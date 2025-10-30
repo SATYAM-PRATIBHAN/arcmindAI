@@ -20,17 +20,17 @@ enum Role {
 }
 
 model User {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  username       String
-  email          String   @unique
-  password       String   // hashed password
-  avatar         String?  // optional profile picture
-  isVerified     Boolean  @default(false)
-  otp            String?  // optional OTP code
-  otpExpiry      DateTime? // optional OTP expiry
-  role           Role     @default(USER)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  username       String 
+  email          String     @unique
+  password       String     // hashed password
+  avatar         String?    // optional profile picture
+  isVerified     Boolean    @default(false)
+  otp            String?    // optional OTP code
+  otpExpiry      DateTime?  // optional OTP expiry
+  role           Role       @default(USER)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@map("users")
 }

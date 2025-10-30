@@ -1,7 +1,7 @@
 export function welcomeEmailTemplate(username: string) {
   return `
     <html>
-      <body style="font-family: 'Inter', sans-serif; background-color: #f8f9fb; padding: 40px; margin: 0;">
+      <body style="font-family: 'Inter', sans-serif; background-color: #f8f9fb; border-radius: 14px; padding: 10px; margin: 0;">
         <div style="max-width: 520px; margin: auto; background: #ffffff; border-radius: 14px; padding: 40px 35px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);">
           
           <!-- Header -->
