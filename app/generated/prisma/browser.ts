@@ -20,3 +20,8 @@ export * from "./enums";
  *
  */
 export type User = Prisma.UserModel;
+/**
+ * Model Generation
+ *
+ */
+export type Generation = Prisma.GenerationModel;

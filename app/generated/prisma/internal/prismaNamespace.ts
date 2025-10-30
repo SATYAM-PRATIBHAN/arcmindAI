@@ -418,6 +418,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never
 
 export const ModelName = {
   User: "User",
+  Generation: "Generation",
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -439,7 +440,7 @@ export type TypeMap<
     omit: GlobalOmitOptions;
   };
   meta: {
-    modelProps: "user";
+    modelProps: "user" | "generation";
     txIsolationLevel: never;
   };
   model: {
@@ -519,6 +520,82 @@ export type TypeMap<
         };
       };
     };
+    Generation: {
+      payload: Prisma.$GenerationPayload<ExtArgs>;
+      fields: Prisma.GenerationFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.GenerationFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.GenerationFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>;
+        };
+        findFirst: {
+          args: Prisma.GenerationFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.GenerationFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>;
+        };
+        findMany: {
+          args: Prisma.GenerationFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>[];
+        };
+        create: {
+          args: Prisma.GenerationCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>;
+        };
+        createMany: {
+          args: Prisma.GenerationCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.GenerationDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>;
+        };
+        update: {
+          args: Prisma.GenerationUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>;
+        };
+        deleteMany: {
+          args: Prisma.GenerationDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.GenerationUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.GenerationUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GenerationPayload>;
+        };
+        aggregate: {
+          args: Prisma.GenerationAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGeneration>;
+        };
+        groupBy: {
+          args: Prisma.GenerationGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.GenerationGroupByOutputType>[];
+        };
+        findRaw: {
+          args: Prisma.GenerationFindRawArgs<ExtArgs>;
+          result: Prisma.JsonObject;
+        };
+        aggregateRaw: {
+          args: Prisma.GenerationAggregateRawArgs<ExtArgs>;
+          result: Prisma.JsonObject;
+        };
+        count: {
+          args: Prisma.GenerationCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.GenerationCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
   };
 } & {
   other: {
@@ -552,6 +629,18 @@ export const UserScalarFieldEnum = {
 
 export type UserScalarFieldEnum =
   (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+
+export const GenerationScalarFieldEnum = {
+  id: "id",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+  userInput: "userInput",
+  generatedOutput: "generatedOutput",
+  userId: "userId",
+} as const;
+
+export type GenerationScalarFieldEnum =
+  (typeof GenerationScalarFieldEnum)[keyof typeof GenerationScalarFieldEnum];
 
 export const SortOrder = {
   asc: "asc",
@@ -625,6 +714,14 @@ export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<
 export type ListEnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
   "Role[]"
+>;
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  "Json"
 >;
 
 /**
@@ -734,6 +831,7 @@ export interface PrismaClientOptions {
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit;
+  generation?: Prisma.GenerationOmit;
 };
 
 /* Types for Logging */

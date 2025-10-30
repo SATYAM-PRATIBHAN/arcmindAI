@@ -72,14 +72,12 @@ const LoginInForm = () => {
             <Input
               type="email"
               placeholder="Email"
-              value={email}
               className="text-sm"
               required
               onChange={(e) => setEmail(e.target.value)}
             />
             <Input
               type="password"
-              value={password}
               placeholder="Password"
               className="text-sm"
               required
