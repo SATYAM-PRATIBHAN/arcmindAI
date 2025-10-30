@@ -70,4 +70,9 @@ Rules:
 - Note the output should be strictly is **json** format.
 - Every diagram should be same as the explanation you gave, i.e the data used in explanation should match the data in the architecture diagram too.
 - Output must be clean, ready to render, and should differ with all two formats.
+
+Mermaid Specific Rules
+- Always wrap subgraph titles in double quotes like subgraph "Client".
+- Use square brackets [] for boxes and parentheses () for rounded nodes consistently
+- Never mix [[ ]] or ([ ]) in the same node, e.g., use WebApp["Web Application (HTML, JS, Three.js)"] or Node((Rounded Node)) consistently.
 `;

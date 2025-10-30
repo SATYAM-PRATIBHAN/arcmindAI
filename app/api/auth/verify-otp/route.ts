@@ -1,4 +1,4 @@
-import { welcomeEmailTemplate } from "@/app/email-template/welcomeEmailTemplate";
+import { welcomeEmailTemplate } from "@/components/email-template/welcomeEmailTemplate";
 import { sendMail } from "@/lib/mailer";
 import { db } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";

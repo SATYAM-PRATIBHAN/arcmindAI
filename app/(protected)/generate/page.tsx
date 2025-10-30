@@ -1,6 +1,6 @@
 "use client";
 
-import { useGenerateSystem } from "@/app/generate/hooks/useGenerateSystem";
+import { useGenerateSystem } from "./hooks/useGenerateSystem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

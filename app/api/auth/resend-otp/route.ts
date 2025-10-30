@@ -2,7 +2,7 @@ import { db } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { generateOTP } from "@/lib/otpgenerator";
 import { sendMail } from "@/lib/mailer";
-import { otpEmailTemplate } from "@/app/email-template/otpEmailTemplate";
+import { otpEmailTemplate } from "@/components/email-template/otpEmailTemplate";
 
 export async function POST(req: NextRequest) {
   try {

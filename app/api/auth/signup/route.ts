@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import { generateOTP } from "@/lib/otpgenerator";
 import { sendMail } from "@/lib/mailer";
 import { signUpSchema } from "@/lib/validation/signUpschema";
-import { otpEmailTemplate } from "@/app/email-template/otpEmailTemplate";
+import { otpEmailTemplate } from "@/components/email-template/otpEmailTemplate";
 
 export async function POST(req: NextRequest) {
   try {
