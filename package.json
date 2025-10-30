@@ -10,10 +10,14 @@
     "format": "prettier --write \"**/*.{ts,tsx}\""
   },
   "dependencies": {
+    "@google/genai": "^1.28.0",
+    "@langchain/core": "^1.0.2",
+    "@langchain/google-genai": "^1.0.0",
     "@prisma/client": "^6.18.0",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.13.0",
     "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
@@ -21,6 +25,7 @@
     "framer-motion": "^12.23.24",
     "googleapis": "^164.1.0",
     "input-otp": "^1.4.2",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.548.0",
     "mermaid": "^11.12.1",
     "mongoose": "^8.19.2",

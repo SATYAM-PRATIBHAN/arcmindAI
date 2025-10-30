@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -20,17 +14,31 @@ enum Role {
 }
 
 model User {
-  id             String     @id @default(auto()) @map("_id") @db.ObjectId
-  username       String 
-  email          String     @unique
-  password       String     // hashed password
-  avatar         String?    // optional profile picture
-  isVerified     Boolean    @default(false)
-  otp            String?    // optional OTP code
-  otpExpiry      DateTime?  // optional OTP expiry
-  role           Role       @default(USER)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  username    String
+  email       String   @unique
+  password    String   // hashed password
+  avatar      String?  // optional profile picture
+  isVerified  Boolean  @default(false)
+  otp         String?  // optional OTP code
+  otpExpiry   DateTime? // optional OTP expiry
+  role        Role     @default(USER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  generations Generation[]
 
   @@map("users")
+}
+
+model Generation {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userInput       String
+  generatedOutput Json     // stores structured system design JSON
+  userId          String   @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }

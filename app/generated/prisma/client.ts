@@ -55,3 +55,8 @@ path.join(
  *
  */
 export type User = Prisma.UserModel;
+/**
+ * Model Generation
+ *
+ */
+export type Generation = Prisma.GenerationModel;

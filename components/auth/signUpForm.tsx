@@ -70,7 +70,6 @@ const SignUpForm = () => {
                 placeholder="Email"
                 className="text-sm"
                 onChange={(e) => setEmail(e.target.value)}
-                value={email}
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -84,7 +83,6 @@ const SignUpForm = () => {
                 placeholder="Username"
                 className="text-sm"
                 onChange={(e) => setUsername(e.target.value)}
-                value={username}
               />
               {errors.username && (
                 <p className="text-red-500 text-xs mt-1">{errors.username}</p>
@@ -98,7 +96,6 @@ const SignUpForm = () => {
                 placeholder="Password"
                 className="text-sm"
                 onChange={(e) => setPassword(e.target.value)}
-                value={password}
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>

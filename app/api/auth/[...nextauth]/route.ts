@@ -2,6 +2,7 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { db } from "@/lib/prisma";
+import { generateAccessToken } from "@/lib/jwt";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -36,10 +37,17 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        const accessToken = generateAccessToken({
+          id: user.id,
+          email: user.email,
+          name: user.username,
+        });
+
         return {
           id: user.id,
           email: user.email,
           name: user.username,
+          accessToken,
         };
       },
     }),
@@ -59,6 +67,8 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.name = user.name || user.email?.split("@")[0];
         token.email = user.email;
+        // @ts-expect-error accessToken is added in authorize
+        token.accessToken = user.accessToken;
       }
       return token;
     },
@@ -69,6 +79,8 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
+        // @ts-expect-error Adding accessToken to session
+        session.user.accessToken = token.accessToken as string;
       }
       return session;
     },
