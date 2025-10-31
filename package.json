@@ -17,6 +17,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.13.0",
     "bcrypt": "^6.0.0",

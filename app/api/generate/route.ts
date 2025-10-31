@@ -57,7 +57,10 @@ export async function POST(req: NextRequest) {
     // ✅ Handle both object and string types safely
     if (typeof finalAIresponse === "string") {
       cleanedOutput = finalAIresponse;
-    } else if (typeof finalAIresponse === "object" && "output" in finalAIresponse) {
+    } else if (
+      typeof finalAIresponse === "object" &&
+      "output" in finalAIresponse
+    ) {
       cleanedOutput = finalAIresponse.output as string;
     } else {
       throw new Error("Unexpected AI response format.");
@@ -80,7 +83,7 @@ export async function POST(req: NextRequest) {
       const parsedData = JSON.parse(jsonText);
 
       // 💾 Save generation result in DB
-      const userGenerates = await db.generation.create({
+      await db.generation.create({
         data: {
           userInput,
           generatedOutput: parsedData,

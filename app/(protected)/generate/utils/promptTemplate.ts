@@ -72,7 +72,32 @@ Rules:
 - Output must be clean, ready to render, and should differ with all two formats.
 
 Mermaid Specific Rules
-- Always wrap subgraph titles in double quotes like subgraph "Client".
-- Use square brackets [] for boxes and parentheses () for rounded nodes consistently
-- Never mix [[ ]] or ([ ]) in the same node, e.g., use WebApp["Web Application (HTML, JS, Three.js)"] or Node((Rounded Node)) consistently.
+1. Basic syntax rules
+ - Diagram declaration: Begin by declaring the diagram type and direction. For example, flowchart TD for a top-down flowchart or graph LR for a left-right one. 
+ - Node definition: Define nodes using an ID and an optional display text within brackets.
+   - A[Display Text] creates a rectangular node. 
+   - B{Decision?} creates a diamond node. 
+   - C((Circle)) creates a circle node.
+   - D((Rounded)) creates a rounded rectangle node. 
+   - E(Rounded) creates a rounded rectangle with rounded corners.
+ - Connection syntax: Use arrows to connect nodes.
+   - A --> B creates a solid arrow. 
+   - A --- B creates a line with no arrow. 
+   - A --|> B creates an arrow with a label on the connection. 
+   - A -->|Yes| B is an example of a labeled arrow. 
+ - Comments: Use %% to start a single-line comment. 
+2. Rules for specific diagrams
+ - Flowcharts and sequence diagrams: Avoid using the word end unquoted, as it can break the syntax.
+ - Class diagrams: Distinguish between attributes and methods. Use () to indicate a method or function, like method(). 
+ - Git graphs: Use specific actions like commit, branch, and merge.
+ - Gantt charts: Use states like done, active, or crit within sections.
+3. Common issues and their fixes
+ - Avoid directive conflicts: Do not use the directive syntax %%{...}%% within a %% comment. This can confuse the renderer. 
+ - Avoid nested nodes: Do not put one node inside another, as this can also cause rendering issues. 
+ - Labeling: Ensure labels are within the correct delimiters. For example, use |label| for a connection label. 
+ - Styling: Use the style statement to apply styles to specific nodes by targeting their ID. For example, style NodeID fill:#f9f,stroke:#333,stroke-width:4px. 
+ - Quotation marks: Wrap nodes that contain special characters or multiple words in quotation marks to prevent breakage. 
+ - When defining a node label that uses double brackets (for example, I["Database (MongoDB)"]), always enclose the label in double quotation marks (""). 
+   For instance: H --> I["Database (MongoDB)"];
+   This ensures correct rendering and prevents syntax errors.
 `;
