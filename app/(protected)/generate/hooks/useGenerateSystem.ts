@@ -33,14 +33,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<any>) {
           userInput,
           // @ts-expect-error accessToken is added to session in NextAuth callbacks
           userId: session?.user.id,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            // @ts-expect-error accessToken is added to session in NextAuth callbacks
-            Authorization: `Bearer ${session.user.accessToken}`,
-          },
-        },
+        }
       );
 
       // Axios responses have data directly, and do not use .ok or .json()

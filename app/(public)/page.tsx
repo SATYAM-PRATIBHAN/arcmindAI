@@ -1,10 +1,12 @@
 "use client";
 
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { data: session, status } = useSession();
   console.log(session);
+  const router = useRouter()
 
   if (status === "loading") {
     return <div>Loading...</div>;
@@ -22,6 +24,12 @@ export default function Home() {
             onClick={() => signOut()}
           >
             SignOut
+          </button>
+          <button
+            className="cursor-pointer px-4 py-2 border bg-amber-300"
+            onClick={() => router.push("/generate")}
+          >
+            Generate
           </button>
         </div>
       ) : (

@@ -2,8 +2,18 @@
 
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import MermaidDiagram from "../components/mermaidDiagram";
 import { ArchitectureData } from "../utils/types";
 import MicroservicesSection from "../components/MicroservicesSection";
@@ -11,13 +21,37 @@ import EntitiesSection from "../components/EntitiesSection";
 import ApiRoutesSection from "../components/ApiRoutesSection";
 import DatabaseSchemaSection from "../components/DatabaseSchemaSection";
 import InfrastructureSection from "../components/InfrastructureSection";
+import axios from "axios";
 
 export default function GenerationPage() {
   const { id } = useParams();
+  const router = useRouter();
   const { getGenerationById, isLoading, error } = useGetGenerationById();
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!id || typeof id !== "string") return;
+
+    setIsDeleting(true);
+    try {
+      const response = await axios.delete(`/api/generate/${id}`);
+
+      if (response.status >= 200 && response.status < 300) {
+        router.push("/generate");
+      } else {
+        console.error("Failed to delete generation");
+      }
+    } catch (error) {
+      console.error("Error deleting generation:", error);
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
 
   useEffect(() => {
     const fetchGeneration = async () => {
@@ -82,10 +116,39 @@ export default function GenerationPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl">
             {generatedData.Explanation.systemName}
           </CardTitle>
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="destructive">Delete Generation</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete this generation? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Confirm Delete"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           <p className="text-gray-600">{generatedData.Explanation.summary}</p>
