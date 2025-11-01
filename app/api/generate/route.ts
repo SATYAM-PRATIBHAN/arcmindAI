@@ -3,19 +3,35 @@ import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
 import { SystemPrompt } from "@/app/(protected)/generate/utils/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { db } from "@/lib/prisma";
+import { generationRateLimit } from "@/lib/rateLimit";
+import {
+  aiGenerationRequestsTotal,
+  aiGenerationSuccessTotal,
+  aiGenerationFailureTotal,
+  aiGenerationDurationSeconds,
+  aiGenerationOutputSizeBytes,
+  userGenerationsTotal,
+  userLastActivityTimestamp,
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+  apiGatewayErrorsTotal,
+  databaseQueryDurationSeconds,
+} from "@/lib/metrics";
 
 export async function POST(req: NextRequest) {
-  try {
-    const authorization = req.headers.get("Authorization");
-    if (!authorization) {
-      return NextResponse.json(
-        { error: "Unauthorized. Missing Authorization header." },
-        { status: 401 },
-      );
-    }
+  const startTime = Date.now();
+  const route = "/api/generate";
+  const method = "POST";
+  httpRequestsTotal.inc({ route, method });
 
+  try {
     const body = await req.json().catch(() => null);
     if (!body || !body.userInput) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { error: "Invalid request body. Missing 'userInput' field." },
         { status: 400 },
@@ -25,6 +41,11 @@ export async function POST(req: NextRequest) {
     const { userInput, userId } = body;
 
     if (!userInput || userInput.trim().length === 0) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { error: "Invalid input. Please provide a valid project idea." },
         { status: 400 },
@@ -32,11 +53,40 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userId) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { error: "Missing userId. You must be logged in to generate." },
         { status: 400 },
       );
     }
+
+    // Rate limiting: 1 request every 2 minutes per user
+    const { success, limit, remaining, reset } =
+      await generationRateLimit.limit(userId);
+    if (!success) {
+      apiGatewayErrorsTotal.inc({ status_code: "429" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Rate limit exceeded. Please wait 2 minutes before making another request.",
+        },
+        { status: 429 },
+      );
+    }
+
+    // Increment AI generation request counter
+    aiGenerationRequestsTotal.inc();
+
+    // Update user activity
+    userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
 
     // ✅ Construct the AI messages
     const messages = [
@@ -44,10 +94,14 @@ export async function POST(req: NextRequest) {
       new HumanMessage(userInput),
     ];
 
-    // 🧠 Call Gemini model
+    // 🧠 Call Gemini model with timing
+    const aiStart = Date.now();
     const response = await geminiLLM.invoke(messages);
+    const aiDuration = (Date.now() - aiStart) / 1000;
+    aiGenerationDurationSeconds.observe(aiDuration);
 
     if (!response || !response.content) {
+      aiGenerationFailureTotal.inc();
       throw new Error("Empty AI response received.");
     }
 
@@ -57,9 +111,13 @@ export async function POST(req: NextRequest) {
     // ✅ Handle both object and string types safely
     if (typeof finalAIresponse === "string") {
       cleanedOutput = finalAIresponse;
-    } else if (typeof finalAIresponse === "object" && "output" in finalAIresponse) {
+    } else if (
+      typeof finalAIresponse === "object" &&
+      "output" in finalAIresponse
+    ) {
       cleanedOutput = finalAIresponse.output as string;
     } else {
+      aiGenerationFailureTotal.inc();
       throw new Error("Unexpected AI response format.");
     }
 
@@ -79,18 +137,47 @@ export async function POST(req: NextRequest) {
 
       const parsedData = JSON.parse(jsonText);
 
-      // 💾 Save generation result in DB
-      const userGenerates = await db.generation.create({
+      // 💾 Save generation result in DB with timing
+      const dbStart = Date.now();
+      await db.generation.create({
         data: {
           userInput,
           generatedOutput: parsedData,
           userId,
         },
       });
+      databaseQueryDurationSeconds.observe(
+        { operation: "create" },
+        (Date.now() - dbStart) / 1000,
+      );
 
-      return NextResponse.json({ success: true, output: finalAIresponse });
+      // Increment success counters
+      aiGenerationSuccessTotal.inc();
+      userGenerationsTotal.inc({ user_id: userId });
+
+      // Set output size
+      aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
+
+      // Track total HTTP duration
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+
+      return NextResponse.json({
+        success: true,
+        output: finalAIresponse,
+        limit: limit,
+        remaining: remaining,
+        reset: reset,
+      });
     } catch (jsonError: any) {
+      aiGenerationFailureTotal.inc();
       console.error("JSON parsing error:", jsonError);
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         {
           error: "Failed to parse AI response JSON. Try rephrasing your input.",
@@ -100,26 +187,22 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error: any) {
+    aiGenerationFailureTotal.inc();
     console.error("Error generating response:", error);
 
     // Handle specific Prisma or AI-related errors
+    let status = 500;
     if (error.code === "P2002") {
-      return NextResponse.json(
-        { error: "Duplicate record detected." },
-        { status: 409 },
-      );
+      status = 409;
+    } else if (error.message?.includes("AI")) {
+      status = 502;
     }
 
-    if (error.message?.includes("AI")) {
-      return NextResponse.json(
-        {
-          error:
-            "The AI service returned an invalid response. Please retry after a few seconds.",
-          details: error.message,
-        },
-        { status: 502 },
-      );
-    }
+    apiGatewayErrorsTotal.inc({ status_code: status.toString() });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
 
     return NextResponse.json(
       {
@@ -127,7 +210,7 @@ export async function POST(req: NextRequest) {
           error?.message ||
           "An unexpected server error occurred while generating the response.",
       },
-      { status: 500 },
+      { status },
     );
   }
 }

@@ -5,7 +5,9 @@ interface DatabaseSchemaSectionProps {
   schema: ArchitectureData["Explanation"]["databaseSchema"];
 }
 
-export default function DatabaseSchemaSection({ schema }: DatabaseSchemaSectionProps) {
+export default function DatabaseSchemaSection({
+  schema,
+}: DatabaseSchemaSectionProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2">

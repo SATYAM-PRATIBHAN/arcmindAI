@@ -1,6 +1,7 @@
 "use client";
 
 import { useGenerateSystem } from "./hooks/useGenerateSystem";
+import { useGetUserHistory } from "./hooks/useGetUserHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +13,12 @@ import EntitiesSection from "./components/EntitiesSection";
 import ApiRoutesSection from "./components/ApiRoutesSection";
 import DatabaseSchemaSection from "./components/DatabaseSchemaSection";
 import InfrastructureSection from "./components/InfrastructureSection";
+import Lottie from "lottie-react";
+import animationData from "@/components/loaderLottie.json";
 
 export default function GeneratePage() {
-  const { generate, isLoading, error } = useGenerateSystem();
+  const { refetch } = useGetUserHistory();
+  const { generate, isLoading, error } = useGenerateSystem(refetch);
   const [userInput, setUserInput] = useState("");
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
@@ -67,8 +71,6 @@ export default function GeneratePage() {
     }
   };
 
-
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex gap-4 items-center">
@@ -94,7 +96,17 @@ export default function GeneratePage() {
         </Card>
       )}
 
-      {generatedData && (
+      {isLoading && (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Lottie
+            animationData={animationData}
+            loop={true}
+            style={{ width: 400, height: 400 }}
+          />
+        </div>
+      )}
+
+      {generatedData && !isLoading && (
         <div className="space-y-8">
           <Card>
             <CardHeader>
@@ -111,7 +123,9 @@ export default function GeneratePage() {
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Microservices</h2>
-            <MicroservicesSection microservices={generatedData.Explanation.microservices} />
+            <MicroservicesSection
+              microservices={generatedData.Explanation.microservices}
+            />
           </section>
 
           <section>
@@ -126,12 +140,16 @@ export default function GeneratePage() {
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
-            <DatabaseSchemaSection schema={generatedData.Explanation.databaseSchema} />
+            <DatabaseSchemaSection
+              schema={generatedData.Explanation.databaseSchema}
+            />
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
-            <InfrastructureSection infra={generatedData.Explanation.infrastructure} />
+            <InfrastructureSection
+              infra={generatedData.Explanation.infrastructure}
+            />
           </section>
 
           <section>

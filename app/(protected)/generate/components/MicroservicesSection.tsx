@@ -5,7 +5,9 @@ interface MicroservicesSectionProps {
   microservices: ArchitectureData["Explanation"]["microservices"];
 }
 
-export default function MicroservicesSection({ microservices }: MicroservicesSectionProps) {
+export default function MicroservicesSection({
+  microservices,
+}: MicroservicesSectionProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {microservices.map((service, index) => (

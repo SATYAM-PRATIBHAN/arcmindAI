@@ -19,11 +19,13 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
+export function OTPFormContent({
+  ...props
+}: React.ComponentProps<typeof Card>) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -49,7 +51,7 @@ export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
       } else {
         setError(res.data.message);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.message || "Verification failed");
     } finally {
       setLoading(false);
@@ -72,7 +74,7 @@ export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
       } else {
         setError(res.data.message);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.message || "Failed to resend OTP");
     } finally {
       setResendLoading(false);
@@ -142,5 +144,27 @@ export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
+  return (
+    <Suspense
+      fallback={
+        <Card {...props}>
+          <CardHeader>
+            <CardTitle>Enter verification code</CardTitle>
+            <CardDescription>
+              We sent a 6-digit code to your email.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">Loading...</div>
+          </CardContent>
+        </Card>
+      }
+    >
+      <OTPFormContent {...props} />
+    </Suspense>
   );
 }

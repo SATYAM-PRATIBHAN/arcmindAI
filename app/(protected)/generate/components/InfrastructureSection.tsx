@@ -5,7 +5,9 @@ interface InfrastructureSectionProps {
   infra: ArchitectureData["Explanation"]["infrastructure"];
 }
 
-export default function InfrastructureSection({ infra }: InfrastructureSectionProps) {
+export default function InfrastructureSection({
+  infra,
+}: InfrastructureSectionProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {Object.entries(infra).map(([key, value]) => (

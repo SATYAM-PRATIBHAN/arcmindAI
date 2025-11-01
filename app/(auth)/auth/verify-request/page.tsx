@@ -1,4 +1,4 @@
-import { OTPForm } from "@/components/auth/otpForm";
+import { OTPForm } from "@/components/main/otpForm";
 
 export default function VerifyRequestPage() {
   return (

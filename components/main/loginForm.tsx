@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-const LoginInForm = () => {
+const LoginInFormContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -103,6 +104,22 @@ const LoginInForm = () => {
         </div>
       </div>
     </section>
+  );
+};
+
+const LoginInForm = () => {
+  return (
+    <Suspense
+      fallback={
+        <section className="bg-muted h-screen">
+          <div className="flex h-full items-center justify-center">
+            <div className="text-lg">Loading...</div>
+          </div>
+        </section>
+      }
+    >
+      <LoginInFormContent />
+    </Suspense>
   );
 };
 
