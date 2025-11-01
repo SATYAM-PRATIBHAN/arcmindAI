@@ -27,9 +27,5 @@ export default function ProtectedLayout({
     return null;
   }
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

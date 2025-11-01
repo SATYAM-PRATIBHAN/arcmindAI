@@ -129,11 +129,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+              <Dialog
+                open={isLogoutDialogOpen}
+                onOpenChange={setIsLogoutDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Button variant="ghost" className="cursor-pointer w-full justify-start">
+                      <Button
+                        variant="ghost"
+                        className="cursor-pointer w-full justify-start"
+                      >
                         <LogOut className="cursor-pointer mr-2 h-4 w-4" />
                         Logout
                       </Button>
@@ -144,7 +150,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <DialogHeader>
                     <DialogTitle>Confirm Logout</DialogTitle>
                     <DialogDescription>
-                      Are you sure you want to log out? You will be redirected to the home page.
+                      Are you sure you want to log out? You will be redirected
+                      to the home page.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>

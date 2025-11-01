@@ -22,6 +22,8 @@ import ApiRoutesSection from "../components/ApiRoutesSection";
 import DatabaseSchemaSection from "../components/DatabaseSchemaSection";
 import InfrastructureSection from "../components/InfrastructureSection";
 import axios from "axios";
+import Lottie from "lottie-react";
+import animationData from "@/components/loaderLottie.json";
 
 export default function GenerationPage() {
   const { id } = useParams();
@@ -84,7 +86,15 @@ export default function GenerationPage() {
   }
 
   if (isLoading) {
-    return <div className="container mx-auto p-6">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Lottie
+          animationData={animationData}
+          loop={true}
+          style={{ width: 400, height: 400 }}
+        />
+      </div>
+    );
   }
 
   if (error) {
@@ -125,7 +135,9 @@ export default function GenerationPage() {
             onOpenChange={setIsDeleteDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button variant="destructive" className="cursor-pointer">Delete Generation</Button>
+              <Button variant="destructive" className="cursor-pointer">
+                Delete Generation
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

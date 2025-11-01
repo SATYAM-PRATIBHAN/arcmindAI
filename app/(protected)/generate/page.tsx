@@ -13,6 +13,8 @@ import EntitiesSection from "./components/EntitiesSection";
 import ApiRoutesSection from "./components/ApiRoutesSection";
 import DatabaseSchemaSection from "./components/DatabaseSchemaSection";
 import InfrastructureSection from "./components/InfrastructureSection";
+import Lottie from "lottie-react";
+import animationData from "@/components/loaderLottie.json";
 
 export default function GeneratePage() {
   const { refetch } = useGetUserHistory();
@@ -94,7 +96,17 @@ export default function GeneratePage() {
         </Card>
       )}
 
-      {generatedData && (
+      {isLoading && (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Lottie
+            animationData={animationData}
+            loop={true}
+            style={{ width: 400, height: 400 }}
+          />
+        </div>
+      )}
+
+      {generatedData && !isLoading && (
         <div className="space-y-8">
           <Card>
             <CardHeader>

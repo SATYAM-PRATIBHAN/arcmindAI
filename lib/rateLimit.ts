@@ -10,7 +10,7 @@ const redis = new Redis({
 // Create rate limiter: 1 request per 2 minutes (120 seconds)
 export const generationRateLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(1, "120 s"), // 1 request per 120 seconds
+  limiter: Ratelimit.slidingWindow(2, "120 s"), // 1 request per 120 seconds
   analytics: true, // Optional: Enable analytics
 });
 

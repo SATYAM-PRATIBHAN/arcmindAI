@@ -47,9 +47,9 @@ export default function GenerateLayout({
 
   // Generate breadcrumbs based on current path and sidebar data
   const generateBreadcrumbs = () => {
-    const pathSegments = pathname.split('/').filter(Boolean);
+    const pathSegments = pathname.split("/").filter(Boolean);
 
-    if (pathname === '/generate') {
+    if (pathname === "/generate") {
       return (
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -59,17 +59,17 @@ export default function GenerateLayout({
       );
     }
 
-    if (pathname.startsWith('/generate/')) {
+    if (pathname.startsWith("/generate/")) {
       const id = pathSegments[1];
-      const generation = history.find(gen => gen.id === id);
-      const title = generation ? (generation.systemName || generation.userInput) : `Generation ${id}`;
+      const generation = history.find((gen) => gen.id === id);
+      const title = generation
+        ? generation.systemName || generation.userInput
+        : `Generation ${id}`;
 
       return (
         <BreadcrumbList>
           <BreadcrumbItem className="hidden md:block">
-            <BreadcrumbLink href="/generate">
-              Generate
-            </BreadcrumbLink>
+            <BreadcrumbLink href="/generate">Generate</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="hidden md:block" />
           <BreadcrumbItem>
@@ -78,7 +78,7 @@ export default function GenerateLayout({
         </BreadcrumbList>
       );
     }
-    
+
     return (
       <BreadcrumbList>
         <BreadcrumbItem>
@@ -95,9 +95,7 @@ export default function GenerateLayout({
         <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            {generateBreadcrumbs()}
-          </Breadcrumb>
+          <Breadcrumb>{generateBreadcrumbs()}</Breadcrumb>
         </header>
         {children}
       </SidebarInset>

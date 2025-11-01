@@ -100,4 +100,29 @@ Mermaid Specific Rules
  - When defining a node label that uses double brackets (for example, I["Database (MongoDB)"]), always enclose the label in double quotation marks (""). 
    For instance: H --> I["Database (MongoDB)"];
    This ensures correct rendering and prevents syntax errors.
+- Example of perfect response(Syntactically***):
+flowchart TD
+    A["Client (Web/Mobile)"] --> B{API Gateway}
+
+    subgraph Microservices
+        C[User Service] --> D((MongoDB))
+        E[Catalog Service] --> F((PostgreSQL))
+        G[Order Service] --> H(RabbitMQ)
+        I[Payment Service] --> J((Stripe API))
+    end
+
+    B --> C
+    B --> E
+    B --> G
+    B --> I
+
+    G --> K[Notification Service]
+    K --> L[Email/SMS]
+
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+    style F fill:#f9f,stroke:#333,stroke-width:2px
+    style J fill:#f9f,stroke:#333,stroke-width:2px
+
+    classDef database fill:#ccf,stroke:#333,stroke-width:2px
+    class D,F,J database 
 `;
