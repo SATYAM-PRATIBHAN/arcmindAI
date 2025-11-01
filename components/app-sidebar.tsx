@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LogOut } from "lucide-react";
 import { SearchForm } from "@/components/search-form";
 import {
   Collapsible,
@@ -10,6 +10,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -19,13 +20,26 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useGetUserHistory } from "@/app/(protected)/generate/hooks/useGetUserHistory";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { history } = useGetUserHistory();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
 
   const filteredHistory = history.filter((gen) =>
@@ -33,6 +47,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       .toLowerCase()
       .includes(searchQuery.toLowerCase()),
   );
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await signOut({ callbackUrl: "/" });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutDialogOpen(false);
+    }
+  };
 
   const data = {
     navMain: [
@@ -43,10 +69,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "New Chat",
             url: "/generate",
             isActive: pathname === "/generate",
-          },
-          {
-            title: "About us",
-            url: "#",
           },
         ],
       },
@@ -103,6 +125,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </Collapsible>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+                <DialogTrigger asChild>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Button variant="ghost" className="cursor-pointer w-full justify-start">
+                        <LogOut className="cursor-pointer mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Confirm Logout</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to log out? You will be redirected to the home page.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsLogoutDialogOpen(false)}
+                      disabled={isLoggingOut}
+                      className="cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="cursor-pointer"
+                    >
+                      {isLoggingOut ? "Logging out..." : "Logout"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

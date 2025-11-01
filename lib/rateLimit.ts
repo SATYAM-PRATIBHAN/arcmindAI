@@ -17,5 +17,5 @@ export const generationRateLimit = new Ratelimit({
 export const otpRateLimit = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(1, "60 s"),
-  analytics: true
-})
+  analytics: true,
+});

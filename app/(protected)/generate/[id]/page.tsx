@@ -114,21 +114,25 @@ export default function GenerationPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="flex flex-1 flex-col gap-4 p-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl">
             {generatedData.Explanation.systemName}
           </CardTitle>
-          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <Dialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+          >
             <DialogTrigger asChild>
-              <Button variant="destructive">Delete Generation</Button>
+              <Button variant="destructive" className="cursor-pointer">Delete Generation</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Confirm Deletion</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete this generation? This action cannot be undone.
+                  Are you sure you want to delete this generation? This action
+                  cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -136,6 +140,7 @@ export default function GenerationPage() {
                   variant="outline"
                   onClick={() => setIsDeleteDialogOpen(false)}
                   disabled={isDeleting}
+                  className="cursor-pointer"
                 >
                   Cancel
                 </Button>
@@ -143,6 +148,7 @@ export default function GenerationPage() {
                   variant="destructive"
                   onClick={handleDelete}
                   disabled={isDeleting}
+                  className="cursor-pointer"
                 >
                   {isDeleting ? "Deleting..." : "Confirm Delete"}
                 </Button>

@@ -13,16 +13,19 @@ import {
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
-  const route = '/api/auth/resend-otp';
-  const method = 'POST';
+  const route = "/api/auth/resend-otp";
+  const method = "POST";
   httpRequestsTotal.inc({ route, method });
 
   try {
     const { email } = await req.json();
 
     if (!email) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "Email is required" },
         { status: 400 },
@@ -34,26 +37,40 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      apiGatewayErrorsTotal.inc({ status_code: '404' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     if (user.isVerified) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "User is already verified" },
         { status: 400 },
       );
     }
 
-    const { success, limit, remaining, reset } = await otpRateLimit.limit(user.id);
+    const { success, limit, remaining, reset } = await otpRateLimit.limit(
+      user.id,
+    );
     if (!success) {
-      apiGatewayErrorsTotal.inc({ status_code: '429' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "429" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
-        { error: "Rate limit exceeded. Please wait 1 minute before making another request." },
+        {
+          error:
+            "Rate limit exceeded. Please wait 1 minute before making another request.",
+        },
         { status: 429 },
       );
     }
@@ -80,19 +97,25 @@ export async function POST(req: NextRequest) {
     });
 
     // Track total HTTP duration
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
 
     return NextResponse.json({
       success: true,
       message: "New OTP sent to your email",
       limit: limit,
       remaining: remaining,
-      reset: reset
+      reset: reset,
     });
   } catch (e) {
     console.error(e);
-    apiGatewayErrorsTotal.inc({ status_code: '500' });
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

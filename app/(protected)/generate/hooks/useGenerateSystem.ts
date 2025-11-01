@@ -27,14 +27,11 @@ export function useGenerateSystem(refetchHistory?: () => Promise<any>) {
     try {
       // Assumes you've installed axios (`npm install axios`) and imported it at the top of the file:
       // import axios from "axios";
-      const response = await axios.post(
-        "/api/generate",
-        {
-          userInput,
-          // @ts-expect-error accessToken is added to session in NextAuth callbacks
-          userId: session?.user.id,
-        }
-      );
+      const response = await axios.post("/api/generate", {
+        userInput,
+        // @ts-expect-error accessToken is added to session in NextAuth callbacks
+        userId: session?.user.id,
+      });
 
       // Axios responses have data directly, and do not use .ok or .json()
       if (response.status < 200 || response.status >= 300) {

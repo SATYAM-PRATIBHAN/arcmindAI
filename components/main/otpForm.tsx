@@ -23,7 +23,9 @@ import { useState, Suspense } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export function OTPFormContent({ ...props }: React.ComponentProps<typeof Card>) {
+export function OTPFormContent({
+  ...props
+}: React.ComponentProps<typeof Card>) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -152,7 +154,9 @@ export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
         <Card {...props}>
           <CardHeader>
             <CardTitle>Enter verification code</CardTitle>
-            <CardDescription>We sent a 6-digit code to your email.</CardDescription>
+            <CardDescription>
+              We sent a 6-digit code to your email.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center">Loading...</div>

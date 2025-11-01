@@ -15,8 +15,8 @@ import {
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
-  const route = '/api/auth/signup';
-  const method = 'POST';
+  const route = "/api/auth/signup";
+  const method = "POST";
   httpRequestsTotal.inc({ route, method });
 
   try {
@@ -25,8 +25,11 @@ export async function POST(req: NextRequest) {
 
     if (!parsedData.success) {
       const errorMessages = parsedData.error;
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { success: false, errors: errorMessages },
         { status: 400 },
@@ -35,8 +38,11 @@ export async function POST(req: NextRequest) {
     const { email, username, password } = parsedData.data;
 
     if (!email || !username || !password) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "All fields required" },
         { status: 400 },
@@ -49,11 +55,17 @@ export async function POST(req: NextRequest) {
         email,
       },
     });
-    databaseQueryDurationSeconds.observe({ operation: 'findFirst' }, (Date.now() - dbFindStart) / 1000);
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbFindStart) / 1000,
+    );
 
     if (existingUser) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "User already Exist" },
         { status: 400 },
@@ -74,7 +86,10 @@ export async function POST(req: NextRequest) {
         otpExpiry,
       },
     });
-    databaseQueryDurationSeconds.observe({ operation: 'create' }, (Date.now() - dbCreateStart) / 1000);
+    databaseQueryDurationSeconds.observe(
+      { operation: "create" },
+      (Date.now() - dbCreateStart) / 1000,
+    );
 
     // Update user activity
     userLastActivityTimestamp.set({ user_id: user.id }, Date.now() / 1000);
@@ -87,7 +102,10 @@ export async function POST(req: NextRequest) {
     });
 
     // Track total HTTP duration
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
 
     return NextResponse.json({
       success: true,
@@ -101,8 +119,11 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     console.error(e);
-    apiGatewayErrorsTotal.inc({ status_code: '500' });
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

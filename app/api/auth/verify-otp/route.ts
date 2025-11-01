@@ -12,16 +12,19 @@ import {
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
-  const route = '/api/auth/verify-otp';
-  const method = 'POST';
+  const route = "/api/auth/verify-otp";
+  const method = "POST";
   httpRequestsTotal.inc({ route, method });
 
   try {
     const { email, otp } = await req.json();
 
     if (!email || !otp) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "Email and OTP are required" },
         { status: 400 },
@@ -34,17 +37,26 @@ export async function POST(req: NextRequest) {
         email,
       },
     });
-    databaseQueryDurationSeconds.observe({ operation: 'findUnique' }, (Date.now() - dbStart) / 1000);
+    databaseQueryDurationSeconds.observe(
+      { operation: "findUnique" },
+      (Date.now() - dbStart) / 1000,
+    );
 
     if (!user) {
-      apiGatewayErrorsTotal.inc({ status_code: '404' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     if (user.isVerified) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "User is already verified" },
         { status: 400 },
@@ -52,8 +64,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user.otp || !user.otpExpiry) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { message: "OTP not found or expired" },
         { status: 400 },
@@ -61,14 +76,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (new Date() > user.otpExpiry) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json({ message: "OTP has expired" }, { status: 400 });
     }
 
     if (user.otp !== otp) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
     }
 
@@ -84,7 +105,10 @@ export async function POST(req: NextRequest) {
         otpExpiry: null,
       },
     });
-    databaseQueryDurationSeconds.observe({ operation: 'update' }, (Date.now() - dbUpdateStart) / 1000);
+    databaseQueryDurationSeconds.observe(
+      { operation: "update" },
+      (Date.now() - dbUpdateStart) / 1000,
+    );
 
     // Update user activity
     userLastActivityTimestamp.set({ user_id: user.id }, Date.now() / 1000);
@@ -96,7 +120,10 @@ export async function POST(req: NextRequest) {
     });
 
     // Track total HTTP duration
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
 
     return NextResponse.json({
       success: true,
@@ -104,8 +131,11 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     console.error(e);
-    apiGatewayErrorsTotal.inc({ status_code: '500' });
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

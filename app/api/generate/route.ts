@@ -20,15 +20,18 @@ import {
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
-  const route = '/api/generate';
-  const method = 'POST';
+  const route = "/api/generate";
+  const method = "POST";
   httpRequestsTotal.inc({ route, method });
 
   try {
     const body = await req.json().catch(() => null);
     if (!body || !body.userInput) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { error: "Invalid request body. Missing 'userInput' field." },
         { status: 400 },
@@ -38,8 +41,11 @@ export async function POST(req: NextRequest) {
     const { userInput, userId } = body;
 
     if (!userInput || userInput.trim().length === 0) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { error: "Invalid input. Please provide a valid project idea." },
         { status: 400 },
@@ -47,8 +53,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userId) {
-      apiGatewayErrorsTotal.inc({ status_code: '400' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         { error: "Missing userId. You must be logged in to generate." },
         { status: 400 },
@@ -56,12 +65,19 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limiting: 1 request every 2 minutes per user
-    const { success, limit, remaining, reset } = await generationRateLimit.limit(userId);
+    const { success, limit, remaining, reset } =
+      await generationRateLimit.limit(userId);
     if (!success) {
-      apiGatewayErrorsTotal.inc({ status_code: '429' });
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      apiGatewayErrorsTotal.inc({ status_code: "429" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
-        { error: "Rate limit exceeded. Please wait 2 minutes before making another request." },
+        {
+          error:
+            "Rate limit exceeded. Please wait 2 minutes before making another request.",
+        },
         { status: 429 },
       );
     }
@@ -130,7 +146,10 @@ export async function POST(req: NextRequest) {
           userId,
         },
       });
-      databaseQueryDurationSeconds.observe({ operation: 'create' }, (Date.now() - dbStart) / 1000);
+      databaseQueryDurationSeconds.observe(
+        { operation: "create" },
+        (Date.now() - dbStart) / 1000,
+      );
 
       // Increment success counters
       aiGenerationSuccessTotal.inc();
@@ -140,19 +159,25 @@ export async function POST(req: NextRequest) {
       aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
 
       // Track total HTTP duration
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
 
-      return NextResponse.json({ 
-        success: true, 
-        output: finalAIresponse, 
-        limit: limit, 
-        remaining: remaining, 
-        reset: reset 
+      return NextResponse.json({
+        success: true,
+        output: finalAIresponse,
+        limit: limit,
+        remaining: remaining,
+        reset: reset,
       });
     } catch (jsonError: any) {
       aiGenerationFailureTotal.inc();
       console.error("JSON parsing error:", jsonError);
-      httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
       return NextResponse.json(
         {
           error: "Failed to parse AI response JSON. Try rephrasing your input.",
@@ -174,7 +199,10 @@ export async function POST(req: NextRequest) {
     }
 
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
-    httpRequestDurationSeconds.observe({ route }, (Date.now() - startTime) / 1000);
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
 
     return NextResponse.json(
       {
