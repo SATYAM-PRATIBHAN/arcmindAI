@@ -8,6 +8,7 @@ import {
   apiGatewayErrorsTotal,
   databaseQueryDurationSeconds,
   userLastActivityTimestamp,
+  activeUsersTotal,
 } from "@/lib/metrics";
 
 export async function POST(req: NextRequest) {
@@ -112,6 +113,9 @@ export async function POST(req: NextRequest) {
 
     // Update user activity
     userLastActivityTimestamp.set({ user_id: user.id }, Date.now() / 1000);
+
+    // Increment active users (assuming verification activates the user)
+    activeUsersTotal.inc();
 
     await sendMail({
       to: user.email,

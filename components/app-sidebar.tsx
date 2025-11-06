@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronRight, LogOut } from "lucide-react";
 import { SearchForm } from "@/components/search-form";
 import {
@@ -30,17 +30,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useGetUserHistory } from "@/app/(protected)/generate/hooks/useGetUserHistory";
+import { useHistory } from "@/lib/contexts/HistoryContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { DOC_ROUTES } from "@/lib/routes";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { history } = useGetUserHistory();
+  const { history, isLoading } = useHistory();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   const filteredHistory = history.filter((gen) =>
     (gen.systemName || gen.userInput)
@@ -67,25 +69,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: "New Chat",
-            url: "/generate",
-            isActive: pathname === "/generate",
+            url: DOC_ROUTES.GENERATE,
+            isActive: pathname === DOC_ROUTES.GENERATE,
           },
         ],
       },
       {
         title: "Previous Chats",
-        url: "#",
-        items: filteredHistory.map((gen) => ({
-          title: gen.systemName || gen.userInput,
-          url: `/generate/${gen.id}`,
-          isActive: pathname === `/generate/${gen.id}`,
-        })),
+        items: isLoading
+          ? Array.from({ length: 10 }).map((_, i) => ({
+              // placeholder entries
+              title: `loading-${i}`,
+              url: "#",
+              isLoading: true,
+            }))
+          : filteredHistory.map((gen) => ({
+              title: gen.systemName || gen.userInput,
+              url: `/generate/${gen.id}`,
+              isActive: pathname === `/generate/${gen.id}`,
+            })),
       },
     ],
   };
 
   return (
-    <Sidebar {...props}>
+    <Sidebar variant="floating" {...props}>
       <SidebarHeader>
         {/* @ts-expect-error: setSearchQuery (from useState) signature does not exactly match SearchForm's onChange prop, but is safe here */}
         <SearchForm value={searchQuery} onChange={setSearchQuery} />
@@ -111,13 +119,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {item.items.map((item: any) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={item.isActive}>
-                          <Link href={item.url}>{item.title}</Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
+                    {item.items.map(
+                      (
+                        item: {
+                          title: string;
+                          url: string;
+                          isActive?: boolean;
+                          isLoading?: boolean;
+                        },
+                        index: number,
+                      ) => (
+                        <SidebarMenuItem key={index}>
+                          {item.isLoading ? (
+                            <div className="animate-pulse flex items-center gap-2 px-3 py-2">
+                              <div className="h-3 w-3 rounded-full bg-muted"></div>
+                              <div className="h-3 flex-1 rounded bg-muted"></div>
+                            </div>
+                          ) : (
+                            <SidebarMenuButton asChild isActive={item.isActive}>
+                              <Link href={item.url}>{item.title}</Link>
+                            </SidebarMenuButton>
+                          )}
+                        </SidebarMenuItem>
+                      ),
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>
@@ -129,6 +154,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    variant="ghost"
+                    className="cursor-pointer w-full justify-start"
+                    asChild
+                  >
+                    <Link
+                      href={DOC_ROUTES.PROFILE}
+                      className="flex items-center"
+                    >
+                      <div className="w-6 h-6 aspect-square rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium mr-2">
+                        {session?.user?.name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-medium">
+                          {session?.user?.name || "User"}
+                        </span>
+                      </div>
+                    </Link>
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <Dialog
                 open={isLogoutDialogOpen}
                 onOpenChange={setIsLogoutDialogOpen}

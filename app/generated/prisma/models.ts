@@ -8,4 +8,5 @@
  */
 export type * from "./models/User";
 export type * from "./models/Generation";
+export type * from "./models/ResetPasswordToken";
 export type * from "./commonInputTypes";

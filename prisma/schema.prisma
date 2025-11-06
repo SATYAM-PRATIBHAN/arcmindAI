@@ -14,19 +14,20 @@ enum Role {
 }
 
 model User {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  username    String
-  email       String   @unique
-  password    String   // hashed password
-  avatar      String?  // optional profile picture
-  isVerified  Boolean  @default(false)
-  otp         String?  // optional OTP code
-  otpExpiry   DateTime? // optional OTP expiry
-  role        Role     @default(USER)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  username            String
+  email               String                @unique
+  password            String                // hashed password
+  avatar              String?               // optional profile picture
+  isVerified          Boolean               @default(false)
+  otp                 String?               // optional OTP code
+  otpExpiry           DateTime?               // optional OTP expiry
+  role                Role                  @default(USER)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
-  generations Generation[]
+  generations         Generation[]
+  resetPasswordTokens ResetPasswordToken[]
 
   @@map("users")
 }
@@ -41,4 +42,16 @@ model Generation {
   user            User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model ResetPasswordToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  tokenHash String   // hashed reset token
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime // token expiry time
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@map("reset_password_tokens")
 }

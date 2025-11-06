@@ -3,6 +3,8 @@
 
 import React, { useEffect, useRef } from "react";
 import mermaid from "mermaid";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 interface MermaidDiagramProps {
   chart: string;
@@ -37,7 +39,42 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart }) => {
     };
     render();
   }, [chart]);
-  return <div ref={containerRef}></div>;
+
+  const downloadAsImage = () => {
+    if (!containerRef.current) return;
+
+    const svgElement = containerRef.current.querySelector("svg");
+    if (!svgElement) return;
+
+    // Get the SVG data
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+
+    // Create download link
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(svgBlob);
+    link.download = "architecture-diagram.svg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Clean up the URL object
+    URL.revokeObjectURL(link.href);
+  };
+
+  return (
+    <div>
+      <div className="flex justify-end mb-4">
+        <Button onClick={downloadAsImage} variant="outline" size="sm">
+          <Download className="w-4 h-4 mr-2" />
+          Download as Image
+        </Button>
+      </div>
+      <div ref={containerRef}></div>
+    </div>
+  );
 };
 
 export default MermaidDiagram;

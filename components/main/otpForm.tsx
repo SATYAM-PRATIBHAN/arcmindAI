@@ -19,9 +19,11 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
+import { DOC_ROUTES } from "@/lib/routes";
+import { useSession } from "next-auth/react";
 
 export function OTPFormContent({
   ...props
@@ -31,9 +33,18 @@ export function OTPFormContent({
   const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const session = useSession();
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,14 +56,29 @@ export function OTPFormContent({
     setError(null);
     setLoading(true);
     try {
-      const res = await axios.post("/api/auth/verify-otp", { email, otp });
+      const res = await axios.post(DOC_ROUTES.API.AUTH.VERIFY_OTP, {
+        email,
+        otp,
+      });
       if (res.data.success) {
-        router.push("/auth/login");
+        const userId =
+          session?.data && session.status === "authenticated"
+            ? (session.data as { user?: { id?: string } })?.user?.id
+            : null;
+        router.push(userId ? DOC_ROUTES.PROFILE : DOC_ROUTES.AUTH.LOGIN);
       } else {
         setError(res.data.message);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Verification failed");
+    } catch (err: unknown) {
+      const axiosError = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errorMessage =
+        axiosError?.response?.data?.message ||
+        axiosError?.message ||
+        "Verification failed";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -68,14 +94,23 @@ export function OTPFormContent({
     setResendMessage(null);
     setResendLoading(true);
     try {
-      const res = await axios.post("/api/auth/resend-otp", { email });
+      const res = await axios.post(DOC_ROUTES.API.AUTH.RESEND_OTP, { email });
       if (res.data.success) {
         setResendMessage("New OTP sent to your email");
+        setResendTimer(60); // Start 60 second timer
       } else {
         setError(res.data.message);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to resend OTP");
+    } catch (err: unknown) {
+      const axiosError = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errorMessage =
+        axiosError?.response?.data?.message ||
+        axiosError?.message ||
+        "Failed to resend OTP";
+      setError(errorMessage);
     } finally {
       setResendLoading(false);
     }
@@ -133,10 +168,14 @@ export function OTPFormContent({
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={resendLoading}
-                  className="text-primary hover:underline disabled:opacity-50"
+                  disabled={resendLoading || resendTimer > 0}
+                  className="cursor-pointer text-primary hover:underline disabled:opacity-50"
                 >
-                  {resendLoading ? "Resending..." : "Resend"}
+                  {resendLoading
+                    ? "Resending..."
+                    : resendTimer > 0
+                      ? `Resend in ${resendTimer}s`
+                      : "Resend"}
                 </button>
               </FieldDescription>
             </FieldGroup>

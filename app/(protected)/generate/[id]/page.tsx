@@ -1,6 +1,8 @@
 "use client";
 
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
+import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
+import { useHistory } from "@/lib/contexts/HistoryContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,38 +23,36 @@ import EntitiesSection from "../components/EntitiesSection";
 import ApiRoutesSection from "../components/ApiRoutesSection";
 import DatabaseSchemaSection from "../components/DatabaseSchemaSection";
 import InfrastructureSection from "../components/InfrastructureSection";
-import axios from "axios";
 import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
+import { DOC_ROUTES } from "@/lib/routes";
 
 export default function GenerationPage() {
   const { id } = useParams();
   const router = useRouter();
   const { getGenerationById, isLoading, error } = useGetGenerationById();
+  const {
+    deleteGeneration,
+    isLoading: isDeleting,
+    error: deleteError,
+  } = useDeleteGenerationById();
+  const { refetch } = useHistory();
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (!id || typeof id !== "string") return;
 
-    setIsDeleting(true);
-    try {
-      const response = await axios.delete(`/api/generate/${id}`);
-
-      if (response.status >= 200 && response.status < 300) {
-        router.push("/generate");
-      } else {
-        console.error("Failed to delete generation");
-      }
-    } catch (error) {
-      console.error("Error deleting generation:", error);
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
+    const result = await deleteGeneration(id);
+    if (result && result.success) {
+      await refetch(); // Update history after deletion
+      router.push(DOC_ROUTES.GENERATE);
+    } else {
+      console.error("Failed to delete generation:", deleteError);
     }
+    setIsDeleteDialogOpen(false);
   };
 
   useEffect(() => {

@@ -8,6 +8,7 @@ import {
   apiGatewayErrorsTotal,
   databaseQueryDurationSeconds,
   userLastActivityTimestamp,
+  cacheHitsTotal,
 } from "@/lib/metrics";
 
 export async function GET(
@@ -35,14 +36,50 @@ export async function GET(
       );
     }
 
+    const dbStart1 = Date.now();
+    const user = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session?.user?.id,
+      },
+    });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbStart1) / 1000,
+    );
+
+    if (!user) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      NextResponse.json({ status: 404, message: "User not Found" });
+    }
+
+    if (user?.isVerified === false) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json({
+        status: 401,
+        message: "Email is not verified",
+      });
+    }
+
     const { id: generationId } = await params;
 
     // Update user activity
-    // @ts-expect-error id is added to the session in the session callback
     userLastActivityTimestamp.set(
+      // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
       Date.now() / 1000,
     );
+
+    // Increment cache hits (assuming fetching generation is a cache hit if cached)
+    cacheHitsTotal.inc();
 
     const dbStart = Date.now();
     const generation = await db.generation.findFirst({
@@ -121,8 +158,8 @@ export async function DELETE(
     const { id: generationId } = await params;
 
     // Update user activity
-    // @ts-expect-error id is added to the session in the session callback
     userLastActivityTimestamp.set(
+      // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
       Date.now() / 1000,
     );
