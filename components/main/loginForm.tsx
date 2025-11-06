@@ -86,7 +86,6 @@ const LoginInFormContent = () => {
               <Label className="block text-xs text-gray-700 mb-2">Email</Label>
               <Input
                 type="email"
-                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition"
@@ -102,7 +101,6 @@ const LoginInFormContent = () => {
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
-                  value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••••••••••••"
                   className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition pr-12"

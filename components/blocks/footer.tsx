@@ -9,10 +9,11 @@ import { DOC_ROUTES } from "@/lib/routes";
 
 export function Footer() {
   const navigation = [
-    { name: "Generate", href: DOC_ROUTES.GENERATE },
+    { name: "Home", href: DOC_ROUTES.HOME },
     { name: "About Us", href: DOC_ROUTES.ABOUT },
     { name: "Pricing", href: DOC_ROUTES.PRICING },
     { name: "FAQ", href: `${DOC_ROUTES.HOME}#faq` },
+    { name: "Generate", href: DOC_ROUTES.GENERATE },
     { name: "Contact", href: DOC_ROUTES.CONTACT },
   ];
 
@@ -36,7 +37,7 @@ export function Footer() {
   return (
     <footer
       ref={ref}
-      className="flex flex-col items-center gap-14 pt-28 lg:pt-32 px-2 overflow-hidden"
+      className="flex max-w-5xl mx-auto flex-col items-center gap-14 pt-28 lg:pt-32 px-2 overflow-hidden"
     >
       {/* CTA Section */}
       <motion.div
