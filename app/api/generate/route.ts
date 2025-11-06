@@ -40,6 +40,38 @@ export async function POST(req: NextRequest) {
 
     const { userInput, userId } = body;
 
+    const dbStart = Date.now();
+    const user = await db.user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbStart) / 1000,
+    );
+
+    if (!user) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      NextResponse.json({ status: 404, message: "User not Found" });
+    }
+
+    if (user?.isVerified === false) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json({
+        status: 401,
+        message: "Email is not verified",
+      });
+    }
+
     if (!userInput || userInput.trim().length === 0) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
@@ -155,6 +187,9 @@ export async function POST(req: NextRequest) {
       aiGenerationSuccessTotal.inc();
       userGenerationsTotal.inc({ user_id: userId });
 
+      // Update user activity
+      userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
+
       // Set output size
       aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
 
@@ -171,8 +206,10 @@ export async function POST(req: NextRequest) {
         remaining: remaining,
         reset: reset,
       });
-    } catch (jsonError: any) {
+    } catch (jsonError: unknown) {
       aiGenerationFailureTotal.inc();
+      const errorMessage =
+        jsonError instanceof Error ? jsonError.message : "Unknown error";
       console.error("JSON parsing error:", jsonError);
       httpRequestDurationSeconds.observe(
         { route },
@@ -181,20 +218,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Failed to parse AI response JSON. Try rephrasing your input.",
-          details: jsonError.message,
+          details: errorMessage,
         },
         { status: 422 },
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     aiGenerationFailureTotal.inc();
     console.error("Error generating response:", error);
 
     // Handle specific Prisma or AI-related errors
     let status = 500;
-    if (error.code === "P2002") {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
       status = 409;
-    } else if (error.message?.includes("AI")) {
+    } else if (errorMessage.includes("AI")) {
       status = 502;
     }
 
@@ -207,7 +251,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          error?.message ||
+          errorMessage ||
           "An unexpected server error occurred while generating the response.",
       },
       { status },

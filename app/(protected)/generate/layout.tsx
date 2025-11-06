@@ -18,7 +18,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { useGetUserHistory } from "./hooks/useGetUserHistory";
+import { useHistory } from "@/lib/contexts/HistoryContext";
+import { DOC_ROUTES } from "@/lib/routes";
+import Link from "next/link";
 
 export default function GenerateLayout({
   children,
@@ -28,18 +30,14 @@ export default function GenerateLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const { history } = useGetUserHistory();
+  const { history } = useHistory();
 
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
-      router.push("/auth/login");
+      router.push(DOC_ROUTES.AUTH.LOGIN);
     }
   }, [session, status, router]);
-
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
 
   if (!session) {
     return null;
@@ -49,7 +47,7 @@ export default function GenerateLayout({
   const generateBreadcrumbs = () => {
     const pathSegments = pathname.split("/").filter(Boolean);
 
-    if (pathname === "/generate") {
+    if (pathname === DOC_ROUTES.GENERATE) {
       return (
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -69,7 +67,7 @@ export default function GenerateLayout({
       return (
         <BreadcrumbList>
           <BreadcrumbItem className="hidden md:block">
-            <BreadcrumbLink href="/generate">Generate</BreadcrumbLink>
+            <BreadcrumbLink href={DOC_ROUTES.GENERATE}>Generate</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="hidden md:block" />
           <BreadcrumbItem>
@@ -92,10 +90,20 @@ export default function GenerateLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>{generateBreadcrumbs()}</Breadcrumb>
+        <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center justify-between border-b px-4">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>{generateBreadcrumbs()}</Breadcrumb>
+          </div>
+          <div className="flex gap-4">
+            <Link
+              href={DOC_ROUTES.HOME}
+              className="text-sm text-gray-600 hover:text-black transition underline"
+            >
+              ← Back to Home
+            </Link>
+          </div>
         </header>
         {children}
       </SidebarInset>

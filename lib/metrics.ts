@@ -91,19 +91,9 @@ export const databaseQueryDurationSeconds = new Histogram({
   buckets: [0.01, 0.05, 0.1, 0.5, 1, 2],
 });
 
-export const databaseConnectionsActive = new Gauge({
-  name: "database_connections_active",
-  help: "Current number of DB connections",
-});
-
 export const cacheHitsTotal = new Counter({
   name: "cache_hits_total",
   help: "Cache hits (when Redis/memory is used)",
-});
-
-export const cacheMissesTotal = new Counter({
-  name: "cache_misses_total",
-  help: "Cache misses",
 });
 
 // Infrastructure Metrics

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { DOC_ROUTES } from "@/lib/routes";
+import type { ArchitectureData } from "../utils/types";
 
 interface Generation {
   id: string;
   userInput: string;
   createdAt: Date;
-  generatedOutput: any;
+  generatedOutput: ArchitectureData;
 }
 
 interface GenerationResponse {
@@ -32,11 +34,14 @@ export function useGetGenerationById() {
     setError(null);
 
     try {
-      const response = await axios.get(`/api/generate/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
+      const response = await axios.get(
+        `${DOC_ROUTES.API.GENERATE.ROOT}/${id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.status < 200 || response.status >= 300) {
         throw new Error(`HTTP error! status: ${response.status}`);

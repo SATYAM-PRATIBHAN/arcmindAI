@@ -53,6 +53,7 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull;
 export const ModelName = {
   User: "User",
   Generation: "Generation",
+  ResetPasswordToken: "ResetPasswordToken",
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -89,6 +90,16 @@ export const GenerationScalarFieldEnum = {
 
 export type GenerationScalarFieldEnum =
   (typeof GenerationScalarFieldEnum)[keyof typeof GenerationScalarFieldEnum];
+
+export const ResetPasswordTokenScalarFieldEnum = {
+  id: "id",
+  tokenHash: "tokenHash",
+  userId: "userId",
+  expiresAt: "expiresAt",
+} as const;
+
+export type ResetPasswordTokenScalarFieldEnum =
+  (typeof ResetPasswordTokenScalarFieldEnum)[keyof typeof ResetPasswordTokenScalarFieldEnum];
 
 export const SortOrder = {
   asc: "asc",

@@ -16,6 +16,18 @@ export const generationRateLimit = new Ratelimit({
 
 export const otpRateLimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(1, "60 s"),
+  limiter: Ratelimit.slidingWindow(1, "60 s"), // 1 request per 60 seconds
+  analytics: true,
+});
+
+export const loginRateLimitIP = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "60 s"), // 5 requests per IP per minute
+  analytics: true,
+});
+
+export const loginRateLimitAccount = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "3600 s"), // 5 requests per account per hour
   analytics: true,
 });

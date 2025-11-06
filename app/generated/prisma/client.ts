@@ -60,3 +60,8 @@ export type User = Prisma.UserModel;
  *
  */
 export type Generation = Prisma.GenerationModel;
+/**
+ * Model ResetPasswordToken
+ *
+ */
+export type ResetPasswordToken = Prisma.ResetPasswordTokenModel;

@@ -11,6 +11,7 @@ import {
   apiGatewayErrorsTotal,
   databaseQueryDurationSeconds,
   userLastActivityTimestamp,
+  userSignupsTotal,
 } from "@/lib/metrics";
 
 export async function POST(req: NextRequest) {
@@ -93,6 +94,9 @@ export async function POST(req: NextRequest) {
 
     // Update user activity
     userLastActivityTimestamp.set({ user_id: user.id }, Date.now() / 1000);
+
+    // Increment user signups
+    userSignupsTotal.inc();
 
     // Send OTP email
     await sendMail({
