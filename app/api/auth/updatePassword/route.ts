@@ -42,8 +42,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Update user last activity
-    // @ts-expect-error id has been added to session in nextauth
+    
     userLastActivityTimestamp.set(
+      // @ts-expect-error id has been added to session in nextauth
       { user_id: session.user.id },
       Date.now() / 1000,
     );

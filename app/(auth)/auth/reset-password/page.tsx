@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DOC_ROUTES } from "@/lib/routes";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useResetPassword } from "@/hooks/useResetPassword";
 import { signUpSchema } from "@/lib/validation/signUpschema";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const token = useSearchParams().get("token");
   const router = useRouter();
 
@@ -242,5 +242,21 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="flex h-screen bg-white text-black">
+          <div className="w-full flex items-center justify-center">
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </section>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
