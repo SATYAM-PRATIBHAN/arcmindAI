@@ -91,8 +91,8 @@ export default function About() {
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               To simplify system design and empower teams to create intelligent,
-              scalable, and future-ready architectures through automation and AI —
-              enabling seamless collaboration between human creativity and
+              scalable, and future-ready architectures through automation and AI
+              — enabling seamless collaboration between human creativity and
               machine intelligence.
             </p>
           </div>
@@ -102,10 +102,10 @@ export default function About() {
               Our Vision
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              We envision a world where developers and architects can collaborate 
-              with AI to turn high-level ideas into structured, efficient, and
-              production-ready systems — transforming the way digital
-              infrastructure is built.
+              We envision a world where developers and architects can
+              collaborate with AI to turn high-level ideas into structured,
+              efficient, and production-ready systems — transforming the way
+              digital infrastructure is built.
             </p>
           </div>
         </motion.div>
@@ -123,8 +123,8 @@ export default function About() {
               What Makes ArcMind Different?
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              We've built a platform focused on speed, quality, and seamless
-              integration for modern development teams.
+              We&apos;ve built a platform focused on speed, quality, and
+              seamless integration for modern development teams.
             </p>
           </motion.div>
 

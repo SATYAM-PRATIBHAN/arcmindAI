@@ -20,7 +20,9 @@ export default function VerifyRequestPage() {
             </Link>
           </div>
 
-          <h2 className="text-4xl font-light text-black mb-2">Verify your email</h2>
+          <h2 className="text-4xl font-light text-black mb-2">
+            Verify your email
+          </h2>
           <p className="text-gray-600 text-sm mb-8">
             Enter the 6-digit code we sent to your email to continue.
           </p>
@@ -29,7 +31,10 @@ export default function VerifyRequestPage() {
 
           {/* Footer */}
           <div className="mt-10 flex items-center justify-between text-xs text-gray-600">
-            <Link href={DOC_ROUTES.HOME} className="hover:text-black transition underline">
+            <Link
+              href={DOC_ROUTES.HOME}
+              className="hover:text-black transition underline"
+            >
               Back to Home
             </Link>
             <Link
