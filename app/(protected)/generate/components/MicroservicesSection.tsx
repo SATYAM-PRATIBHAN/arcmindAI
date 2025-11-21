@@ -8,6 +8,20 @@ interface MicroservicesSectionProps {
 export default function MicroservicesSection({
   microservices,
 }: MicroservicesSectionProps) {
+  const renderList = (title: string, items: string[]) => {
+    if (!items.length) return null;
+    return (
+      <div className="mt-3">
+        <p className="text-xs font-semibold uppercase text-gray-500">{title}</p>
+        <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-gray-600">
+          {items.map((item, idx) => (
+            <li key={`${title}-${idx}`}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {microservices.map((service, index) => (
@@ -29,6 +43,19 @@ export default function MicroservicesSection({
                 </span>
               ))}
             </div>
+            {service.details?.workflow && (
+              <p className="mt-3 text-sm text-gray-700">
+                <span className="font-semibold">Workflow:</span>{" "}
+                {service.details.workflow}
+              </p>
+            )}
+            {renderList("Inputs", service.details?.inputs ?? [])}
+            {renderList("Outputs", service.details?.outputs ?? [])}
+            {renderList(
+              "Integration Points",
+              service.details?.integrationPoints ?? [],
+            )}
+            {renderList("Data Storage", service.details?.dataStorage ?? [])}
           </CardContent>
         </Card>
       ))}

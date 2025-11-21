@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Github, User, LogOut } from "lucide-react";
+import { ChevronRight, Github, User as UserIcon, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -17,6 +17,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { DOC_ROUTES } from "@/lib/routes";
+import { useGetUser, User } from "@/hooks/useGetUser";
 
 const ITEMS = [
   {
@@ -48,7 +49,21 @@ export const Navbar = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const { getUser } = useGetUser();
   const isAuthenticated = status === "authenticated";
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await getUser();
+      if (userData?.success) {
+        setUser(userData?.output);
+      }
+    };
+    if (session) {
+      fetchUser();
+    }
+  }, [session]);
 
   return (
     <section
@@ -128,8 +143,30 @@ export const Navbar = () => {
               <NavigationMenuList>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="data-[state=open]:bg-accent/50 bg-transparent! px-1.5 [&>svg]:hidden">
-                    <div className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm">
-                      {session?.user?.email?.charAt(0).toUpperCase() || "U"}
+                    <div
+                      className={cn(
+                        "relative cursor-pointer flex h-8 w-8 items-center justify-center rounded-full text-primary-foreground text-sm",
+                        user?.plan === "custom" && "ring-2 ring-yellow-500",
+                      )}
+                    >
+                      {user?.avatar ? (
+                        <Image
+                          src={user.avatar}
+                          alt="avatar"
+                          width={24}
+                          height={24}
+                          className="rounded-full object-cover w-6 h-6"
+                        />
+                      ) : (
+                        <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-black text-xs font-bold uppercase">
+                          {session?.user?.name?.charAt(0).toUpperCase() || "U"}
+                        </span>
+                      )}
+                      {user?.plan === "pro" && (
+                        <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-[7px] border-black px-0.5 py-0.5 rounded">
+                          PRO
+                        </span>
+                      )}
                     </div>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="left-0 right-auto lg:left-auto lg:right-0">
@@ -137,12 +174,12 @@ export const Navbar = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            href={DOC_ROUTES.PROFILE}
+                            href={DOC_ROUTES.PROFILE.ROOT}
                             className="cursor-pointer group hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex items-center justify-start rounded-md p-2 leading-none no-underline outline-hidden transition-colors select-none"
                           >
                             <div className="space-y-1 transition-transform duration-300 group-hover:translate-x-1">
                               <div className="text-sm leading-none font-medium flex items-start gap-2">
-                                <User className="h-4 w-4" />
+                                <UserIcon className="h-4 w-4" />
                                 Profile
                               </div>
                             </div>

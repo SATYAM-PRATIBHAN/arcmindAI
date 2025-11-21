@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { DashedLine } from "../dashed-line";
 import Link from "next/link";
 import { DOC_ROUTES } from "@/lib/routes";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 const plans = [
   {
@@ -18,10 +21,9 @@ const plans = [
     yearlyPrice: "$0",
     description: "Perfect for individuals exploring AI architecture design.",
     features: [
-      "AI-powered architecture generation (limited)",
-      "Download generated diagrams (limited)",
+      "AI-powered architecture generation (3 total)",
       "Basic tech stack visualization",
-      "Access to architecture history (3 recent)",
+      "Download generated diagrams (limited)",
     ],
   },
   {
@@ -31,9 +33,9 @@ const plans = [
     features: [
       "All Free plan features, plus...",
       "Unlimited architecture generations",
+      "Unified tech stack planning with customizations",
       "Download complete JSON + diagram files",
       "Full architecture history",
-      "Customizable tech stacks",
       "Email delivery of system designs",
       "Priority AI model access",
     ],
@@ -48,13 +50,56 @@ const plans = [
       "Private model endpoints",
       "Advanced analytics & metrics dashboard",
       "Dedicated support & onboarding",
-      "Custom integrations (e.g., Notion, Jira, GitHub)",
     ],
   },
 ];
 
 export const Pricing = ({ className }: { className?: string }) => {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleSubscribe = async (planName: string) => {
+    if (!session) {
+      router.push("/auth/login");
+      return;
+    }
+
+    setLoadingPlan(planName.toLowerCase());
+
+    try {
+      const billingPeriod = isAnnual ? "yearly" : "monthly";
+      const { data } = await axios.post(
+        `${DOC_ROUTES.API.PAYMENT.ROOT}`,
+        { billingPeriod, planName },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to create checkout session");
+      }
+
+      if (data.checkoutUrl) {
+        // Redirect to Dodo Payments checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error("No checkout URL received");
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to process subscription. Please try again.",
+      );
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <section className={cn("pb-24 lg:pb-38", className)}>
@@ -169,22 +214,41 @@ export const Pricing = ({ className }: { className?: string }) => {
                     ))}
                   </div>
 
-                  <Link
-                    href={
-                      plan.name === "Enterprise"
-                        ? `${DOC_ROUTES.CONTACT}`
-                        : `${DOC_ROUTES.GENERATE}`
-                    }
-                  >
+                  {plan.name === "Enterprise" ? (
+                    <Link href={DOC_ROUTES.CONTACT}>
+                      <Button
+                        className="w-fit cursor-pointer"
+                        variant="outline"
+                      >
+                        Contact Us
+                      </Button>
+                    </Link>
+                  ) : plan.name === "Free" ? (
+                    <Link href={DOC_ROUTES.GENERATE}>
+                      <Button
+                        className="w-fit cursor-pointer"
+                        variant="outline"
+                      >
+                        Get Started
+                      </Button>
+                    </Link>
+                  ) : (
                     <Button
                       className="w-fit cursor-pointer"
                       variant={plan.name === "Pro" ? "default" : "outline"}
+                      onClick={() => handleSubscribe(plan.name)}
+                      disabled={loadingPlan === plan.name.toLowerCase()}
                     >
-                      {plan.name === "Enterprise"
-                        ? "Coming soon"
-                        : "Coming soon"}
+                      {loadingPlan === plan.name.toLowerCase() ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        `Subscribe ${isAnnual ? "Annually" : "Monthly"}`
+                      )}
                     </Button>
-                  </Link>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

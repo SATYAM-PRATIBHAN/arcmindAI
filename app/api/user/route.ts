@@ -74,6 +74,10 @@ export async function GET() {
         avatar: user.avatar,
         email: user.email,
         isVerified: user.isVerified,
+        plan: user.plan,
+        subscriptionId: user.subscriptionId,
+        subscriptionStatus: user.subscriptionStatus,
+        currentPeriodEnd: user.currentPeriodEnd,
       },
     });
   } catch (err) {

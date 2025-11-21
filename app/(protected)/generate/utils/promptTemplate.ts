@@ -16,7 +16,14 @@ Output format MUST be:
     {
       "name": "string",
       "responsibility": "string",
-      "techStack": ["string"]
+      "techStack": ["string"],
+      "details": {
+        "workflow": "Explain how this service operates end-to-end",
+        "inputs": ["List of events, APIs, or data sources consumed"],
+        "outputs": ["List of events, APIs, or artifacts produced"],
+        "integrationPoints": ["Critical dependencies or downstream services"],
+        "dataStorage": ["Databases, caches, or queues directly owned"]
+      }
     }
   ],
   "entities": [
@@ -66,6 +73,7 @@ flowchart TD
 
 Rules:
 - Produce all two outputs every time, i.e Explanation and the Architecture diagram.
+- For every microservice, always populate the \`details\` object with concrete, implementation-ready information so each team knows inputs, outputs, workflow, dependencies, and owned data stores.
 - Do not mix diagrams with text in the wrong section.
 - Note the output should be strictly is **json** format.
 - Every diagram should be same as the explanation you gave, i.e the data used in explanation should match the data in the architecture diagram too.

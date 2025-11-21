@@ -19,6 +19,10 @@ interface User {
   createdAt: Date;
   avatar: string;
   isVerified: boolean;
+  plan: string;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
+  currentPeriodEnd: Date | null;
 }
 
 export default function ProfilePage() {
@@ -99,7 +103,7 @@ export default function ProfilePage() {
     if (status === "authenticated") {
       fetchUser();
     }
-  }, [session, status, getUser]);
+  }, [session]);
 
   if (status === "loading") {
     return (

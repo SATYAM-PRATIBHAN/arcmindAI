@@ -65,7 +65,7 @@ export function OTPFormContent({
           session?.data && session.status === "authenticated"
             ? (session.data as { user?: { id?: string } })?.user?.id
             : null;
-        router.push(userId ? DOC_ROUTES.PROFILE : DOC_ROUTES.AUTH.LOGIN);
+        router.push(userId ? DOC_ROUTES.PROFILE.ROOT : DOC_ROUTES.AUTH.LOGIN);
       } else {
         setError(res.data.message);
       }

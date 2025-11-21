@@ -3,13 +3,17 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { DOC_ROUTES } from "@/lib/routes";
 
-interface User {
+export interface User {
   id: string;
   email: string;
   username: string;
   createdAt: Date;
   avatar: string;
   isVerified: boolean;
+  plan: string;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
+  currentPeriodEnd: Date | null;
 }
 
 interface UserResponse {

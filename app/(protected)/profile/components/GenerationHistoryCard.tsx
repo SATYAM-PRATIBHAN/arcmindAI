@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -17,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
+import { DOC_ROUTES } from "@/lib/routes";
 
 interface Generation {
   id: string;
@@ -34,9 +37,22 @@ export function GenerationHistoryCard({
   history,
   isLoading,
 }: GenerationHistoryCardProps) {
-  const sortedHistory = history.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter history based on search term (case-insensitive)
+  const filteredHistory = useMemo(() => {
+    return history
+      .filter((gen) =>
+        (gen.systemName || "Custom Generation")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()),
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+  }, [history, searchTerm]);
 
   return (
     <Card>
@@ -48,7 +64,15 @@ export function GenerationHistoryCard({
         <CardDescription>
           Your previous AI generations and chats
         </CardDescription>
+        <input
+          type="text"
+          placeholder="Search by system name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </CardHeader>
+
       <CardContent>
         {isLoading ? (
           <div className="space-y-4">
@@ -56,7 +80,7 @@ export function GenerationHistoryCard({
               <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
-        ) : sortedHistory.length > 0 ? (
+        ) : filteredHistory.length > 0 ? (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -68,8 +92,14 @@ export function GenerationHistoryCard({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedHistory.map((gen: Generation) => (
-                  <TableRow key={gen.id}>
+                {filteredHistory.map((gen: Generation) => (
+                  <TableRow
+                    key={gen.id}
+                    onClick={() =>
+                      router.push(`${DOC_ROUTES.GENERATE}/${gen.id}`)
+                    }
+                    className="cursor-pointer"
+                  >
                     <TableCell className="font-medium">
                       {new Date(gen.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -98,8 +128,8 @@ export function GenerationHistoryCard({
         ) : (
           <div className="text-center py-12 text-muted-foreground">
             <FileText className="mx-auto h-12 w-12 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No generations yet</h3>
-            <p>Start creating AI generations to see your history here.</p>
+            <h3 className="text-lg font-semibold mb-2">No generations found</h3>
+            <p>Try adjusting your search or create new AI generations.</p>
           </div>
         )}
       </CardContent>

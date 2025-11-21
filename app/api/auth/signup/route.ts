@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         username,
         otp,
         otpExpiry,
+        plan: "free",
       },
     });
     databaseQueryDurationSeconds.observe(

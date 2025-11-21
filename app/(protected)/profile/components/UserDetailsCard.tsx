@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Calendar,
   Mail,
@@ -17,6 +16,17 @@ import { ChangePasswordDialog } from "./ChangePasswordDialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { DOC_ROUTES } from "@/lib/routes";
+import { useGetUser, User as FullUser } from "@/hooks/useGetUser";
+import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { InfoIcon } from "lucide-react";
 
 interface User {
   id: string;
@@ -25,6 +35,10 @@ interface User {
   createdAt: Date;
   avatar: string;
   isVerified: boolean;
+  plan: string;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
+  currentPeriodEnd: Date | null;
 }
 
 interface UserDetailsCardProps {
@@ -53,6 +67,20 @@ export function UserDetailsCard({
 }: UserDetailsCardProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const [fullUser, setFullUser] = useState<FullUser | null>(null);
+  const { getUser } = useGetUser();
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await getUser();
+      if (userData?.success) {
+        setFullUser(userData?.output);
+      }
+    };
+    fetchUser();
+  }, [session]);
+
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -63,7 +91,7 @@ export function UserDetailsCard({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="shrink-0">
+          <div className="shrink-0 relative">
             {user?.avatar ? (
               <Image
                 src={user.avatar}
@@ -76,6 +104,11 @@ export function UserDetailsCard({
               <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold">
                 {session?.user?.name?.charAt(0).toUpperCase() || "U"}
               </div>
+            )}
+            {fullUser?.plan === "pro" && (
+              <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs px-1 py-0.5 rounded">
+                PRO
+              </span>
             )}
           </div>
           <div className="flex-1 space-y-2">
@@ -148,6 +181,87 @@ export function UserDetailsCard({
             </div>
           </div>
         </div>
+
+        {fullUser && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" />
+              Subscription Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 space-x-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Plan
+                </span>
+                <Badge
+                  variant={
+                    fullUser.plan === "free"
+                      ? "secondary"
+                      : fullUser.plan === "pro"
+                        ? "default"
+                        : "outline"
+                  }
+                >
+                  {fullUser.plan.toUpperCase()}
+                </Badge>
+              </div>
+              {fullUser.subscriptionId && (
+                <div className="block md:flex md:justify-end space-x-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Subscription ID
+                  </span>
+                  <div className="bg-muted px-2 py-1 rounded text-xs block">
+                    {fullUser.subscriptionId}
+                  </div>
+                </div>
+              )}
+              {fullUser.currentPeriodEnd && (
+                <div className="space-y-2 space-x-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Current Period Ends
+                  </span>
+                  <span className="text-sm">
+                    {new Date(fullUser.currentPeriodEnd).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+              {fullUser.plan === "pro" && fullUser.subscriptionId && (
+                <div className="block md:flex md:justify-end">
+                  <Button
+                    variant="destructive"
+                    className="w-fit px-2 cursor-pointer"
+                    onClick={() => setCancelDialogOpen(true)}
+                  >
+                    Cancel Subscription
+                  </Button>
+
+                  <div className="flex justify-center items-center">
+                    <CancelSubscriptionDialog
+                      open={cancelDialogOpen}
+                      onOpenChange={setCancelDialogOpen}
+                    />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-pointer text-muted-foreground hover:text-foreground">
+                            <InfoIcon className="w-5 h-5" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-sm">
+                          <p>
+                            Your subscription will remain active until the end
+                            of the current billing period and will be cancelled
+                            for upcoming months.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

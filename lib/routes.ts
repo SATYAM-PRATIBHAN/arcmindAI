@@ -14,6 +14,11 @@ export const DOC_ROUTES = {
       FORGOT_PASSWORD: "/api/auth/forgot-password",
       RESET_PASSWORD: "/api/auth/reset-password",
     },
+    PAYMENT: {
+      ROOT: "/api/payment",
+      WEBHOOK: "/api/payment/webhook",
+    },
+    GRIEVANCE: "/api/grievance",
     GENERATE: {
       ROOT: "/api/generate",
       HISTORY: "/api/generate/history",
@@ -30,7 +35,10 @@ export const DOC_ROUTES = {
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
   },
-  PROFILE: "/profile",
+  PROFILE: {
+    ROOT: "/profile",
+    CANCEL_SUBSCRIPTION: "/profile/subscription-cancel",
+  },
   GENERATE: "/generate",
   ABOUT: "/about",
   PRICING: "/pricing",

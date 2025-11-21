@@ -13,6 +13,13 @@ enum Role {
   ADMIN
 }
 
+enum Plan {
+  free
+  pro
+  enterprise
+}
+
+
 model User {
   id                  String                @id @default(auto()) @map("_id") @db.ObjectId
   username            String
@@ -21,8 +28,12 @@ model User {
   avatar              String?               // optional profile picture
   isVerified          Boolean               @default(false)
   otp                 String?               // optional OTP code
-  otpExpiry           DateTime?               // optional OTP expiry
+  otpExpiry           DateTime?             // optional OTP expiry
   role                Role                  @default(USER)
+  plan                Plan                  @default(free) // free, pro, enterprise
+  subscriptionId      String?               // Dodo subscription ID
+  subscriptionStatus  String?               // active, canceled, expired, null
+  currentPeriodEnd    DateTime?             // end of current billing period
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 

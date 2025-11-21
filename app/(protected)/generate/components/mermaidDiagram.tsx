@@ -5,6 +5,7 @@ import React, { useEffect, useRef } from "react";
 import mermaid from "mermaid";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import * as htmlToImage from "html-to-image";
 
 interface MermaidDiagramProps {
   chart: string;
@@ -40,34 +41,33 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart }) => {
     render();
   }, [chart]);
 
-  const downloadAsImage = () => {
+  const downloadAsImage = async () => {
     if (!containerRef.current) return;
 
-    const svgElement = containerRef.current.querySelector("svg");
-    if (!svgElement) return;
+    try {
+      const dataUrl = await htmlToImage.toPng(containerRef.current, {
+        backgroundColor: "#ffffff", // optional
+        pixelRatio: 2, // for high-res
+      });
 
-    // Get the SVG data
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const svgBlob = new Blob([svgData], {
-      type: "image/svg+xml;charset=utf-8",
-    });
-
-    // Create download link
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(svgBlob);
-    link.download = "architecture-diagram.svg";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Clean up the URL object
-    URL.revokeObjectURL(link.href);
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "architecture-diagram.png";
+      link.click();
+    } catch (err) {
+      console.error("Failed to export diagram:", err);
+    }
   };
 
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <Button onClick={downloadAsImage} variant="outline" size="sm">
+        <Button
+          className="cursor-pointer"
+          onClick={downloadAsImage}
+          variant="outline"
+          size="sm"
+        >
           <Download className="w-4 h-4 mr-2" />
           Download as Image
         </Button>
