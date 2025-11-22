@@ -9,7 +9,16 @@ import {
   databaseQueryDurationSeconds,
   userLastActivityTimestamp,
   cacheHitsTotal,
+  aiGenerationRequestsTotal,
+  aiGenerationSuccessTotal,
+  aiGenerationFailureTotal,
+  aiGenerationDurationSeconds,
+  aiGenerationOutputSizeBytes,
+  userGenerationsTotal,
 } from "@/lib/metrics";
+import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { UpdateSystemPrompt } from "@/app/(protected)/generate/utils/updateSystemPrompt";
 
 export async function GET(
   request: NextRequest,
@@ -201,6 +210,224 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error fetching generation:", error);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const startTime = Date.now();
+  const route = "/api/generate/[id]";
+  const method = "PUT";
+  httpRequestsTotal.inc({ route, method });
+
+  try {
+    const session = await getServerSession(authOptions);
+
+    // @ts-expect-error id is added to the session in the session callback
+    if (!session?.user?.id) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const dbStart1 = Date.now();
+    const user = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session?.user?.id,
+      },
+    });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbStart1) / 1000,
+    );
+
+    if (!user) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (user?.isVerified === false) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Email is not verified" },
+        { status: 401 },
+      );
+    }
+
+    if (user?.plan != "pro" || "enterprise") {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json({
+        status: 401,
+        message: "Purchase the pro version to use this feature",
+      });
+    }
+
+    const { id: generationId } = await params;
+
+    // Update user activity
+    userLastActivityTimestamp.set(
+      // @ts-expect-error id is added to the session in the session callback
+      { user_id: session.user.id },
+      Date.now() / 1000,
+    );
+
+    // Increment AI generation request counter
+    aiGenerationRequestsTotal.inc();
+
+    const { userInput } = await request.json();
+
+    const dbStart2 = Date.now();
+    const originalResponse = await db.generation.findFirst({
+      where: {
+        id: generationId,
+        // @ts-expect-error id is added to the session in the session callback
+        userId: session.user.id,
+      },
+    });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbStart2) / 1000,
+    );
+
+    if (!originalResponse) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Generation not found" },
+        { status: 404 },
+      );
+    }
+
+    const messages = [
+      new SystemMessage(UpdateSystemPrompt),
+      new HumanMessage(`Original generated content: ${JSON.stringify(originalResponse.generatedOutput)}
+
+User feedback/input for update: ${userInput}`),
+    ];
+
+    const aiStart = Date.now();
+    const newGeneratedOutput = await geminiLLM.invoke(messages);
+    const aiDuration = (Date.now() - aiStart) / 1000;
+    aiGenerationDurationSeconds.observe(aiDuration);
+
+    if (!newGeneratedOutput || !newGeneratedOutput.content) {
+      aiGenerationFailureTotal.inc();
+      throw new Error("Empty AI response received.");
+    }
+
+    const finalAIresponse = newGeneratedOutput.content;
+    console.log(finalAIresponse);
+
+    // Step 1: Convert response to string
+    const raw =
+      typeof finalAIresponse === "string"
+        ? finalAIresponse
+        : JSON.stringify(finalAIresponse);
+
+    // Step 2: Extract JSON block
+    let jsonText = raw;
+
+    const jsonStart = jsonText.indexOf("```json");
+    if (jsonStart !== -1) {
+      jsonText = jsonText.slice(jsonStart + 7);
+    }
+
+    const jsonEnd = jsonText.lastIndexOf("```");
+    if (jsonEnd !== -1) {
+      jsonText = jsonText.slice(0, jsonEnd);
+    }
+
+    jsonText = jsonText.trim();
+    if (!jsonText) throw new Error("No JSON content found in AI response");
+
+    // Step 3: Parse initial JSON
+    const parsedData = JSON.parse(jsonText);
+
+    // Step 4: Clean “Architecture Diagram” field
+    if (
+      parsedData?.Explanation &&
+      typeof parsedData.Explanation["Architecture Diagram"] === "string"
+    ) {
+      let diagram = parsedData.Explanation["Architecture Diagram"];
+      diagram = diagram
+        .replace(/```mermaid/g, "")
+        .replace(/```/g, "")
+        .trim();
+      parsedData.Explanation["Architecture Diagram"] = diagram;
+    }
+
+    const dbStart3 = Date.now();
+    const generation = await db.generation.update({
+      where: {
+        id: generationId,
+        // @ts-expect-error id is added to the session in the session callback
+        userId: session.user.id,
+      },
+      data: {
+        generatedOutput: parsedData,
+      },
+    });
+    databaseQueryDurationSeconds.observe(
+      { operation: "update" },
+      (Date.now() - dbStart3) / 1000,
+    );
+
+    // Increment success counters
+    aiGenerationSuccessTotal.inc();
+    // @ts-expect-error id is added to the session in the session callback
+    userGenerationsTotal.inc({ user_id: session.user.id });
+
+    // Set output size
+    aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
+
+    // Track total HTTP duration
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
+
+    return NextResponse.json({
+      success: true,
+      output: generation,
+    });
+  } catch (error) {
+    console.error("Error updating generation:", error);
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },

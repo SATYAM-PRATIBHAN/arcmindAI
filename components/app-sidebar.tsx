@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, LogOut } from "lucide-react";
 import { SearchForm } from "@/components/search-form";
 import {
@@ -35,6 +35,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { DOC_ROUTES } from "@/lib/routes";
+import { cn } from "@/lib/utils";
+import { useGetUser, User } from "@/hooks/useGetUser";
+import Image from "next/image";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { history, isLoading } = useHistory();
@@ -43,12 +46,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [user, setUser] = useState<User | null>(null);
+  const { getUser } = useGetUser();
 
   const filteredHistory = history.filter((gen) =>
     (gen.systemName || gen.userInput)
       .toLowerCase()
       .includes(searchQuery.toLowerCase()),
   );
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await getUser();
+      if (userData?.success) {
+        setUser(userData?.output);
+      }
+    };
+    if (session) {
+      fetchUser();
+    }
+  }, [session]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -162,11 +179,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     asChild
                   >
                     <Link
-                      href={DOC_ROUTES.PROFILE}
+                      href={DOC_ROUTES.PROFILE.ROOT}
                       className="flex items-center"
                     >
-                      <div className="w-6 h-6 aspect-square rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium mr-2">
-                        {session?.user?.name?.charAt(0).toUpperCase() || "U"}
+                      <div
+                        className={cn(
+                          "relative w-6 h-6 aspect-square rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium mr-2",
+                          user?.plan === "custom" && "ring-1 ring-yellow-500",
+                        )}
+                      >
+                        {user?.avatar ? (
+                          <Image
+                            src={user.avatar}
+                            alt="avatar"
+                            width={24}
+                            height={24}
+                            className="rounded-full object-cover w-6 h-6"
+                          />
+                        ) : (
+                          <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-black text-xs font-bold uppercase">
+                            {session?.user?.name?.charAt(0).toUpperCase() ||
+                              "U"}
+                          </span>
+                        )}
+                        {user?.plan === "pro" && (
+                          <span className="absolute -top-0.5 -right-0.5 bg-yellow-500 text-white text-[5px] border-black px-1 py-0.5 rounded">
+                            PRO
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-col text-left">
                         <span className="text-sm font-medium">

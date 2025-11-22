@@ -6,6 +6,13 @@ export interface ArchitectureData {
       name: string;
       responsibility: string;
       techStack: string[];
+      details: {
+        workflow: string;
+        inputs: string[];
+        outputs: string[];
+        integrationPoints: string[];
+        dataStorage: string[];
+      };
     }>;
     entities: Array<{
       name: string;

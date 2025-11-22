@@ -72,6 +72,31 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const generationCount = await db.generation.count({
+      where: { userId },
+    });
+
+    // 2. Get user limit based on plan
+    const planLimits = {
+      free: 3,
+      pro: 100,
+      enterprise: 9999, // or unlimited
+    };
+
+    const plan = user?.plan as keyof typeof planLimits | undefined;
+    const userLimit = plan ? planLimits[plan] : undefined;
+
+    // 3. Enforce plan limits
+    if (userLimit !== undefined && generationCount >= userLimit) {
+      return NextResponse.json(
+        {
+          error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
+          upgrade: user?.plan === "free" ? true : false,
+        },
+        { status: 403 },
+      );
+    }
+
     if (!userInput || userInput.trim().length === 0) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(

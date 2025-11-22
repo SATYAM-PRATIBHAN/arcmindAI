@@ -8,6 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import Link from "next/link";
 
 interface FeatureSection {
   category: string;
@@ -26,13 +27,15 @@ const pricingPlans = [
       text: "Get started",
       variant: "outline" as const,
     },
+    link: "/signup"
   },
   {
     name: "Startup",
     button: {
-      text: "Get started",
+      text: "Try Pro",
       variant: "outline" as const,
     },
+    link: "/pricing"
   },
   {
     name: "Enterprise",
@@ -40,74 +43,90 @@ const pricingPlans = [
       text: "Get a demo",
       variant: "outline" as const,
     },
+    link: "/contact"
   },
 ];
 
 const comparisonFeatures: FeatureSection[] = [
   {
-    category: "Usage",
+    category: "Generation",
     features: [
       {
-        name: "Members",
-        free: "Unlimited",
+        name: "AI Generation",
+        free: "Limited",
         startup: "Unlimited",
         enterprise: "Unlimited",
       },
       {
-        name: "Transactions",
-        free: "250",
-        startup: "Unlimited",
-        enterprise: "Unlimited",
+        name: "Priority Access",
+        free: null,
+        startup: true,
+        enterprise: true,
       },
       {
-        name: "Teams",
-        free: "2",
-        startup: "Unlimited",
-        enterprise: "Unlimited",
+        name: "Private Endpoints",
+        free: null,
+        startup: null,
+        enterprise: true,
       },
     ],
   },
   {
-    category: "Features",
+    category: "Visualization",
     features: [
       {
-        name: "Reporting",
+        name: "Tech Stack Viz",
         free: true,
         startup: true,
         enterprise: true,
       },
       {
-        name: "Analytics",
-        free: true,
+        name: "Custom Planning",
+        free: null,
         startup: true,
         enterprise: true,
       },
+    ],
+  },
+  {
+    category: "Downloads",
+    features: [
       {
-        name: "Import and export",
-        free: true,
+        name: "Diagram Downloads",
+        free: "Limited",
+        startup: "Full JSON + Diagrams",
+        enterprise: "Full JSON + Diagrams",
+      },
+    ],
+  },
+  {
+    category: "History",
+    features: [
+      {
+        name: "History Access",
+        free: "3 Recent",
+        startup: "Full History",
+        enterprise: "Full History",
+      },
+      {
+        name: "Team Workspaces",
+        free: null,
+        startup: null,
+        enterprise: true,
+      },
+    ],
+  },
+  {
+    category: "Delivery",
+    features: [
+      {
+        name: "Email Delivery",
+        free: null,
         startup: true,
         enterprise: true,
       },
       {
         name: "Integrations",
-        free: true,
-        startup: true,
-        enterprise: true,
-      },
-      {
-        name: "Mainline AI",
-        free: null,
-        startup: true,
-        enterprise: true,
-      },
-      {
-        name: "Admin roles",
-        free: null,
-        startup: null,
-        enterprise: true,
-      },
-      {
-        name: "Audit log",
         free: null,
         startup: null,
         enterprise: true,
@@ -115,22 +134,16 @@ const comparisonFeatures: FeatureSection[] = [
     ],
   },
   {
-    category: "Support",
+    category: "Analytics",
     features: [
       {
-        name: "Priority Support",
-        free: true,
-        startup: true,
-        enterprise: true,
-      },
-      {
-        name: "Account Manager",
+        name: "Analytics Dashboard",
         free: null,
         startup: null,
         enterprise: true,
       },
       {
-        name: "Uptime SLA",
+        name: "Dedicated Support",
         free: null,
         startup: null,
         enterprise: true,
@@ -197,12 +210,14 @@ const PlanHeaders = ({
                 className={`size-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
               />
             </CollapsibleTrigger>
-            <Button
-              variant={pricingPlans[selectedPlan].button.variant}
-              className="w-fit"
-            >
-              {pricingPlans[selectedPlan].button.text}
-            </Button>
+            <Link href={pricingPlans[selectedPlan].link}>
+              <Button
+                variant={pricingPlans[selectedPlan].button.variant}
+                className="w-fit cursor-pointer"
+              >
+                {pricingPlans[selectedPlan].button.text}
+              </Button>
+            </Link>
           </div>
           <CollapsibleContent className="flex flex-col space-y-2 p-2">
             {pricingPlans.map(
