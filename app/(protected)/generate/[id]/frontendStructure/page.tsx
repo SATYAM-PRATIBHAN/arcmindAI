@@ -127,7 +127,12 @@ export default function FrontendStructurePage() {
           <Separator className="my-6" />
 
           {/* Structure Section */}
-          <Accordion type="single" defaultValue="structure" collapsible className="w-full">
+          <Accordion
+            type="single"
+            defaultValue="structure"
+            collapsible
+            className="w-full"
+          >
             <AccordionItem value="structure">
               <AccordionTrigger className="text-2xl font-bold">
                 Project Structure

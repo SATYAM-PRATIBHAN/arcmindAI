@@ -4,10 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
-    "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\""
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@google/genai": "^1.28.0",

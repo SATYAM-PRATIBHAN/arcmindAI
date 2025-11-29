@@ -1,18 +1,26 @@
 import { Folder, File } from "lucide-react";
 
-export function buildTree(paths: string[]) {
-  const tree: any = {};
+export type FileTree = {
+  [key: string]: FileTree | null;
+};
+
+export function buildTree(paths: string[]): FileTree {
+  const tree: FileTree = {};
 
   paths.forEach((path) => {
     const parts = path.replace(/^src\//, "").split("/");
-    let current = tree;
+    let current: FileTree = tree;
 
-    parts.forEach((part, index) => {
+    parts.forEach((part) => {
       const isFile = part.includes(".");
-      if (!current[part]) {
-        current[part] = isFile ? null : {}; // folder → object / file → null
+
+      if (!(part in current)) {
+        current[part] = isFile ? null : {};
       }
-      current = isFile ? current : current[part];
+
+      if (!isFile && current[part]) {
+        current = current[part] as FileTree;
+      }
     });
   });
 
@@ -20,7 +28,7 @@ export function buildTree(paths: string[]) {
 }
 
 
-export function TreeView({ node, depth = 0 }: { node: any; depth?: number }) {
+export function TreeView({ node, depth = 0 }: { node: FileTree; depth?: number }) {
   return (
     <>
       {Object.entries(node).map(([name, value]) => {
@@ -40,8 +48,7 @@ export function TreeView({ node, depth = 0 }: { node: any; depth?: number }) {
               <span>{name}</span>
             </div>
 
-            {/* Render children recursively */}
-            {!isFile && <TreeView node={value} depth={depth + 1} />}
+            {!isFile && value && <TreeView node={value} depth={depth + 1} />}
           </div>
         );
       })}
@@ -58,4 +65,3 @@ export function FileTreeRenderer({ tree }: { tree: string[] }) {
     </div>
   );
 }
-
