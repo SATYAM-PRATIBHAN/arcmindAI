@@ -27,7 +27,7 @@ const pricingPlans = [
       text: "Get started",
       variant: "outline" as const,
     },
-    link: "/signup"
+    link: "/signup",
   },
   {
     name: "Startup",
@@ -35,7 +35,7 @@ const pricingPlans = [
       text: "Try Pro",
       variant: "outline" as const,
     },
-    link: "/pricing"
+    link: "/pricing",
   },
   {
     name: "Enterprise",
@@ -43,7 +43,7 @@ const pricingPlans = [
       text: "Get a demo",
       variant: "outline" as const,
     },
-    link: "/contact"
+    link: "/contact",
   },
 ];
 

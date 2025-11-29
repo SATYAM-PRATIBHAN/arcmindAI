@@ -87,6 +87,7 @@ export const GenerationScalarFieldEnum = {
   updatedAt: 'updatedAt',
   userInput: 'userInput',
   generatedOutput: 'generatedOutput',
+  frontendData: 'frontendData',
   userId: 'userId'
 } as const
 

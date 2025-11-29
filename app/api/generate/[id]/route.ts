@@ -352,7 +352,6 @@ User feedback/input for update: ${userInput}`),
     }
 
     const finalAIresponse = newGeneratedOutput.content;
-    console.log(finalAIresponse);
 
     // Step 1: Convert response to string
     const raw =
