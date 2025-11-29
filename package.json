@@ -19,7 +19,7 @@
     "@google/genai": "^1.28.0",
     "@hookform/resolvers": "^5.2.2",
     "@langchain/core": "^1.0.2",
-    "@langchain/google-genai": "^1.0.0",
+    "@langchain/google-genai": "^1.0.2",
     "@langchain/openai": "^1.1.2",
     "@prisma/client": "^6.18.0",
     "@radix-ui/react-accordion": "^1.2.12",
