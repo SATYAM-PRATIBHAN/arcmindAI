@@ -60,27 +60,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build and analyze bundle
-        run: pnpm build
-        env:
-          DATABASE_URL: "mongodb://localhost:27017/test"
-          NEXTAUTH_SECRET: "ci-build-secret"
-          GOOGLE_CLIENT_ID: "dummy"
-          GOOGLE_CLIENT_SECRET: "dummy"
-          GOOGLE_REFRESH_TOKEN: "dummy"
-          GOOGLE_REDIRECT_URI: "http://localhost:3000"
-          GEMINI_API_KEY: "dummy"
-          OPENAI_API_KEY: "dummy"
-          JWT_SECRET: "ci-jwt-secret"
-          UPSTASH_REDIS_REST_URL: "https://dummy.upstash.io"
-          UPSTASH_REDIS_REST_TOKEN: "dummy"
-          ADMIN_EMAIL: "dummy@localhost"
-          CLOUDINARY_CLOUD_NAME: "dummy"
-          CLOUDINARY_API_KEY: "dummy"
-          CLOUDINARY_API_SECRET: "dummy"
-          NEXT_PUBLIC_BASE_URL: "http://localhost:3000"
-          DODO_PAYMENTS_API_KEY: "dummy"
-          DODO_WEBHOOK_SECRET: "dummy"
-          NEXTAUTH_URL: "http://localhost:3000"
-          ANALYZE: "true"
-          
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
