@@ -110,11 +110,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userId) {
+      httpRequestsTotal.inc({ route, method, status_code: "400" });
       apiGatewayErrorsTotal.inc({ status_code: "400" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
       return NextResponse.json(
         { error: "Missing userId. You must be logged in to generate." },
         { status: 400 },

@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     siteName: "ArcMind AI",
     images: [
       {
-        url: "",
+        url: "/ogimage.webp",
         width: 1200,
         height: 630,
         alt: "ArcMind AI - AI-Powered System Design Generator",
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     title: "ArcMind AI - AI-Powered System Design Generator",
     description:
       "Generate structured system designs using AI. Describe your requirements and get detailed architecture diagrams, components, and tech stacks powered by Gemini and Langchain.",
-    images: [""],
+    images: ["/ogimage.webp"],
     creator: "@s_pratibhan",
   },
 };

@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Code2 } from "lucide-react";
+import Link from "next/link";
 
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
@@ -199,12 +202,20 @@ export default function GenerationPage() {
           <CardTitle className="text-2xl">
             {generatedData.Explanation.systemName}
           </CardTitle>
-          <DeleteDialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline">
+              <Link href={`/generate/${id}/frontendStructure`}>
+                <Code2 className="mr-2 h-4 w-4" />
+                Frontend Structure
+              </Link>
+            </Button>
+            <DeleteDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+              onDelete={handleDelete}
+              isDeleting={isDeleting}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-gray-600">{generatedData.Explanation.summary}</p>

@@ -46,6 +46,7 @@ export type GenerationCountAggregateOutputType = {
   updatedAt: number
   userInput: number
   generatedOutput: number
+  frontendData: number
   userId: number
   _all: number
 }
@@ -73,6 +74,7 @@ export type GenerationCountAggregateInputType = {
   updatedAt?: true
   userInput?: true
   generatedOutput?: true
+  frontendData?: true
   userId?: true
   _all?: true
 }
@@ -155,6 +157,7 @@ export type GenerationGroupByOutputType = {
   updatedAt: Date
   userInput: string
   generatedOutput: runtime.JsonValue
+  frontendData: runtime.JsonValue | null
   userId: string
   _count: GenerationCountAggregateOutputType | null
   _min: GenerationMinAggregateOutputType | null
@@ -185,6 +188,7 @@ export type GenerationWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Generation"> | Date | string
   userInput?: Prisma.StringFilter<"Generation"> | string
   generatedOutput?: Prisma.JsonFilter<"Generation">
+  frontendData?: Prisma.JsonNullableFilter<"Generation">
   userId?: Prisma.StringFilter<"Generation"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -195,6 +199,7 @@ export type GenerationOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   userInput?: Prisma.SortOrder
   generatedOutput?: Prisma.SortOrder
+  frontendData?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -208,6 +213,7 @@ export type GenerationWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Generation"> | Date | string
   userInput?: Prisma.StringFilter<"Generation"> | string
   generatedOutput?: Prisma.JsonFilter<"Generation">
+  frontendData?: Prisma.JsonNullableFilter<"Generation">
   userId?: Prisma.StringFilter<"Generation"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
@@ -218,6 +224,7 @@ export type GenerationOrderByWithAggregationInput = {
   updatedAt?: Prisma.SortOrder
   userInput?: Prisma.SortOrder
   generatedOutput?: Prisma.SortOrder
+  frontendData?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   _count?: Prisma.GenerationCountOrderByAggregateInput
   _max?: Prisma.GenerationMaxOrderByAggregateInput
@@ -233,6 +240,7 @@ export type GenerationScalarWhereWithAggregatesInput = {
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Generation"> | Date | string
   userInput?: Prisma.StringWithAggregatesFilter<"Generation"> | string
   generatedOutput?: Prisma.JsonWithAggregatesFilter<"Generation">
+  frontendData?: Prisma.JsonNullableWithAggregatesFilter<"Generation">
   userId?: Prisma.StringWithAggregatesFilter<"Generation"> | string
 }
 
@@ -242,6 +250,7 @@ export type GenerationCreateInput = {
   updatedAt?: Date | string
   userInput: string
   generatedOutput: runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | null
   user: Prisma.UserCreateNestedOneWithoutGenerationsInput
 }
 
@@ -251,6 +260,7 @@ export type GenerationUncheckedCreateInput = {
   updatedAt?: Date | string
   userInput: string
   generatedOutput: runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | null
   userId: string
 }
 
@@ -259,6 +269,7 @@ export type GenerationUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
   user?: Prisma.UserUpdateOneRequiredWithoutGenerationsNestedInput
 }
 
@@ -267,6 +278,7 @@ export type GenerationUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -276,6 +288,7 @@ export type GenerationCreateManyInput = {
   updatedAt?: Date | string
   userInput: string
   generatedOutput: runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | null
   userId: string
 }
 
@@ -284,6 +297,7 @@ export type GenerationUpdateManyMutationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
 }
 
 export type GenerationUncheckedUpdateManyInput = {
@@ -291,6 +305,7 @@ export type GenerationUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -310,6 +325,7 @@ export type GenerationCountOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   userInput?: Prisma.SortOrder
   generatedOutput?: Prisma.SortOrder
+  frontendData?: Prisma.SortOrder
   userId?: Prisma.SortOrder
 }
 
@@ -377,6 +393,7 @@ export type GenerationCreateWithoutUserInput = {
   updatedAt?: Date | string
   userInput: string
   generatedOutput: runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | null
 }
 
 export type GenerationUncheckedCreateWithoutUserInput = {
@@ -385,6 +402,7 @@ export type GenerationUncheckedCreateWithoutUserInput = {
   updatedAt?: Date | string
   userInput: string
   generatedOutput: runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | null
 }
 
 export type GenerationCreateOrConnectWithoutUserInput = {
@@ -421,6 +439,7 @@ export type GenerationScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Generation"> | Date | string
   userInput?: Prisma.StringFilter<"Generation"> | string
   generatedOutput?: Prisma.JsonFilter<"Generation">
+  frontendData?: Prisma.JsonNullableFilter<"Generation">
   userId?: Prisma.StringFilter<"Generation"> | string
 }
 
@@ -430,6 +449,7 @@ export type GenerationCreateManyUserInput = {
   updatedAt?: Date | string
   userInput: string
   generatedOutput: runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | null
 }
 
 export type GenerationUpdateWithoutUserInput = {
@@ -437,6 +457,7 @@ export type GenerationUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
 }
 
 export type GenerationUncheckedUpdateWithoutUserInput = {
@@ -444,6 +465,7 @@ export type GenerationUncheckedUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
 }
 
 export type GenerationUncheckedUpdateManyWithoutUserInput = {
@@ -451,6 +473,7 @@ export type GenerationUncheckedUpdateManyWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userInput?: Prisma.StringFieldUpdateOperationsInput | string
   generatedOutput?: runtime.InputJsonValue | runtime.InputJsonValue
+  frontendData?: runtime.InputJsonValue | runtime.InputJsonValue | null
 }
 
 
@@ -461,6 +484,7 @@ export type GenerationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   updatedAt?: boolean
   userInput?: boolean
   generatedOutput?: boolean
+  frontendData?: boolean
   userId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["generation"]>
@@ -473,10 +497,11 @@ export type GenerationSelectScalar = {
   updatedAt?: boolean
   userInput?: boolean
   generatedOutput?: boolean
+  frontendData?: boolean
   userId?: boolean
 }
 
-export type GenerationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "updatedAt" | "userInput" | "generatedOutput" | "userId", ExtArgs["result"]["generation"]>
+export type GenerationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "updatedAt" | "userInput" | "generatedOutput" | "frontendData" | "userId", ExtArgs["result"]["generation"]>
 export type GenerationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -492,6 +517,7 @@ export type $GenerationPayload<ExtArgs extends runtime.Types.Extensions.Internal
     updatedAt: Date
     userInput: string
     generatedOutput: runtime.JsonValue
+    frontendData: runtime.JsonValue | null
     userId: string
   }, ExtArgs["result"]["generation"]>
   composites: {}
@@ -891,6 +917,7 @@ export interface GenerationFieldRefs {
   readonly updatedAt: Prisma.FieldRef<"Generation", 'DateTime'>
   readonly userInput: Prisma.FieldRef<"Generation", 'String'>
   readonly generatedOutput: Prisma.FieldRef<"Generation", 'Json'>
+  readonly frontendData: Prisma.FieldRef<"Generation", 'Json'>
   readonly userId: Prisma.FieldRef<"Generation", 'String'>
 }
     
