@@ -8,6 +8,7 @@ import {
   apiGatewayErrorsTotal,
   databaseQueryDurationSeconds,
 } from "@/lib/metrics";
+import { Plan } from "@/app/generated/prisma/enums";
 
 type PaymentSucceededPayload = {
   type: string;
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
 
   const userId = metadata.userId;
   const planName = (metadata.planName ?? "pro").toLowerCase();
-  const billingPeriod = metadata.billingPeriod ?? "monthly";
+  // const billingPeriod = metadata.billingPeriod ?? "monthly";
 
   let currentPeriodEnd: Date | null = null;
   const subscriptionId = data.subscription_id ?? null;
@@ -107,11 +108,13 @@ export async function POST(req: NextRequest) {
 
   // 4. Update user in DB
   try {
-    const dbEnd = databaseQueryDurationSeconds.startTimer({ operation: "user_update" });
+    const dbEnd = databaseQueryDurationSeconds.startTimer({
+      operation: "user_update",
+    });
     await db.user.update({
       where: { id: userId },
       data: {
-        plan: planName as any, // Type assertion—change as appropriate to match your Enum type
+        plan: planName as Plan, // Cast planName to your Plan enum type to fix type error
         subscriptionId: subscriptionId ?? data.payment_id,
         subscriptionStatus: "active",
         currentPeriodEnd,

@@ -87,8 +87,11 @@ export const useFrontendStructure = (
 
       setData(result.data);
       return result.data;
-    } catch (err: any) {
-      const errorMessage = err.message || "Something went wrong";
+    } catch (err) {
+      const errorMessage =
+        (err instanceof Error && err.message) ||
+        (typeof err === "string" && err) ||
+        "Something went wrong";
       setError(errorMessage);
       return null;
     } finally {

@@ -1,0 +1,53 @@
+# Labels for auto-labeling PRs based on file changes
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/**"
+          - "components/**"
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/api/**"
+          - "actions/**"
+
+hooks:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "hooks/**"
+
+database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "prisma/**"
+
+ai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "lib/ai/**"
+          - "app/(protected)/generate/**"
+
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.config.*"
+          - "tsconfig.json"
+          - ".env.example"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "package.json"
+          - "pnpm-lock.yaml"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"

@@ -48,7 +48,9 @@ export async function POST(
       );
     }
 
-    const dbEndUser = databaseQueryDurationSeconds.startTimer({ operation: "user_find" });
+    const dbEndUser = databaseQueryDurationSeconds.startTimer({
+      operation: "user_find",
+    });
     const user = await db.user.findFirst({
       where: {
         // @ts-expect-error id is added to the session in the session callback
@@ -86,7 +88,9 @@ export async function POST(
 
     const { id: generationId } = await params;
 
-    const dbEndGen = databaseQueryDurationSeconds.startTimer({ operation: "generation_find" });
+    const dbEndGen = databaseQueryDurationSeconds.startTimer({
+      operation: "generation_find",
+    });
     const generation = await db.generation.findFirst({
       where: {
         id: generationId,
@@ -106,14 +110,14 @@ export async function POST(
       });
     }
 
-    if(generation.frontendData) {
+    if (generation.frontendData) {
       cacheHitsTotal.inc();
       httpRequestsTotal.inc({ route, method, status_code: "200" });
       end();
       return NextResponse.json({
         success: true,
         data: generation.frontendData,
-      })
+      });
     }
 
     const messages = [
@@ -127,6 +131,9 @@ Generate a complete frontend architecture for this backend system.`),
     const aiEnd = aiGenerationDurationSeconds.startTimer();
 
     const response = await openAiLLM.invoke(messages);
+
+    // @ts-expect-error id is added to the session in the session callback
+    userGenerationsTotal.inc({ user_id: session.user.id });
 
     let content: string;
     if (typeof response.content === "string") {
@@ -146,11 +153,16 @@ Generate a complete frontend architecture for this backend system.`),
     }
 
     aiGenerationSuccessTotal.inc();
+    // @ts-expect-error id is added to the session in the session callback
+    userGenerationsTotal.inc({ user_id: session.user.id });
     aiEnd();
-    aiGenerationOutputSizeBytes.set(Buffer.byteLength(content, 'utf8'));
+    aiGenerationOutputSizeBytes.set(Buffer.byteLength(content, "utf8"));
 
     const frontendArchitecture = JSON.parse(cleanJsonOutput(content));
 
+    const dbEndGenUp = databaseQueryDurationSeconds.startTimer({
+      operation: "generation_find",
+    });
     await db.generation.update({
       where: {
         id: generationId,
@@ -159,19 +171,26 @@ Generate a complete frontend architecture for this backend system.`),
         frontendData: frontendArchitecture,
       },
     });
+    dbEndGenUp();
+
+    userLastActivityTimestamp.set(
+      // @ts-expect-error id is added to the session in the session callback
+      { user_id: session.user.id },
+      Date.now() / 1000,
+    );
 
     return NextResponse.json({
       success: true,
       data: frontendArchitecture,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Frontend structure generation error:", err);
     aiGenerationFailureTotal.inc();
     httpRequestsTotal.inc({ route, method, status_code: "500" });
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     end();
     return NextResponse.json(
-      { success: false, message: err?.message || "Internal Server Error" },
+      { success: false, message: "Internal Server Error" },
       { status: 500 },
     );
   }

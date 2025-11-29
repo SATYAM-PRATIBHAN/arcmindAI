@@ -37,23 +37,27 @@ Generate structured system designs using AI. Describe your requirements and get 
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/SATYAM-PRATIBHAN/arcmindAI.git
 cd arcmindAI
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables:
-Copy `.env.example` to `.env.local` or `.env` and fill in the required values:
+   Copy `.env.example` to `.env.local` or `.env` and fill in the required values:
+
 ```bash
 cp .env.example .env
 ```
 
 Required environment variables:
+
 - `DATABASE_URL`: MongoDB connection string (example: `mongodb+srv://<user>:<password>@cluster.mongodb.net/dbname`)
 - `NEXTAUTH_SECRET`: A random string used for NextAuth session encryption
 - `GOOGLE_CLIENT_ID`: Google OAuth 2.0 Client ID (for login)
@@ -71,12 +75,14 @@ Required environment variables:
 - `NEXT_PUBLIC_BASE_URL`: Public base URL of the deployed app
 
 4. Set up the database:
+
 ```bash
 pnpm prisma generate
 pnpm prisma db push
 ```
 
 5. Run the development server:
+
 ```bash
 pnpm dev
 ```
@@ -86,21 +92,25 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## Usage
 
 ### Authentication
+
 - Sign up with email verification
 - Login with email/password
 - OTP verification for account security
 - Password reset functionality
 
 ### AI Generation
+
 - Navigate to the generate page
 - Describe your system requirements in natural language
 - Receive structured system design with architecture diagrams, components, and tech stack recommendations
 
 ### History
+
 - View all previous generations
 - Filter and search through your design history
 
 ### Metrics
+
 - Access metrics dashboard for generation statistics
 - Monitor AI performance and user activity
 
