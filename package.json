@@ -53,7 +53,7 @@
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.548.0",
     "mermaid": "^11.12.1",
-    "mongoose": "^8.19.2",
+    "mongoose": "^9.0.0",
     "motion": "^12.23.24",
     "next": "16.0.0",
     "next-auth": "^4.24.11",
