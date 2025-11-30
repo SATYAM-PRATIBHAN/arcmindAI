@@ -100,11 +100,18 @@ export async function POST(req: NextRequest) {
     userSignupsTotal.inc();
 
     // Send OTP email
-    await sendMail({
-      to: email,
-      subject: "Verify your email - ArcMindAI",
-      html: otpEmailTemplate(otp, username),
-    });
+    try {
+      await sendMail({
+        to: email,
+        subject: "Verify your email - ArcMindAI",
+        html: otpEmailTemplate(otp, username),
+      });
+      console.log(`OTP email sent successfully to ${email}`);
+    } catch (emailError) {
+      console.error(`Failed to send OTP email to ${email}:`, emailError);
+      // Optionally, you can choose to fail the signup or continue
+      // For now, log and continue, but in production, consider failing
+    }
 
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
