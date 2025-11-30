@@ -51,11 +51,18 @@ export async function POST(req: NextRequest) {
     }
 
     const dbFindStart = Date.now();
-    const existingUser = await db.user.findFirst({
-      where: {
-        email,
-      },
-    });
+    let existingUser;
+    try {
+      existingUser = await db.user.findFirst({
+        where: {
+          email,
+        },
+      });
+      console.log(`DB findFirst for email ${email}: ${existingUser ? 'found' : 'not found'}`);
+    } catch (dbError) {
+      console.error(`DB findFirst error for email ${email}:`, dbError);
+      throw dbError;
+    }
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
       (Date.now() - dbFindStart) / 1000,
