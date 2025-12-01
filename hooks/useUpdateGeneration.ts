@@ -27,6 +27,9 @@ export function useUpdateGeneration() {
       const response = await axios.put(
         `${DOC_ROUTES.API.GENERATE.ROOT}/${generationId}`,
         { userInput },
+        {
+          validateStatus: (status) => status < 500, // Don't throw for 4xx errors, only for 5xx
+        },
       );
 
       if (response.status >= 200 && response.status < 300) {
@@ -36,13 +39,17 @@ export function useUpdateGeneration() {
         const errorMessage =
           response.data?.message ||
           response.data?.error ||
-          "Failed to update generation";
+          "Something went wrong";
         setError(errorMessage);
         return response.data;
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An unexpected error occurred";
+      let errorMessage = "Something went wrong";
+      if (axios.isAxiosError(err) && err.response) {
+        errorMessage = err.response.data?.message || err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
       return null;
     } finally {

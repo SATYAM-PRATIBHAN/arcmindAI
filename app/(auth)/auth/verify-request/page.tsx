@@ -1,9 +1,14 @@
+"use client";
+
 import { OTPForm } from "@/components/main/otpForm";
 import Image from "next/image";
 import Link from "next/link";
 import { DOC_ROUTES } from "@/lib/routes";
+import { useSearchParams } from "next/navigation";
 
 export default function VerifyRequestPage() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
   return (
     <section className="flex h-screen bg-white text-black">
       {/* Left Section (Form) */}
@@ -23,8 +28,11 @@ export default function VerifyRequestPage() {
           <h2 className="text-4xl font-light text-black mb-2">
             Verify your email
           </h2>
+          <p className="text-gray-600 text-sm">
+            We sent the 6-digit code to: <span className="font-medium">{email}</span>
+          </p>
           <p className="text-gray-600 text-sm mb-8">
-            Enter the 6-digit code we sent to your email to continue.
+            Please ensure the email you want to register is correct.
           </p>
 
           <OTPForm />

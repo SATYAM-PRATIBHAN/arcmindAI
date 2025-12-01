@@ -91,7 +91,7 @@ export default function GenerationPage() {
       setResponseText("");
       setIsActionDialogOpen(false);
     } else {
-      console.error("Failed to update generation:", updateError);
+      console.log("Failed to update generation:", updateError);
     }
   };
 

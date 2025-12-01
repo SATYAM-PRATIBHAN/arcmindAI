@@ -283,16 +283,16 @@ export async function PUT(
       );
     }
 
-    if (user?.plan != "pro" || "enterprise") {
+    if (user?.plan !== "pro" && user?.plan !== "enterprise") {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
         (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({
-        status: 401,
+        success: false,
         message: "Purchase the pro version to use this feature",
-      });
+      }, { status: 401 });
     }
 
     const { id: generationId } = await params;

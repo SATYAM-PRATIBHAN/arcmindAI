@@ -29,12 +29,13 @@ export function useAskDoubt() {
         },
       );
 
-      if (response.status < 200 || response.status >= 300) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const data = response.data;
+      if (data.success) {
+        return data;
+      } else {
+        setError(data.message || "An error occurred");
+        return null;
       }
-
-      const data: DoubtResponse = response.data;
-      return data;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An error occurred";
