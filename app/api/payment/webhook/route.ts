@@ -8,7 +8,7 @@ import {
   apiGatewayErrorsTotal,
   databaseQueryDurationSeconds,
 } from "@/lib/metrics";
-import { Plan } from "@/app/generated/prisma/enums";
+import { Plan } from "@prisma/client";
 
 type PaymentSucceededPayload = {
   type: string;
