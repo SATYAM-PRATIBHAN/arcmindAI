@@ -27,8 +27,13 @@ export function buildTree(paths: string[]): FileTree {
   return tree;
 }
 
-
-export function TreeView({ node, depth = 0 }: { node: FileTree; depth?: number }) {
+export function TreeView({
+  node,
+  depth = 0,
+}: {
+  node: FileTree;
+  depth?: number;
+}) {
   return (
     <>
       {Object.entries(node).map(([name, value]) => {

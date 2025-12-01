@@ -181,7 +181,8 @@ User Question: ${question}`),
       { route },
       (Date.now() - startTime) / 1000,
     );
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, message: errorMessage },
       { status: 500 },

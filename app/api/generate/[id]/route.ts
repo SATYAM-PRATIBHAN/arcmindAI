@@ -289,10 +289,13 @@ export async function PUT(
         { route },
         (Date.now() - startTime) / 1000,
       );
-      return NextResponse.json({
-        success: false,
-        message: "Purchase the pro version to use this feature",
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Purchase the pro version to use this feature",
+        },
+        { status: 401 },
+      );
     }
 
     const { id: generationId } = await params;

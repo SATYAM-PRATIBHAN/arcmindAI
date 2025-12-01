@@ -58,7 +58,9 @@ export async function POST(req: NextRequest) {
           email,
         },
       });
-      console.log(`DB findFirst for email ${email}: ${existingUser ? 'found' : 'not found'}`);
+      console.log(
+        `DB findFirst for email ${email}: ${existingUser ? "found" : "not found"}`,
+      );
     } catch (dbError) {
       console.error(`DB findFirst error for email ${email}:`, dbError);
       throw dbError;
