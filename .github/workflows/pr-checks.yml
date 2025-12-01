@@ -18,7 +18,7 @@ jobs:
       deps: ${{ steps.filter.outputs.deps }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Detect file changes
         uses: dorny/paths-filter@v3
@@ -44,7 +44,7 @@ jobs:
     if: needs.changes-detection.outputs.src == 'true' || needs.changes-detection.outputs.deps == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
