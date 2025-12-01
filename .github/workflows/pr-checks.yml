@@ -44,10 +44,10 @@ jobs:
     if: needs.changes-detection.outputs.src == 'true' || needs.changes-detection.outputs.deps == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v3
         with:
           version: 9.1.0
 
