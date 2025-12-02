@@ -113,10 +113,10 @@ flowchart TD
     A["Client (Web/Mobile)"] --> B{API Gateway}
 
     subgraph Microservices
-        C[User Service] --> D((MongoDB))
-        E[Catalog Service] --> F((PostgreSQL))
-        G[Order Service] --> H(RabbitMQ)
-        I[Payment Service] --> J((Stripe API))
+        C[User Service] --> D["PostgreSQL (User Data)"]
+        E[Agent Management Service] --> F["MongoDB (Agent Configs)"]
+        G[AI Engine Service] --> H["Redis (Task Results)"]
+        I[Knowledge Base Service] --> J["Elasticsearch (Knowledge Index)"]
     end
 
     B --> C
@@ -124,13 +124,14 @@ flowchart TD
     B --> G
     B --> I
 
-    G --> K[Notification Service]
-    K --> L[Email/SMS]
+    G --> K["Task Queue (e.g., RabbitMQ)"]
+    K --> G
 
     style D fill:#f9f,stroke:#333,stroke-width:2px
     style F fill:#f9f,stroke:#333,stroke-width:2px
+    style H fill:#f9f,stroke:#333,stroke-width:2px
     style J fill:#f9f,stroke:#333,stroke-width:2px
 
     classDef database fill:#ccf,stroke:#333,stroke-width:2px
-    class D,F,J database 
+    class D,F,H,J database
 `;
