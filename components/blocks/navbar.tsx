@@ -322,6 +322,17 @@ export const Navbar = () => {
             ),
           )}
         </nav>
+
+        {/* Mobile Auth Buttons */}
+        {!isAuthenticated && (
+          <div className="pt-4 border-t">
+            <Link href={DOC_ROUTES.AUTH.LOGIN}>
+              <Button className="w-full cursor-pointer" variant="outline">
+                <span className="relative z-10">Login</span>
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

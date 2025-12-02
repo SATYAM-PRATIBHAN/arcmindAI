@@ -3,7 +3,6 @@ export const DOC_ROUTES = {
     GITHUB: "https://github.com/SATYAM-PRATIBHAN/arcmindAI",
     LINKEDIN: "https://www.linkedin.com/in/satyampratibhan/",
     X: "https://x.com/s_pratibhan",
-    PORTFOLIO: "https://satyampratibhan.vercel.app/",
   },
   API: {
     AUTH: {

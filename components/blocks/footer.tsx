@@ -20,7 +20,6 @@ export function Footer() {
   const social = [
     { name: "X", href: DOC_ROUTES.SOCIAL.X },
     { name: "LinkedIn", href: DOC_ROUTES.SOCIAL.LINKEDIN },
-    { name: "Portfolio", href: DOC_ROUTES.SOCIAL.PORTFOLIO },
   ];
 
   const legal = [{ name: "Privacy Policy", href: DOC_ROUTES.PRIVACY_POLICY }];
