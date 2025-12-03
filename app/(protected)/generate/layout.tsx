@@ -99,7 +99,7 @@ export default function GenerateLayout({
           <div className="flex gap-4">
             <Link
               href={DOC_ROUTES.HOME}
-              className="text-sm text-gray-600 hover:text-black transition underline"
+              className="text-xs md:text-sm text-gray-600 hover:text-black transition underline"
             >
               ← Back to Home
             </Link>
