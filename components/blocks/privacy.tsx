@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
-    <main className="max-w-4xl mx-auto px-6 py-20 lg:py-42 text-gray-800">
+    <main className="max-w-4xl mx-auto px-6 py-28 lg:py-42 text-gray-800">
       <motion.h1
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

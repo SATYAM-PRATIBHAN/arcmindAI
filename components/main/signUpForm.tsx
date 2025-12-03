@@ -11,12 +11,14 @@ import Image from "next/image";
 import { DOC_ROUTES } from "@/lib/routes";
 import Link from "next/link";
 
-type FormErrors = Partial<Record<"email" | "username" | "password", string>>;
+type FormErrors = Partial<Record<"email" | "username" | "password" | "confirmPassword", string>>;
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState<FormErrors>({}); // 🧠 error state
@@ -43,6 +45,13 @@ const SignUpForm = () => {
       return;
     }
 
+    // Frontend validation for confirm password
+    if (password !== confirmPassword) {
+      setErrors({ confirmPassword: "Passwords do not match" });
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await axios.post(DOC_ROUTES.API.AUTH.SIGNUP, {
         email,
@@ -61,7 +70,7 @@ const SignUpForm = () => {
   };
 
   return (
-    <section className="flex h-screen bg-white text-black">
+    <section className="flex h-screen mt-10 lg:mt-0 bg-white text-black">
       {/* Left Section (Image) */}
       <div className="hidden md:flex w-1/2 items-center justify-center m-4 rounded-4xl bg-gray-200">
         <Image
@@ -140,6 +149,7 @@ const SignUpForm = () => {
                   placeholder="••••••••••••••••••••••"
                   className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition pr-12"
                   required
+                  onPaste={(e) => e.preventDefault()}
                 />
                 <button
                   type="button"
@@ -151,6 +161,34 @@ const SignUpForm = () => {
               </div>
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Confirm Password Field */}
+            <div>
+              <label className="block text-xs text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••••••••••••••••"
+                  className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition pr-12"
+                  required
+                  onCopy={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
               )}
             </div>
 

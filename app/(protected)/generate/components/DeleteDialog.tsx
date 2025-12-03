@@ -31,7 +31,7 @@ export default function DeleteDialog({
           Delete Generation
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Confirm Deletion</DialogTitle>
           <DialogDescription>
@@ -39,12 +39,12 @@ export default function DeleteDialog({
             be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:gap-0">
           <Button
             variant="outline"
             disabled={isDeleting}
             onClick={() => onOpenChange(false)}
-            className="cursor-pointer"
+            className="w-full sm:w-auto cursor-pointer"
           >
             Cancel
           </Button>
@@ -52,7 +52,7 @@ export default function DeleteDialog({
             variant="destructive"
             onClick={onDelete}
             disabled={isDeleting}
-            className="cursor-pointer"
+            className="w-full sm:w-auto cursor-pointer"
           >
             {isDeleting ? "Deleting..." : "Confirm Delete"}
           </Button>

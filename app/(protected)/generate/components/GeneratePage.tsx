@@ -26,7 +26,7 @@ export default function GeneratePage() {
   const [userInput, setUserInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
-    null,
+    null
   );
 
   function cleanMermaidString(input: string) {
@@ -66,7 +66,7 @@ export default function GeneratePage() {
         console.error("Raw output length:", result.output.length);
         console.error(
           "Raw output preview:",
-          result.output.substring(0, 500) + "...",
+          result.output.substring(0, 500) + "..."
         );
         setGeneratedData(null);
       }
@@ -114,7 +114,7 @@ export default function GeneratePage() {
       {generatedData && !isLoading && (
         <div className="space-y-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-2xl">
                 {generatedData.Explanation.systemName}
               </CardTitle>
@@ -126,6 +126,7 @@ export default function GeneratePage() {
             </CardContent>
           </Card>
 
+          {/* Sections */}
           <section>
             <h2 className="text-2xl font-bold mb-4">Microservices</h2>
             <MicroservicesSection
@@ -157,12 +158,16 @@ export default function GeneratePage() {
             />
           </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
-            <MermaidDiagram
-              chart={cleanMermaidString(generatedData["Architecture Diagram"])}
-            />
-          </section>
+          {generatedData["Architecture Diagram"] && (
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
+              <MermaidDiagram
+                chart={cleanMermaidString(
+                  generatedData["Architecture Diagram"]
+                )}
+              />
+            </section>
+          )}
         </div>
       )}
     </div>

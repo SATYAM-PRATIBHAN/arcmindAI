@@ -202,8 +202,13 @@ export default function GenerationPage() {
           <CardTitle className="text-2xl">
             {generatedData.Explanation.systemName}
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline">
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">{generatedData.Explanation.summary}</p>
+        </CardContent>
+
+        <div className="flex flex-col gap-2 mx-4 sm:flex-row sm:items-center">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href={`/generate/${id}/frontendStructure`}>
                 <Code2 className="mr-2 h-4 w-4" />
                 Frontend Structure
@@ -216,10 +221,6 @@ export default function GenerationPage() {
               isDeleting={isDeleting}
             />
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">{generatedData.Explanation.summary}</p>
-        </CardContent>
       </Card>
 
       {/* Sections */}
