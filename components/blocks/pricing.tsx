@@ -37,7 +37,7 @@ const plans = [
       "Download complete JSON + diagram files",
       "Full architecture history",
       "Email delivery of system designs",
-      "Priority AI model access",
+      "Get defined Frontend Structure",
     ],
   },
   {
