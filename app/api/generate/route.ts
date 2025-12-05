@@ -78,8 +78,8 @@ export async function POST(req: NextRequest) {
 
     // 2. Get user limit based on plan
     const planLimits = {
-      free: 3,
-      pro: 100,
+      free: 10,
+      pro: 200,
       enterprise: 9999, // or unlimited
     };
 

@@ -21,7 +21,7 @@ const plans = [
     yearlyPrice: "$0",
     description: "Perfect for individuals exploring AI architecture design.",
     features: [
-      "AI-powered architecture generation (3 total)",
+      "AI-powered architecture generation (10 total)",
       "Basic tech stack visualization",
       "Download generated diagrams (limited)",
     ],
