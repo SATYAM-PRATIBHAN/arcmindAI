@@ -10,6 +10,20 @@ export default function Hero() {
   return (
     <section className="relative flex flex-col items-center justify-center min-h-screen max-w-5xl mx-auto text-center px-6 my-16 md:my-24 lg:my-48 overflow-hidden">
       {/* Heading */}
+      <a
+        href="https://www.producthunt.com/products/arcmind-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-arcmind-ai"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1045558&theme=light&t=1764930733253"
+          alt="Arcmind AI - Design Smarter Systems using AI | Product Hunt"
+          style={{ width: 250, height: 54 }}
+          width={250}
+          height={54}
+          className="mb-4"
+        />
+      </a>
       <motion.h1
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
