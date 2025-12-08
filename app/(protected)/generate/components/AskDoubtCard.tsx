@@ -25,7 +25,6 @@ interface AskDoubtCardProps {
   onOpenChange: (open: boolean) => void;
   doubtText: string;
   onDoubtTextChange: (text: string) => void;
-  onSubmit: (question?: string) => void;
   generationId: string;
 }
 
@@ -34,7 +33,6 @@ export default function AskDoubtCard({
   onOpenChange,
   doubtText,
   onDoubtTextChange,
-  onSubmit,
   generationId,
 }: AskDoubtCardProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -86,9 +84,6 @@ export default function AskDoubtCard({
       };
       setMessages((prev) => [...prev, errorMessage]);
     }
-
-    // Call the onSubmit handler for any additional logic
-    await onSubmit(question);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {

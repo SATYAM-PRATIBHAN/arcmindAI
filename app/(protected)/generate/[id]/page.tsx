@@ -50,6 +50,8 @@ export default function GenerationPage() {
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
+  const [githubGeneration, setGithubGeneration] = useState<string | null>(null);
+  const [isGithubRepo, setIsGithubRepo] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<
@@ -65,13 +67,25 @@ export default function GenerationPage() {
       if (id && typeof id === "string") {
         const result = await getGenerationById(id);
         if (result && result.success) {
-          try {
-            setGeneratedData(result.output.generatedOutput as ArchitectureData);
-          } catch {
+          // Check if this is a GitHub generation
+          if (result.output.githubGeneration) {
+            setGithubGeneration(result.output.githubGeneration);
+            setIsGithubRepo(true);
             setGeneratedData(null);
+          } else {
+            try {
+              setGeneratedData(
+                result.output.generatedOutput as ArchitectureData,
+              );
+              setIsGithubRepo(false);
+              setGithubGeneration(null);
+            } catch {
+              setGeneratedData(null);
+            }
           }
         } else {
           setGeneratedData(null);
+          setGithubGeneration(null);
         }
       }
     };
@@ -80,6 +94,13 @@ export default function GenerationPage() {
 
   const handleUpdate = async () => {
     if (!id || typeof id !== "string" || !responseText.trim()) return;
+
+    // GitHub generations don't support updates yet
+    if (isGithubRepo) {
+      alert("Updates are not yet supported for GitHub repository designs.");
+      return;
+    }
+
     const result = await updateGeneration(id, responseText);
     if (result && result.success) {
       const updatedResult = await getGenerationById(id);
@@ -91,15 +112,8 @@ export default function GenerationPage() {
       setResponseText("");
       setIsActionDialogOpen(false);
     } else {
-      console.log("Failed to update generation:", updateError);
+      console.error("Failed to update generation:", updateError);
     }
-  };
-
-  const handleAskDoubt = async (question?: string) => {
-    // The doubt is handled in the AskDoubtCard component
-    // This function can be used for any additional logic after asking a doubt
-    console.log("Doubt submitted:", question);
-    // Do not reset doubtText here as it's handled in the component
   };
 
   const handleDelete = async () => {
@@ -134,7 +148,7 @@ export default function GenerationPage() {
     );
   }
 
-  if (error || !generatedData) {
+  if (error || (!generatedData && !githubGeneration)) {
     return (
       <div className="container mx-auto p-6">
         <Card
@@ -155,6 +169,67 @@ export default function GenerationPage() {
       </div>
     );
   }
+
+  // Render GitHub generation view
+  if (isGithubRepo && githubGeneration) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <ActionDialog
+          open={isActionDialogOpen}
+          onOpenChange={setIsActionDialogOpen}
+          onSelectUpdate={() => {
+            // For GitHub generations, route to the update page
+            router.push(DOC_ROUTES.IMPORT.UPDATE(id as string));
+            setIsActionDialogOpen(false);
+          }}
+          onSelectDoubt={() => {
+            setSelectedAction("doubt");
+            setIsDoubtChatOpen(true);
+            setIsActionDialogOpen(false);
+          }}
+          onCancel={() => {
+            setSelectedAction(null);
+            setIsActionDialogOpen(false);
+          }}
+        />
+
+        <AskDoubtCard
+          open={isDoubtChatOpen}
+          onOpenChange={setIsDoubtChatOpen}
+          doubtText={doubtText}
+          onDoubtTextChange={setDoubtText}
+          generationId={id as string}
+        />
+
+        <ActionButton onClick={() => setIsActionDialogOpen(true)} />
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-2xl">GitHub Repository Design</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              System architecture generated from GitHub repository analysis
+            </p>
+            <DeleteDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+              onDelete={handleDelete}
+              isDeleting={isDeleting}
+            />
+          </CardContent>
+        </Card>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
+          <MermaidDiagram chart={cleanMermaidString(githubGeneration)} />
+        </section>
+      </div>
+    );
+  }
+
+  // Render regular generation view
+  if (!generatedData) return null; // Safety check
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -191,7 +266,6 @@ export default function GenerationPage() {
         onOpenChange={setIsDoubtChatOpen}
         doubtText={doubtText}
         onDoubtTextChange={setDoubtText}
-        onSubmit={handleAskDoubt}
         generationId={id as string}
       />
 
@@ -208,19 +282,19 @@ export default function GenerationPage() {
         </CardContent>
 
         <div className="flex flex-col gap-2 mx-4 sm:flex-row sm:items-center">
-            <Button asChild variant="outline" className="w-full sm:w-auto">
-              <Link href={`/generate/${id}/frontendStructure`}>
-                <Code2 className="mr-2 h-4 w-4" />
-                Frontend Structure
-              </Link>
-            </Button>
-            <DeleteDialog
-              open={isDeleteDialogOpen}
-              onOpenChange={setIsDeleteDialogOpen}
-              onDelete={handleDelete}
-              isDeleting={isDeleting}
-            />
-          </div>
+          <Button asChild variant="outline" className="w-full sm:w-auto">
+            <Link href={`/generate/${id}/frontendStructure`}>
+              <Code2 className="mr-2 h-4 w-4" />
+              Frontend Structure
+            </Link>
+          </Button>
+          <DeleteDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            onDelete={handleDelete}
+            isDeleting={isDeleting}
+          />
+        </div>
       </Card>
 
       {/* Sections */}

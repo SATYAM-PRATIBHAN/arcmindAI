@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
-import { SystemPrompt } from "@/app/(protected)/generate/utils/promptTemplate";
+import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { db } from "@/lib/prisma";
 import { generationRateLimit } from "@/lib/rateLimit";

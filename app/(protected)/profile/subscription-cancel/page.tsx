@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

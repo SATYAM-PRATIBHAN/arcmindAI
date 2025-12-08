@@ -39,9 +39,23 @@ const ITEMS = [
   },
   { label: "About Us", href: DOC_ROUTES.ABOUT },
   { label: "Pricing", href: DOC_ROUTES.PRICING },
-  { label: "FAQ", href: `${DOC_ROUTES.HOME}#faq` },
   { label: "Contact", href: DOC_ROUTES.CONTACT },
-  { label: "Generate", href: DOC_ROUTES.GENERATE },
+  {
+    label: "Generate",
+    dropdownItems: [
+      {
+        title: "Generate",
+        href: DOC_ROUTES.GENERATE,
+        description: "Generate arcitecture diagrams through single prompt",
+      },
+      {
+        title: "GitHub Import",
+        href: DOC_ROUTES.IMPORT.ROOT,
+        description:
+          "Generate architecture diagrams through your github repository",
+      },
+    ],
+  },
 ];
 
 export const Navbar = () => {

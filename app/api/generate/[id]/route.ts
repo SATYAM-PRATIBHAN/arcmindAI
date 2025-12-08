@@ -18,7 +18,7 @@ import {
 } from "@/lib/metrics";
 import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { UpdateSystemPrompt } from "@/app/(protected)/generate/utils/updateSystemPrompt";
+import { UpdateSystemPrompt } from "@/lib/prompts/updateSystemPrompt";
 
 export async function GET(
   request: NextRequest,

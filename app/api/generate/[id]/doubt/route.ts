@@ -15,7 +15,7 @@ import {
 } from "@/lib/metrics";
 import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { DoubtSystemPrompt } from "@/app/(protected)/generate/utils/askDoubtPrompt";
+import { DoubtSystemPrompt } from "@/lib/prompts/askDoubtPrompt";
 
 export async function POST(
   request: NextRequest,
@@ -139,12 +139,22 @@ export async function POST(
     // Increment AI generation request counter
     aiGenerationRequestsTotal.inc();
 
-    const messages = [
-      new SystemMessage(DoubtSystemPrompt),
-      new HumanMessage(`Architecture Data: ${JSON.stringify(generation.generatedOutput)}
+    let messages;
+    if (generation.githubGeneration) {
+      messages = [
+        new SystemMessage(DoubtSystemPrompt),
+        new HumanMessage(`Architecture Data: ${JSON.stringify(generation.githubGeneration)}
 
 User Question: ${question}`),
-    ];
+      ];
+    } else {
+      messages = [
+        new SystemMessage(DoubtSystemPrompt),
+        new HumanMessage(`Architecture Data: ${JSON.stringify(generation.generatedOutput)}
+
+User Question: ${question}`),
+      ];
+    }
 
     const aiStart = Date.now();
     const aiResponse = await geminiLLM.invoke(messages);

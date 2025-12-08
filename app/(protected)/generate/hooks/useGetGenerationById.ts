@@ -9,6 +9,7 @@ interface Generation {
   userInput: string;
   createdAt: Date;
   generatedOutput: ArchitectureData;
+  githubGeneration?: string | null; // Mermaid diagram for GitHub repos
 }
 
 interface GenerationResponse {

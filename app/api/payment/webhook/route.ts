@@ -121,8 +121,6 @@ export async function POST(req: NextRequest) {
       },
     });
     dbEnd();
-
-    console.log(`✅ Subscription updated for User ${userId}`);
   } catch (error) {
     console.error("❌ Failed to update DB:", error);
   }
