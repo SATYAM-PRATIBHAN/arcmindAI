@@ -1,9 +1,11 @@
-import NextAuth, { AuthOptions } from "next-auth";
+import NextAuth, { AuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
 import bcrypt from "bcrypt";
 import { db } from "@/lib/prisma";
 import { generateAccessToken } from "@/lib/jwt";
 import { loginRateLimitIP, loginRateLimitAccount } from "@/lib/rateLimit";
+import { encryptToken } from "@/lib/encryption";
 import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
@@ -36,7 +38,7 @@ export const authOptions: AuthOptions = {
             apiGatewayErrorsTotal.inc({ status_code: "400" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000,
+              (Date.now() - startTime) / 1000
             );
             throw new Error("Missing email or password");
           }
@@ -53,10 +55,10 @@ export const authOptions: AuthOptions = {
             apiGatewayErrorsTotal.inc({ status_code: "429" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000,
+              (Date.now() - startTime) / 1000
             );
             throw new Error(
-              "Too many login attempts from this IP. Please try again later.",
+              "Too many login attempts from this IP. Please try again later."
             );
           }
 
@@ -66,42 +68,42 @@ export const authOptions: AuthOptions = {
           });
           databaseQueryDurationSeconds.observe(
             { operation: "findUnique" },
-            (Date.now() - dbStart) / 1000,
+            (Date.now() - dbStart) / 1000
           );
 
           if (!user) {
             apiGatewayErrorsTotal.inc({ status_code: "404" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000,
+              (Date.now() - startTime) / 1000
             );
             throw new Error("User not found");
           }
 
           // Rate limit by account (email)
           const accountLimitResult = await loginRateLimitAccount.limit(
-            credentials.email,
+            credentials.email
           );
           if (!accountLimitResult.success) {
             apiGatewayErrorsTotal.inc({ status_code: "429" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000,
+              (Date.now() - startTime) / 1000
             );
             throw new Error(
-              "Too many login attempts for this account. Please try again later.",
+              "Too many login attempts for this account. Please try again later."
             );
           }
 
           const isValid = await bcrypt.compare(
             credentials.password,
-            user.password,
+            user.password
           );
           if (!isValid) {
             apiGatewayErrorsTotal.inc({ status_code: "401" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000,
+              (Date.now() - startTime) / 1000
             );
             throw new Error("Invalid credentials");
           }
@@ -112,7 +114,7 @@ export const authOptions: AuthOptions = {
           // Update user activity
           userLastActivityTimestamp.set(
             { user_id: user.id },
-            Date.now() / 1000,
+            Date.now() / 1000
           );
 
           const accessToken = generateAccessToken({
@@ -123,7 +125,7 @@ export const authOptions: AuthOptions = {
 
           httpRequestDurationSeconds.observe(
             { route },
-            (Date.now() - startTime) / 1000,
+            (Date.now() - startTime) / 1000
           );
 
           return {
@@ -138,6 +140,15 @@ export const authOptions: AuthOptions = {
         }
       },
     }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "read:user user:email repo",
+        },
+      },
+    }),
   ],
 
   pages: {
@@ -149,6 +160,44 @@ export const authOptions: AuthOptions = {
   },
 
   callbacks: {
+    async signIn({ account }) {
+      // Handle GitHub OAuth sign-in
+      if (account?.provider === "github" && account.access_token) {
+        try {
+          // Get the current session to find the logged-in user
+          const session = await getServerSession(authOptions);
+
+          if (session?.user) {
+            // User is already logged in with credentials
+            // Link GitHub account to their existing account
+            const email = session.user?.email;
+
+            if (email) {
+              // Encrypt the GitHub access token before storing
+              const encryptedToken = encryptToken(account.access_token);
+
+              await db.user.update({
+                where: { email: email },
+                data: { githubAccessToken: encryptedToken },
+              });
+
+              // Redirect back to import page with success message
+              return "/import?github=linked";
+            }
+          }
+
+          // No active session - user must be logged in first
+          return "/auth/login?error=MustLoginFirst";
+        } catch (error) {
+          console.error("Error linking GitHub account:", error);
+          return "/import?error=LinkFailed";
+        }
+      }
+
+      // Allow credentials sign-in
+      return true;
+    },
+
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -157,6 +206,11 @@ export const authOptions: AuthOptions = {
         // @ts-expect-error accessToken is added in authorize
         token.accessToken = user.accessToken;
       }
+
+      // Note: We do NOT fetch or expose the GitHub token in JWT/session
+      // The token stays encrypted in the database and is only decrypted
+      // server-side when needed for GitHub API calls
+
       return token;
     },
 
@@ -168,7 +222,9 @@ export const authOptions: AuthOptions = {
         session.user.name = token.name as string;
         // @ts-expect-error Adding accessToken to session
         session.user.accessToken = token.accessToken as string;
+        // Note: We do NOT expose githubAccessToken in the session for security
       }
+
       return session;
     },
   },

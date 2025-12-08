@@ -1,3 +1,4 @@
+import { Background } from "@/components/background";
 import { Footer } from "@/components/blocks/footer";
 import { Navbar } from "@/components/blocks/navbar";
 import { Metadata } from "next";
@@ -13,8 +14,10 @@ export default function ProtectedLayout({
 }) {
   return (
     <div>
-      <Navbar />
-      {children}
+      <Background variant="top" className="from-muted/80 via-muted to-muted/80">
+        <Navbar />
+        {children}
+      </Background>
       <Footer />
     </div>
   );

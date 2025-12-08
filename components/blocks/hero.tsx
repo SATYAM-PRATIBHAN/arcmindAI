@@ -15,10 +15,9 @@ export default function Hero() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <img
+        <Image
           src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1045558&theme=light&t=1764930733253"
           alt="Arcmind AI - Design Smarter Systems using AI | Product Hunt"
-          style={{ width: 250, height: 54 }}
           width={250}
           height={54}
           className="mb-4"

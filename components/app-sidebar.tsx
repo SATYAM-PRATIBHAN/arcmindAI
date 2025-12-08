@@ -89,6 +89,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: DOC_ROUTES.GENERATE,
             isActive: pathname === DOC_ROUTES.GENERATE,
           },
+          {
+            title: "Import Project",
+            url: DOC_ROUTES.IMPORT.ROOT,
+          },
         ],
       },
       {

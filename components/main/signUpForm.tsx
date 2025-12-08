@@ -11,7 +11,9 @@ import Image from "next/image";
 import { DOC_ROUTES } from "@/lib/routes";
 import Link from "next/link";
 
-type FormErrors = Partial<Record<"email" | "username" | "password" | "confirmPassword", string>>;
+type FormErrors = Partial<
+  Record<"email" | "username" | "password" | "confirmPassword", string>
+>;
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -184,11 +186,17 @@ const SignUpForm = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 

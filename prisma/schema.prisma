@@ -33,6 +33,7 @@ model User {
   subscriptionId      String?               // Dodo subscription ID
   subscriptionStatus  String?               // active, canceled, expired, null
   currentPeriodEnd    DateTime?             // end of current billing period
+  githubAccessToken   String?               // GitHub OAuth access token
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -43,14 +44,15 @@ model User {
 }
 
 model Generation {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  userInput       String
-  generatedOutput Json     // stores structured system design JSON
-  frontendData    Json?
-  userId          String   @db.ObjectId
-  user            User     @relation(fields: [userId], references: [id])
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  userInput        String
+  generatedOutput  Json?     // stores structured system design JSON
+  frontendData     Json?
+  githubGeneration String?  // stores Mermaid diagram for GitHub repos
+  userId           String   @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }

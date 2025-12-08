@@ -58,9 +58,6 @@ export async function POST(req: NextRequest) {
           email,
         },
       });
-      console.log(
-        `DB findFirst for email ${email}: ${existingUser ? "found" : "not found"}`,
-      );
     } catch (dbError) {
       console.error(`DB findFirst error for email ${email}:`, dbError);
       throw dbError;
@@ -115,7 +112,6 @@ export async function POST(req: NextRequest) {
         subject: "Verify your email - ArcMindAI",
         html: otpEmailTemplate(otp, username),
       });
-      console.log(`OTP email sent successfully to ${email}`);
     } catch (emailError) {
       console.error(`Failed to send OTP email to ${email}:`, emailError);
       // Optionally, you can choose to fail the signup or continue
