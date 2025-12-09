@@ -6,7 +6,8 @@ import { formatRepositoryAnalysisForAI } from "@/app/(protected)/generate/utils/
 import { RepositoryAnalysis } from "@/types/repository-analysis";
 import { db } from "@/lib/prisma";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { openAiLLM } from "@/lib/ai/helperClient";
+import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
+import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
 interface GenerateGithubDesignRequest {
   owner: string;
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Missing required fields: owner, repo, or analysisData",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     const userMessage = formatRepositoryAnalysisForAI(
       owner,
       repo,
-      analysisData,
+      analysisData
     );
 
     // Call AI to generate Mermaid diagram
@@ -79,7 +80,13 @@ export async function POST(request: NextRequest) {
       new HumanMessage(userMessage),
     ];
 
-    const response = await openAiLLM.invoke(messages);
+    // 🔑 Fetch user's API keys
+    const userApiKeys = await getUserApiKeys(userId);
+
+    const { response } = await invokeGeminiWithFallback(
+      messages,
+      userApiKeys.geminiApiKey
+    );
     let mermaidDiagram = response.content as string;
 
     // Clean up the response - remove markdown code blocks if present
@@ -113,7 +120,7 @@ export async function POST(request: NextRequest) {
             ? error.message
             : "Failed to generate system design",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

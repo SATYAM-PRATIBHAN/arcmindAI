@@ -2,9 +2,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import { openAiLLM } from "@/lib/ai/helperClient";
+import { invokeOpenAIWithFallback } from "@/lib/ai/helperClient";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { FRONTEND_GENERATION_PROMPT } from "@/app/(protected)/generate/utils/createFrontendStackandStructure";
+import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
@@ -28,7 +29,7 @@ function cleanJsonOutput(content: string): string {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const route = "/api/generate/[id]/frontendStructure";
   const method = "POST";
@@ -44,7 +45,7 @@ export async function POST(
       end();
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -130,7 +131,14 @@ Generate a complete frontend architecture for this backend system.`),
     aiGenerationRequestsTotal.inc();
     const aiEnd = aiGenerationDurationSeconds.startTimer();
 
-    const response = await openAiLLM.invoke(messages);
+    // 🔑 Fetch user's API keys
+    // @ts-expect-error id is added to the session in the session callback
+    const userApiKeys = await getUserApiKeys(session.user.id);
+
+    const { response } = await invokeOpenAIWithFallback(
+      messages,
+      userApiKeys.openaiApiKey
+    );
 
     // @ts-expect-error id is added to the session in the session callback
     userGenerationsTotal.inc({ user_id: session.user.id });
@@ -145,7 +153,7 @@ Generate a complete frontend architecture for this backend system.`),
             ? item
             : typeof item === "object" && "text" in item
               ? String(item.text)
-              : "",
+              : ""
         )
         .join("");
     } else {
@@ -176,7 +184,7 @@ Generate a complete frontend architecture for this backend system.`),
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000,
+      Date.now() / 1000
     );
 
     return NextResponse.json({
@@ -191,7 +199,7 @@ Generate a complete frontend architecture for this backend system.`),
     end();
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -86,14 +86,14 @@ export async function GET() {
 
     const transformedGenerations = generations.map((gen) => {
       const output = gen.generatedOutput as
-        | { Explanation?: { systemName?: string } }
+        | { systemName?: string }
         | null
         | undefined;
       return {
         id: gen.id,
         userInput: gen.userInput,
         createdAt: gen.createdAt,
-        systemName: output?.Explanation?.systemName || "",
+        systemName: output?.systemName || "",
       };
     });
 

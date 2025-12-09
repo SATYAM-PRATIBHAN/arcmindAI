@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 
 interface MicroservicesSectionProps {
-  microservices: ArchitectureData["Explanation"]["microservices"];
+  microservices: ArchitectureData["microservices"];
 }
 
 export default function MicroservicesSection({

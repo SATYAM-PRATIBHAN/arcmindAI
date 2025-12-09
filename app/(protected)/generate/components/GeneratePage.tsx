@@ -29,11 +29,19 @@ export default function GeneratePage() {
     null,
   );
 
-  function cleanMermaidString(input: string) {
+  function cleanMermaidString(input: string | undefined | null): string {
+    if (!input || typeof input !== "string") return "";
+    
     return input
-      .replace(/^```mermaid\n?/, "")
-      .replace(/\n?```$/, "")
+      // Remove code block markers if present (for backward compatibility)
+      .replace(/^```mermaid\n?/g, "")
+      .replace(/\n?```$/g, "")
+      .replace(/```/g, "")
+      // Convert escaped newlines to actual newlines
       .replace(/\\n/g, "\n")
+      // Handle any other escaped characters
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
       .trim();
   }
 
@@ -44,20 +52,49 @@ export default function GeneratePage() {
         // More robust parsing: find JSON content between ```json and ```
         let cleanedOutput = result.output;
 
-        // Find the start of JSON content
-        const jsonStart = cleanedOutput.indexOf("```json");
+        // Find the start of JSON code block
+        const jsonStartMarker = "```json";
+        const jsonStart = cleanedOutput.indexOf(jsonStartMarker);
+        
         if (jsonStart !== -1) {
-          cleanedOutput = cleanedOutput.slice(jsonStart + 7); // Remove ```json
-        }
-
-        // Find the end of JSON content
-        const jsonEnd = cleanedOutput.lastIndexOf("```");
-        if (jsonEnd !== -1) {
-          cleanedOutput = cleanedOutput.slice(0, jsonEnd);
+          // Extract from after the ```json marker
+          cleanedOutput = cleanedOutput.slice(jsonStart + jsonStartMarker.length);
+          
+          // Find the first closing ``` after the JSON start (not the last one in the entire string)
+          const jsonEnd = cleanedOutput.indexOf("```");
+          if (jsonEnd !== -1) {
+            cleanedOutput = cleanedOutput.slice(0, jsonEnd);
+          }
+        } else {
+          // If no ```json marker, try to find JSON object directly
+          // Look for first { and matching closing } to extract JSON
+          const firstBrace = cleanedOutput.indexOf("{");
+          if (firstBrace !== -1) {
+            // Find matching closing brace
+            let braceCount = 0;
+            let lastBrace = -1;
+            for (let i = firstBrace; i < cleanedOutput.length; i++) {
+              if (cleanedOutput[i] === "{") braceCount++;
+              if (cleanedOutput[i] === "}") {
+                braceCount--;
+                if (braceCount === 0) {
+                  lastBrace = i;
+                  break;
+                }
+              }
+            }
+            if (lastBrace !== -1) {
+              cleanedOutput = cleanedOutput.slice(firstBrace, lastBrace + 1);
+            }
+          }
         }
 
         // Trim whitespace
         cleanedOutput = cleanedOutput.trim();
+
+        if (!cleanedOutput) {
+          throw new Error("No JSON content found in AI response.");
+        }
 
         const parsedData: ArchitectureData = JSON.parse(cleanedOutput);
         setGeneratedData(parsedData);
@@ -116,12 +153,12 @@ export default function GeneratePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-2xl">
-                {generatedData.Explanation.systemName}
+                {generatedData.systemName}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                {generatedData.Explanation.summary}
+                {generatedData.summary}
               </p>
             </CardContent>
           </Card>
@@ -130,31 +167,31 @@ export default function GeneratePage() {
           <section>
             <h2 className="text-2xl font-bold mb-4">Microservices</h2>
             <MicroservicesSection
-              microservices={generatedData.Explanation.microservices}
+              microservices={generatedData.microservices}
             />
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Entities</h2>
-            <EntitiesSection entities={generatedData.Explanation.entities} />
+            <EntitiesSection entities={generatedData.entities} />
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">API Routes</h2>
-            <ApiRoutesSection apiRoutes={generatedData.Explanation.apiRoutes} />
+            <ApiRoutesSection apiRoutes={generatedData.apiRoutes} />
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
             <DatabaseSchemaSection
-              schema={generatedData.Explanation.databaseSchema}
+              schema={generatedData.databaseSchema}
             />
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
             <InfrastructureSection
-              infra={generatedData.Explanation.infrastructure}
+              infra={generatedData.infrastructure}
             />
           </section>
 

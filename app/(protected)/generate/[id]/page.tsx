@@ -74,12 +74,12 @@ export default function GenerationPage() {
             setGeneratedData(null);
           } else {
             try {
-              setGeneratedData(
-                result.output.generatedOutput as ArchitectureData,
-              );
+              const data = result.output.generatedOutput as ArchitectureData;
+              setGeneratedData(data);
               setIsGithubRepo(false);
               setGithubGeneration(null);
-            } catch {
+            } catch (error) {
+              console.error("Error processing generation data:", error);
               setGeneratedData(null);
             }
           }
@@ -105,9 +105,8 @@ export default function GenerationPage() {
     if (result && result.success) {
       const updatedResult = await getGenerationById(id);
       if (updatedResult && updatedResult.success) {
-        setGeneratedData(
-          updatedResult.output.generatedOutput as ArchitectureData,
-        );
+        const data = updatedResult.output.generatedOutput as ArchitectureData;
+        setGeneratedData(data);
       }
       setResponseText("");
       setIsActionDialogOpen(false);
@@ -128,11 +127,19 @@ export default function GenerationPage() {
     setIsDeleteDialogOpen(false);
   };
 
-  function cleanMermaidString(input: string) {
+  function cleanMermaidString(input: string | undefined | null): string {
+    if (!input || typeof input !== "string") return "";
+    
     return input
-      .replace(/^```mermaid\n?/, "")
-      .replace(/\n?```$/, "")
+      // Remove code block markers if present (for backward compatibility)
+      .replace(/^```mermaid\n?/g, "")
+      .replace(/\n?```$/g, "")
+      .replace(/```/g, "")
+      // Convert escaped newlines to actual newlines
       .replace(/\\n/g, "\n")
+      // Handle any other escaped characters
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
       .trim();
   }
 
@@ -274,11 +281,13 @@ export default function GenerationPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl">
-            {generatedData.Explanation.systemName}
+            {generatedData.systemName || "System Architecture"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">{generatedData.Explanation.summary}</p>
+          <p className="text-gray-600">
+            {generatedData.summary || "No summary available."}
+          </p>
         </CardContent>
 
         <div className="flex flex-col gap-2 mx-4 sm:flex-row sm:items-center">
@@ -298,36 +307,46 @@ export default function GenerationPage() {
       </Card>
 
       {/* Sections */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Microservices</h2>
-        <MicroservicesSection
-          microservices={generatedData.Explanation.microservices}
-        />
-      </section>
+      {generatedData.microservices && (
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Microservices</h2>
+          <MicroservicesSection
+            microservices={generatedData.microservices}
+          />
+        </section>
+      )}
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Entities</h2>
-        <EntitiesSection entities={generatedData.Explanation.entities} />
-      </section>
+      {generatedData.entities && (
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Entities</h2>
+          <EntitiesSection entities={generatedData.entities} />
+        </section>
+      )}
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">API Routes</h2>
-        <ApiRoutesSection apiRoutes={generatedData.Explanation.apiRoutes} />
-      </section>
+      {generatedData.apiRoutes && (
+        <section>
+          <h2 className="text-2xl font-bold mb-4">API Routes</h2>
+          <ApiRoutesSection apiRoutes={generatedData.apiRoutes} />
+        </section>
+      )}
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
-        <DatabaseSchemaSection
-          schema={generatedData.Explanation.databaseSchema}
-        />
-      </section>
+      {generatedData.databaseSchema && (
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
+          <DatabaseSchemaSection
+            schema={generatedData.databaseSchema}
+          />
+        </section>
+      )}
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
-        <InfrastructureSection
-          infra={generatedData.Explanation.infrastructure}
-        />
-      </section>
+      {generatedData.infrastructure && (
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
+          <InfrastructureSection
+            infra={generatedData.infrastructure}
+          />
+        </section>
+      )}
 
       {generatedData["Architecture Diagram"] && (
         <section>

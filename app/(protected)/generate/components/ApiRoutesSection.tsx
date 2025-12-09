@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 
 interface ApiRoutesSectionProps {
-  apiRoutes: ArchitectureData["Explanation"]["apiRoutes"];
+  apiRoutes: ArchitectureData["apiRoutes"];
 }
 
 export default function ApiRoutesSection({ apiRoutes }: ApiRoutesSectionProps) {

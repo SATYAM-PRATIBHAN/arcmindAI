@@ -28,31 +28,90 @@ Your diagram should include:
 
 Example structure:
 \`\`\`
+1.
 flowchart TD
-    A["Client (Web/Mobile)"] --> B{API Gateway}
+    A["Client (Web/Mobile App)"] --> B{API Gateway}
 
-    subgraph Microservices
-        C[User Service] --> D["PostgreSQL (User Data)"]
-        E[Agent Management Service] --> F["MongoDB (Agent Configs)"]
-        G[AI Engine Service] --> H["Redis (Task Results)"]
-        I[Knowledge Base Service] --> J["Elasticsearch (Knowledge Index)"]
+    subgraph Core Microservices
+        C[User Service] --> C_DB["PostgreSQL (User/Address Data)"]
+        D[Menu & Catalog Service] --> D_DB["MongoDB (Menu Items)"]
+        E[Cart Service] --> E_DB["Redis (Shopping Carts)"]
+        F[Order Service] --> F_DB["PostgreSQL (Orders/Order Items)"]
+        G[Payment Service] --> G_DB["PostgreSQL (Payment Transactions)"]
+        H[Notification Service]
+        I[Delivery Management Service] --> I_DB["PostgreSQL (Deliveries/Drivers)"]
+    end
+
+    subgraph Infrastructure
+        MQ[(RabbitMQ - Message Queue)]
+        CDN["CDN (Static Assets)"]
+        PGW["External Payment Gateway (e.g., Stripe)"]
+        NOTIF_EXT["External Notification Service (e.g., AWS SES/SNS)"]
     end
 
     B --> C
+    B --> D
     B --> E
+    B --> F
     B --> G
     B --> I
 
-    G --> K["Task Queue (e.g., RabbitMQ)"]
-    K --> G
+    E -- "Get Menu Item Price/Availability" --> D
+    F -- "Get Cart Contents" --> E
+    F -- "Validate Menu Items" --> D
+    F -- "Get User/Address Info" --> C
+    F -- "Initiate Payment" --> G
+    F -- "Order Created/Updated Event" --> MQ
+    G -- "Process Payment" --> PGW
+    G -- "Payment Status" --> F
 
-    style D fill:#f9f,stroke:#333,stroke-width:2px
-    style F fill:#f9f,stroke:#333,stroke-width:2px
-    style H fill:#f9f,stroke:#333,stroke-width:2px
-    style J fill:#f9f,stroke:#333,stroke-width:2px
+    MQ -- "Consumes Order Events" --> H
+    MQ -- "Consumes Order Events" --> I
+
+    H -- "Send Email/SMS" --> NOTIF_EXT
+    I -- "Delivery Status Update Event" --> MQ
+
+    A --> CDN
+
+    style C_DB fill:#f9f,stroke:#333,stroke-width:2px
+    style D_DB fill:#f9f,stroke:#333,stroke-width:2px
+    style E_DB fill:#f9f,stroke:#333,stroke-width:2px
+    style F_DB fill:#f9f,stroke:#333,stroke-width:2px
+    style G_DB fill:#f9f,stroke:#333,stroke-width:2px
+    style I_DB fill:#f9f,stroke:#333,stroke-width:2px
 
     classDef database fill:#ccf,stroke:#333,stroke-width:2px
-    class D,F,H,J database
+    class C_DB,D_DB,E_DB,F_DB,G_DB,I_DB database
+
+2.
+flowchart TD
+    User["User (Browser/Mobile)"]
+
+    subgraph Application_Services["Application Services"]
+        FE["Frontend Service (Next.js App)"]
+        BE["Backend API Service (Next.js API Routes)"]
+    end
+
+    subgraph Data_Layer["Data Layer"]
+        DB[(PostgreSQL Database)]
+    end
+
+    subgraph DevOps["DevOps"]
+        Developer["Developer"]
+        CI["GitHub Actions (CI/CD)"]
+    end
+
+    User -->|HTTP/HTTPS| FE
+    FE -->|REST API Calls| BE
+    BE -->|"Prisma ORM (SQL)"| DB
+
+    Developer -->|Code Push| CI
+    CI -->|Build & Deploy Frontend| FE
+    CI -->|Build & Deploy Backend| BE
+
+    classDef database fill:#ccf,stroke:#333,stroke-width:2px
+    class DB database
+
 \`\`\`
 
 Generate a detailed, accurate diagram based on the repository analysis data.`;

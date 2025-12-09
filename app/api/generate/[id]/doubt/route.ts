@@ -13,13 +13,14 @@ import {
   aiGenerationFailureTotal,
   aiGenerationDurationSeconds,
 } from "@/lib/metrics";
-import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
+import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { DoubtSystemPrompt } from "@/lib/prompts/askDoubtPrompt";
+import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now();
   const route = "/api/generate/[id]/doubt";
@@ -34,11 +35,11 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -51,14 +52,14 @@ export async function POST(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart1) / 1000,
+      (Date.now() - dbStart1) / 1000
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json({ status: 404, message: "User not Found" });
     }
@@ -67,7 +68,7 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json({
         status: 401,
@@ -79,7 +80,7 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json({
         status: 401,
@@ -93,7 +94,7 @@ export async function POST(
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000,
+      Date.now() / 1000
     );
 
     const { question } = await request.json();
@@ -102,11 +103,11 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { success: false, message: "Question is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -121,18 +122,18 @@ export async function POST(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000,
+      (Date.now() - dbStart) / 1000
     );
 
     if (!generation) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { success: false, message: "Generation not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -156,8 +157,15 @@ User Question: ${question}`),
       ];
     }
 
+    // 🔑 Fetch user's API keys
+    // @ts-expect-error id is added to the session in the session callback
+    const userApiKeys = await getUserApiKeys(session.user.id);
+
     const aiStart = Date.now();
-    const aiResponse = await geminiLLM.invoke(messages);
+    const { response: aiResponse } = await invokeGeminiWithFallback(
+      messages,
+      userApiKeys.geminiApiKey
+    );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
 
@@ -177,7 +185,7 @@ User Question: ${question}`),
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000,
+      (Date.now() - startTime) / 1000
     );
 
     return NextResponse.json({
@@ -189,13 +197,13 @@ User Question: ${question}`),
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000,
+      (Date.now() - startTime) / 1000
     );
     const errorMessage =
       error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, message: errorMessage },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

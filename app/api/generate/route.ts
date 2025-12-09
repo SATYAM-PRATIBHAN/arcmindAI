@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { geminiLLM } from "@/app/(protected)/generate/utils/aiClient";
+import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { db } from "@/lib/prisma";
 import { generationRateLimit } from "@/lib/rateLimit";
+import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
   aiGenerationRequestsTotal,
   aiGenerationSuccessTotal,
@@ -30,11 +31,11 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { error: "Invalid request body. Missing 'userInput' field." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -48,14 +49,14 @@ export async function POST(req: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000,
+      (Date.now() - dbStart) / 1000
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       NextResponse.json({ status: 404, message: "User not Found" });
     }
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json({
         status: 401,
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
           error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
           upgrade: user?.plan === "free" ? true : false,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -101,11 +102,11 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { error: "Invalid input. Please provide a valid project idea." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       return NextResponse.json(
         { error: "Missing userId. You must be logged in to generate." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -125,14 +126,14 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "429" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         {
           error:
             "Rate limit exceeded. Please wait 2 minutes before making another request.",
         },
-        { status: 429 },
+        { status: 429 }
       );
     }
 
@@ -148,11 +149,19 @@ export async function POST(req: NextRequest) {
       new HumanMessage(userInput),
     ];
 
-    // 🧠 Call Gemini model with timing
+    // 🔑 Fetch user's API keys
+    const userApiKeys = await getUserApiKeys(userId);
+
+    // 🧠 Call Gemini model with timing and automatic fallback
     const aiStart = Date.now();
-    const response = await geminiLLM.invoke(messages);
+    const { response, allKeysFailed } = await invokeGeminiWithFallback(
+      messages,
+      userApiKeys.geminiApiKey
+    );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
+
+    console.log("si response: ", response);
 
     if (!response || !response.content) {
       aiGenerationFailureTotal.inc();
@@ -179,17 +188,77 @@ export async function POST(req: NextRequest) {
     try {
       let jsonText = cleanedOutput;
 
-      const jsonStart = jsonText.indexOf("```json");
-      if (jsonStart !== -1) jsonText = jsonText.slice(jsonStart + 7);
+      // Find the start of JSON code block
+      const jsonStartMarker = "```json";
+      const jsonStart = jsonText.indexOf(jsonStartMarker);
 
-      const jsonEnd = jsonText.lastIndexOf("```");
-      if (jsonEnd !== -1) jsonText = jsonText.slice(0, jsonEnd);
+      if (jsonStart !== -1) {
+        // Extract from after the ```json marker
+        jsonText = jsonText.slice(jsonStart + jsonStartMarker.length);
+
+        // Find the first closing ``` after the JSON start (not the last one in the entire string)
+        const jsonEnd = jsonText.indexOf("```");
+        if (jsonEnd !== -1) {
+          jsonText = jsonText.slice(0, jsonEnd);
+        }
+      } else {
+        // If no ```json marker, try to find JSON object directly
+        // Look for first { and last } to extract JSON
+        const firstBrace = jsonText.indexOf("{");
+        if (firstBrace !== -1) {
+          // Find matching closing brace
+          let braceCount = 0;
+          let lastBrace = -1;
+          for (let i = firstBrace; i < jsonText.length; i++) {
+            if (jsonText[i] === "{") braceCount++;
+            if (jsonText[i] === "}") {
+              braceCount--;
+              if (braceCount === 0) {
+                lastBrace = i;
+                break;
+              }
+            }
+          }
+          if (lastBrace !== -1) {
+            jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+          }
+        }
+      }
 
       jsonText = jsonText.trim();
 
       if (!jsonText) throw new Error("No JSON content found in AI response.");
+      console.log("json text: ", jsonText);
 
       const parsedData = JSON.parse(jsonText);
+
+      // 🎨 Extract mermaid diagram if present
+      const mermaidStartMarker = "```mermaid";
+      const mermaidStart = cleanedOutput.indexOf(mermaidStartMarker);
+
+      if (mermaidStart !== -1) {
+        // Extract from after the ```mermaid marker
+        let mermaidText = cleanedOutput.slice(
+          mermaidStart + mermaidStartMarker.length
+        );
+
+        // Find the first closing ``` after the mermaid start
+        const mermaidEnd = mermaidText.indexOf("```");
+        if (mermaidEnd !== -1) {
+          mermaidText = mermaidText.slice(0, mermaidEnd);
+        }
+
+        // Clean up the mermaid diagram
+        mermaidText = mermaidText
+          .replace(/```mermaid/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        // Add to parsedData
+        if (mermaidText) {
+          parsedData["Architecture Diagram"] = mermaidText;
+        }
+      }
 
       // 💾 Save generation result in DB with timing
       const dbStart = Date.now();
@@ -202,7 +271,7 @@ export async function POST(req: NextRequest) {
       });
       databaseQueryDurationSeconds.observe(
         { operation: "create" },
-        (Date.now() - dbStart) / 1000,
+        (Date.now() - dbStart) / 1000
       );
 
       // Increment success counters
@@ -218,7 +287,7 @@ export async function POST(req: NextRequest) {
       // Track total HTTP duration
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
 
       return NextResponse.json({
@@ -235,14 +304,14 @@ export async function POST(req: NextRequest) {
       console.error("JSON parsing error:", jsonError);
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         {
           error: "Failed to parse AI response JSON. Try rephrasing your input.",
           details: errorMessage,
         },
-        { status: 422 },
+        { status: 422 }
       );
     }
   } catch (error: unknown) {
@@ -253,6 +322,15 @@ export async function POST(req: NextRequest) {
     let status = 500;
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+
+    // Check if all API keys failed (trigger user to add their own keys)
+    const isApiKeyError =
+      errorMessage.toLowerCase().includes("api key") ||
+      errorMessage.toLowerCase().includes("rate limit") ||
+      errorMessage.toLowerCase().includes("quota") ||
+      errorMessage.toLowerCase().includes("unauthorized") ||
+      errorMessage.toLowerCase().includes("authentication");
+
     if (
       typeof error === "object" &&
       error !== null &&
@@ -260,6 +338,8 @@ export async function POST(req: NextRequest) {
       error.code === "P2002"
     ) {
       status = 409;
+    } else if (isApiKeyError) {
+      status = 503; // Service Unavailable - signals client to show API key dialog
     } else if (errorMessage.includes("AI")) {
       status = 502;
     }
@@ -267,7 +347,7 @@ export async function POST(req: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000,
+      (Date.now() - startTime) / 1000
     );
 
     return NextResponse.json(
@@ -276,7 +356,7 @@ export async function POST(req: NextRequest) {
           errorMessage ||
           "An unexpected server error occurred while generating the response.",
       },
-      { status },
+      { status }
     );
   }
 }

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 
 interface EntitiesSectionProps {
-  entities: ArchitectureData["Explanation"]["entities"];
+  entities: ArchitectureData["entities"];
 }
 
 export default function EntitiesSection({ entities }: EntitiesSectionProps) {

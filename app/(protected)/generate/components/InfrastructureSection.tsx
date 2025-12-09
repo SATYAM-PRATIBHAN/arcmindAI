@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 
 interface InfrastructureSectionProps {
-  infra: ArchitectureData["Explanation"]["infrastructure"];
+  infra: ArchitectureData["infrastructure"];
 }
 
 export default function InfrastructureSection({

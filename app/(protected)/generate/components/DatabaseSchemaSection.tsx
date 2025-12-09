@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 
 interface DatabaseSchemaSectionProps {
-  schema: ArchitectureData["Explanation"]["databaseSchema"];
+  schema: ArchitectureData["databaseSchema"];
 }
 
 export default function DatabaseSchemaSection({
