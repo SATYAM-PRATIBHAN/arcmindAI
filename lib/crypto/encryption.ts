@@ -32,7 +32,7 @@ export function encryptApiKey(apiKey: string, encryptionKey: string): string {
       salt,
       100000,
       KEY_LENGTH,
-      "sha512"
+      "sha512",
     );
 
     // Create cipher
@@ -61,7 +61,7 @@ export function encryptApiKey(apiKey: string, encryptionKey: string): string {
  */
 export function decryptApiKey(
   encryptedKey: string,
-  encryptionKey: string
+  encryptionKey: string,
 ): string {
   try {
     // Parse the encrypted key
@@ -83,7 +83,7 @@ export function decryptApiKey(
       salt,
       100000,
       KEY_LENGTH,
-      "sha512"
+      "sha512",
     );
 
     // Create decipher
@@ -109,7 +109,7 @@ export function decryptApiKey(
  */
 export function validateApiKeyFormat(
   apiKey: string,
-  provider: "gemini" | "openai"
+  provider: "gemini" | "openai",
 ): boolean {
   if (!apiKey || typeof apiKey !== "string") {
     return false;

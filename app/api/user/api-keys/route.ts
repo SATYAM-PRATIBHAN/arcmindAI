@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     console.error("Error checking API keys:", error);
     return NextResponse.json(
       { error: "Failed to check API keys" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     if (!geminiApiKey && !openaiApiKey) {
       return NextResponse.json(
         { error: "At least one API key must be provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
           error:
             "Invalid Gemini API key format. Keys should start with 'AI' and be at least 30 characters.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
           error:
             "Invalid OpenAI API key format. Keys should start with 'sk-' and be at least 20 characters.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     console.error("Error saving API keys:", error);
     return NextResponse.json(
       { error: "Failed to save API keys" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -197,7 +197,7 @@ export async function DELETE(req: NextRequest) {
     console.error("Error deleting API keys:", error);
     return NextResponse.json(
       { error: "Failed to delete API keys" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

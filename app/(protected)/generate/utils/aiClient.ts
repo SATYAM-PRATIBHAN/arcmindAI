@@ -89,7 +89,7 @@ export type FallbackResult = {
  */
 export async function invokeGeminiWithFallback(
   messages: BaseMessage[],
-  userApiKey?: string
+  userApiKey?: string,
 ): Promise<FallbackResult> {
   let usedUserKey = false;
   let allKeysFailed = false;
@@ -105,7 +105,7 @@ export async function invokeGeminiWithFallback(
     } catch (error) {
       console.warn(
         "User's Gemini API key failed, falling back to system keys:",
-        error
+        error,
       );
       // Continue to system keys
     }
@@ -121,13 +121,13 @@ export async function invokeGeminiWithFallback(
     if (shouldFallback(error)) {
       console.warn(
         "Primary Gemini API failed, falling back to secondary API key:",
-        error
+        error,
       );
 
       // Tier 3: Try secondary system API key
       try {
         console.log(
-          "Attempting Gemini generation with secondary system API key"
+          "Attempting Gemini generation with secondary system API key",
         );
         const response = await geminiLLM_2.invoke(messages);
         return { response, usedUserKey, allKeysFailed };

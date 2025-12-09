@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (!owner || !repo || !path) {
       return NextResponse.json(
         { success: false, message: "Missing owner, repo, or path parameter" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     if (!user?.githubAccessToken) {
       return NextResponse.json(
         { success: false, message: "GitHub not connected" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
             : "application/vnd.github.raw",
         },
         responseType: isImage ? "arraybuffer" : "text",
-      }
+      },
     );
 
     if (isImage) {
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         message:
           err instanceof Error ? err.message : "Failed to fetch file content",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

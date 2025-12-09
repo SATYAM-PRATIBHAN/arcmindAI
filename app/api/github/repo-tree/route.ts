@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           success: false,
           message: "Missing owner, repo, or branch parameter",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     if (!user?.githubAccessToken) {
       return NextResponse.json(
         { success: false, message: "GitHub not connected" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
           Authorization: `Bearer ${githubToken}`,
           Accept: "application/vnd.github.v3+json",
         },
-      }
+      },
     );
 
     return NextResponse.json({
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
             ? err.message
             : "Failed to fetch repository tree",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

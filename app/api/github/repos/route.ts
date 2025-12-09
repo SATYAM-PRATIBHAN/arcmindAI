@@ -12,7 +12,7 @@ export async function GET() {
     if (!session?.user) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -30,7 +30,7 @@ export async function GET() {
     if (!user?.githubAccessToken) {
       return NextResponse.json(
         { success: false, message: "GitHub not connected" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -61,7 +61,7 @@ export async function GET() {
         message:
           err instanceof Error ? err.message : "Failed to fetch repositories",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

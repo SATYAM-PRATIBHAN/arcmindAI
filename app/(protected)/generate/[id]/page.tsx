@@ -129,18 +129,20 @@ export default function GenerationPage() {
 
   function cleanMermaidString(input: string | undefined | null): string {
     if (!input || typeof input !== "string") return "";
-    
-    return input
-      // Remove code block markers if present (for backward compatibility)
-      .replace(/^```mermaid\n?/g, "")
-      .replace(/\n?```$/g, "")
-      .replace(/```/g, "")
-      // Convert escaped newlines to actual newlines
-      .replace(/\\n/g, "\n")
-      // Handle any other escaped characters
-      .replace(/\\"/g, '"')
-      .replace(/\\'/g, "'")
-      .trim();
+
+    return (
+      input
+        // Remove code block markers if present (for backward compatibility)
+        .replace(/^```mermaid\n?/g, "")
+        .replace(/\n?```$/g, "")
+        .replace(/```/g, "")
+        // Convert escaped newlines to actual newlines
+        .replace(/\\n/g, "\n")
+        // Handle any other escaped characters
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .trim()
+    );
   }
 
   if (isLoading) {
@@ -310,9 +312,7 @@ export default function GenerationPage() {
       {generatedData.microservices && (
         <section>
           <h2 className="text-2xl font-bold mb-4">Microservices</h2>
-          <MicroservicesSection
-            microservices={generatedData.microservices}
-          />
+          <MicroservicesSection microservices={generatedData.microservices} />
         </section>
       )}
 
@@ -333,18 +333,14 @@ export default function GenerationPage() {
       {generatedData.databaseSchema && (
         <section>
           <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
-          <DatabaseSchemaSection
-            schema={generatedData.databaseSchema}
-          />
+          <DatabaseSchemaSection schema={generatedData.databaseSchema} />
         </section>
       )}
 
       {generatedData.infrastructure && (
         <section>
           <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
-          <InfrastructureSection
-            infra={generatedData.infrastructure}
-          />
+          <InfrastructureSection infra={generatedData.infrastructure} />
         </section>
       )}
 

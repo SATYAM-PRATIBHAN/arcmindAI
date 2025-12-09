@@ -28,7 +28,7 @@ export function useRepositoryAnalyzer(): UseRepositoryAnalyzerResult {
           repo,
           // Note: githubToken is no longer sent from frontend
           // It's retrieved server-side for security
-        }
+        },
       );
 
       if (!response.data.success) {

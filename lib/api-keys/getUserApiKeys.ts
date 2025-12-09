@@ -33,7 +33,7 @@ export async function getUserApiKeys(userId: string): Promise<UserApiKeys> {
       try {
         keys.geminiApiKey = decryptApiKey(
           user.geminiApiKey,
-          user.encryptionKey
+          user.encryptionKey,
         );
       } catch (error) {
         console.error("Failed to decrypt Gemini API key:", error);
@@ -45,7 +45,7 @@ export async function getUserApiKeys(userId: string): Promise<UserApiKeys> {
       try {
         keys.openaiApiKey = decryptApiKey(
           user.openaiApiKey,
-          user.encryptionKey
+          user.encryptionKey,
         );
       } catch (error) {
         console.error("Failed to decrypt OpenAI API key:", error);

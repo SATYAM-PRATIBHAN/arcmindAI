@@ -55,7 +55,7 @@ export function RepositoryPageClient() {
       router.push(DOC_ROUTES.IMPORT.UPDATE(generationId));
     } else {
       toast.error(
-        "No generation ID available. Please generate a design first."
+        "No generation ID available. Please generate a design first.",
       );
     }
     setIsDialogOpen(false);

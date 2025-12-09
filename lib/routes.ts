@@ -66,7 +66,7 @@ type PathValue = string | ((...args: string[]) => string);
 type FlatRoutes = string[];
 
 const flattenRoutes = (
-  obj: Record<string, PathValue | Record<string, unknown>>
+  obj: Record<string, PathValue | Record<string, unknown>>,
 ): FlatRoutes => {
   if (!obj) return [];
   return Object.values(obj).reduce<FlatRoutes>((acc, value) => {
@@ -77,8 +77,8 @@ const flattenRoutes = (
     } else if (typeof value === "object" && value !== null) {
       acc.push(
         ...flattenRoutes(
-          value as Record<string, PathValue | Record<string, unknown>>
-        )
+          value as Record<string, PathValue | Record<string, unknown>>,
+        ),
       );
     }
     return acc;
@@ -88,5 +88,5 @@ const flattenRoutes = (
 export const ALL_DOC_ROUTES: FlatRoutes = flattenRoutes(DOC_ROUTES);
 
 export const isDocRoute = (
-  path: string
+  path: string,
 ): path is (typeof ALL_DOC_ROUTES)[number] => ALL_DOC_ROUTES.includes(path);

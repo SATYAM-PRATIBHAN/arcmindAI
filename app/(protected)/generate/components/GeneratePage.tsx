@@ -31,18 +31,20 @@ export default function GeneratePage() {
 
   function cleanMermaidString(input: string | undefined | null): string {
     if (!input || typeof input !== "string") return "";
-    
-    return input
-      // Remove code block markers if present (for backward compatibility)
-      .replace(/^```mermaid\n?/g, "")
-      .replace(/\n?```$/g, "")
-      .replace(/```/g, "")
-      // Convert escaped newlines to actual newlines
-      .replace(/\\n/g, "\n")
-      // Handle any other escaped characters
-      .replace(/\\"/g, '"')
-      .replace(/\\'/g, "'")
-      .trim();
+
+    return (
+      input
+        // Remove code block markers if present (for backward compatibility)
+        .replace(/^```mermaid\n?/g, "")
+        .replace(/\n?```$/g, "")
+        .replace(/```/g, "")
+        // Convert escaped newlines to actual newlines
+        .replace(/\\n/g, "\n")
+        // Handle any other escaped characters
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .trim()
+    );
   }
 
   const handleGenerate = async () => {
@@ -55,11 +57,13 @@ export default function GeneratePage() {
         // Find the start of JSON code block
         const jsonStartMarker = "```json";
         const jsonStart = cleanedOutput.indexOf(jsonStartMarker);
-        
+
         if (jsonStart !== -1) {
           // Extract from after the ```json marker
-          cleanedOutput = cleanedOutput.slice(jsonStart + jsonStartMarker.length);
-          
+          cleanedOutput = cleanedOutput.slice(
+            jsonStart + jsonStartMarker.length,
+          );
+
           // Find the first closing ``` after the JSON start (not the last one in the entire string)
           const jsonEnd = cleanedOutput.indexOf("```");
           if (jsonEnd !== -1) {
@@ -157,18 +161,14 @@ export default function GeneratePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
-                {generatedData.summary}
-              </p>
+              <p className="text-gray-600">{generatedData.summary}</p>
             </CardContent>
           </Card>
 
           {/* Sections */}
           <section>
             <h2 className="text-2xl font-bold mb-4">Microservices</h2>
-            <MicroservicesSection
-              microservices={generatedData.microservices}
-            />
+            <MicroservicesSection microservices={generatedData.microservices} />
           </section>
 
           <section>
@@ -183,16 +183,12 @@ export default function GeneratePage() {
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
-            <DatabaseSchemaSection
-              schema={generatedData.databaseSchema}
-            />
+            <DatabaseSchemaSection schema={generatedData.databaseSchema} />
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
-            <InfrastructureSection
-              infra={generatedData.infrastructure}
-            />
+            <InfrastructureSection infra={generatedData.infrastructure} />
           </section>
 
           {generatedData["Architecture Diagram"] && (

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Missing required fields: owner, repo, or analysisData",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const userMessage = formatRepositoryAnalysisForAI(
       owner,
       repo,
-      analysisData
+      analysisData,
     );
 
     // Call AI to generate Mermaid diagram
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     const { response } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey
+      userApiKeys.geminiApiKey,
     );
     let mermaidDiagram = response.content as string;
 
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
             ? error.message
             : "Failed to generate system design",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

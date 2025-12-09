@@ -38,7 +38,7 @@ export const authOptions: AuthOptions = {
             apiGatewayErrorsTotal.inc({ status_code: "400" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000
+              (Date.now() - startTime) / 1000,
             );
             throw new Error("Missing email or password");
           }
@@ -55,10 +55,10 @@ export const authOptions: AuthOptions = {
             apiGatewayErrorsTotal.inc({ status_code: "429" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000
+              (Date.now() - startTime) / 1000,
             );
             throw new Error(
-              "Too many login attempts from this IP. Please try again later."
+              "Too many login attempts from this IP. Please try again later.",
             );
           }
 
@@ -68,42 +68,42 @@ export const authOptions: AuthOptions = {
           });
           databaseQueryDurationSeconds.observe(
             { operation: "findUnique" },
-            (Date.now() - dbStart) / 1000
+            (Date.now() - dbStart) / 1000,
           );
 
           if (!user) {
             apiGatewayErrorsTotal.inc({ status_code: "404" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000
+              (Date.now() - startTime) / 1000,
             );
             throw new Error("User not found");
           }
 
           // Rate limit by account (email)
           const accountLimitResult = await loginRateLimitAccount.limit(
-            credentials.email
+            credentials.email,
           );
           if (!accountLimitResult.success) {
             apiGatewayErrorsTotal.inc({ status_code: "429" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000
+              (Date.now() - startTime) / 1000,
             );
             throw new Error(
-              "Too many login attempts for this account. Please try again later."
+              "Too many login attempts for this account. Please try again later.",
             );
           }
 
           const isValid = await bcrypt.compare(
             credentials.password,
-            user.password
+            user.password,
           );
           if (!isValid) {
             apiGatewayErrorsTotal.inc({ status_code: "401" });
             httpRequestDurationSeconds.observe(
               { route },
-              (Date.now() - startTime) / 1000
+              (Date.now() - startTime) / 1000,
             );
             throw new Error("Invalid credentials");
           }
@@ -114,7 +114,7 @@ export const authOptions: AuthOptions = {
           // Update user activity
           userLastActivityTimestamp.set(
             { user_id: user.id },
-            Date.now() / 1000
+            Date.now() / 1000,
           );
 
           const accessToken = generateAccessToken({
@@ -125,7 +125,7 @@ export const authOptions: AuthOptions = {
 
           httpRequestDurationSeconds.observe(
             { route },
-            (Date.now() - startTime) / 1000
+            (Date.now() - startTime) / 1000,
           );
 
           return {

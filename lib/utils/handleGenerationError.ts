@@ -10,7 +10,7 @@ import { toast } from "sonner";
  */
 export function handleGenerationError(
   error: unknown,
-  openApiKeyDialog: () => void
+  openApiKeyDialog: () => void,
 ): boolean {
   // Check if it's a fetch response error
   if (error instanceof Response) {
@@ -87,7 +87,7 @@ export function handleGenerationError(
  */
 export async function handleFetchError(
   response: Response,
-  openApiKeyDialog: () => void
+  openApiKeyDialog: () => void,
 ): Promise<void> {
   if (response.status === 503) {
     toast.error("Having trouble generating your design", {

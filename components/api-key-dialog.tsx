@@ -65,7 +65,7 @@ export function ApiKeyDialog({
     } catch (error) {
       console.error("Error saving API keys:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to save API keys"
+        error instanceof Error ? error.message : "Failed to save API keys",
       );
     } finally {
       setIsLoading(false);
@@ -94,7 +94,7 @@ export function ApiKeyDialog({
     } catch (error) {
       console.error("Error removing API keys:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to remove API keys"
+        error instanceof Error ? error.message : "Failed to remove API keys",
       );
     } finally {
       setIsLoading(false);

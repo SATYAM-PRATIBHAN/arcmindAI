@@ -76,7 +76,7 @@ export type OpenAIFallbackResult = {
  */
 export async function invokeOpenAIWithFallback(
   messages: BaseMessage[],
-  userApiKey?: string
+  userApiKey?: string,
 ): Promise<OpenAIFallbackResult> {
   let usedUserKey = false;
   let allKeysFailed = false;
@@ -92,7 +92,7 @@ export async function invokeOpenAIWithFallback(
     } catch (error) {
       console.warn(
         "User's OpenAI API key failed, falling back to system key:",
-        error
+        error,
       );
       // Continue to system key
     }

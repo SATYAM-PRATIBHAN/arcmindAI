@@ -34,7 +34,7 @@ export function RepoList() {
   const REPOS_PER_PAGE = isMobile ? 6 : 12;
 
   const filteredRepos = repos.filter((repo) =>
-    repo.full_name.toLowerCase().includes(search.toLowerCase())
+    repo.full_name.toLowerCase().includes(search.toLowerCase()),
   );
 
   // Pagination logic
@@ -151,7 +151,7 @@ export function RepoList() {
                   >
                     {page}
                   </Button>
-                )
+                ),
               )}
             </div>
 

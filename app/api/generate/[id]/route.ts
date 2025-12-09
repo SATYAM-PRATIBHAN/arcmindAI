@@ -23,7 +23,7 @@ import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const startTime = Date.now();
   const route = "/api/generate/[id]";
@@ -38,11 +38,11 @@ export async function GET(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -55,14 +55,14 @@ export async function GET(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart1) / 1000
+      (Date.now() - dbStart1) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       NextResponse.json({ status: 404, message: "User not Found" });
     }
@@ -71,7 +71,7 @@ export async function GET(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({
         status: 401,
@@ -85,7 +85,7 @@ export async function GET(
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     // Increment cache hits (assuming fetching generation is a cache hit if cached)
@@ -101,25 +101,25 @@ export async function GET(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!generation) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Generation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -131,18 +131,18 @@ export async function GET(
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const startTime = Date.now();
   const route = "/api/generate/[id]";
@@ -157,11 +157,11 @@ export async function DELETE(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -171,7 +171,7 @@ export async function DELETE(
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     const dbStart = Date.now();
@@ -184,25 +184,25 @@ export async function DELETE(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "delete" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!generation) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Generation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -214,18 +214,18 @@ export async function DELETE(
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const startTime = Date.now();
   const route = "/api/generate/[id]";
@@ -240,11 +240,11 @@ export async function PUT(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -257,18 +257,18 @@ export async function PUT(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart1) / 1000
+      (Date.now() - dbStart1) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -276,11 +276,11 @@ export async function PUT(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Email is not verified" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -288,14 +288,14 @@ export async function PUT(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           success: false,
           message: "Purchase the pro version to use this feature",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -305,7 +305,7 @@ export async function PUT(
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     // Increment AI generation request counter
@@ -323,18 +323,18 @@ export async function PUT(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart2) / 1000
+      (Date.now() - dbStart2) / 1000,
     );
 
     if (!originalResponse) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Generation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -352,7 +352,7 @@ User feedback/input for update: ${userInput}`),
     const aiStart = Date.now();
     const { response: newGeneratedOutput } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey
+      userApiKeys.geminiApiKey,
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -412,7 +412,7 @@ User feedback/input for update: ${userInput}`),
     });
     databaseQueryDurationSeconds.observe(
       { operation: "update" },
-      (Date.now() - dbStart3) / 1000
+      (Date.now() - dbStart3) / 1000,
     );
 
     // Increment success counters
@@ -426,7 +426,7 @@ User feedback/input for update: ${userInput}`),
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -438,11 +438,11 @@ User feedback/input for update: ${userInput}`),
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       { success: false, message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

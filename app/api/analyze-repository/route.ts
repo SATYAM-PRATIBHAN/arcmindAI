@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Unauthorized",
         } as AnalyzeRepositoryResponse,
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "Missing required fields: owner or repo",
         } as AnalyzeRepositoryResponse,
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: "GitHub not connected",
         } as AnalyzeRepositoryResponse,
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             ? error.message
             : "Failed to analyze repository",
       } as AnalyzeRepositoryResponse,
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

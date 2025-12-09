@@ -10,7 +10,7 @@ export async function GET() {
     if (!session?.user) {
       return NextResponse.json(
         { connected: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -32,7 +32,7 @@ export async function GET() {
     console.error("Error checking GitHub status:", err);
     return NextResponse.json(
       { connected: false, message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

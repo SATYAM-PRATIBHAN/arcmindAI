@@ -14,7 +14,7 @@ function getEncryptionKey(): Buffer {
 
   if (!key) {
     throw new Error(
-      "ENCRYPTION_KEY environment variable is not set. Please generate a 32-byte key using: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+      "ENCRYPTION_KEY environment variable is not set. Please generate a 32-byte key using: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
     );
   }
 
@@ -23,7 +23,7 @@ function getEncryptionKey(): Buffer {
 
   if (keyBuffer.length !== KEY_LENGTH) {
     throw new Error(
-      `ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (64 hex characters). Current length: ${keyBuffer.length} bytes`
+      `ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (64 hex characters). Current length: ${keyBuffer.length} bytes`,
     );
   }
 
