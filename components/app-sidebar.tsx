@@ -52,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const filteredHistory = history.filter((gen) =>
     (gen.systemName || gen.userInput)
       .toLowerCase()
-      .includes(searchQuery.toLowerCase()),
+      .includes(searchQuery.toLowerCase())
   );
 
   useEffect(() => {
@@ -70,6 +70,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      // Clear all doubt conversation history from localStorage
+      const keys = Object.keys(localStorage);
+      keys.forEach((key) => {
+        if (key.startsWith("doubt_chat_")) {
+          localStorage.removeItem(key);
+        }
+      });
+
       await signOut({ callbackUrl: "/" });
     } catch (error) {
       console.error("Error signing out:", error);
@@ -148,7 +156,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           isActive?: boolean;
                           isLoading?: boolean;
                         },
-                        index: number,
+                        index: number
                       ) => (
                         <SidebarMenuItem key={index}>
                           {item.isLoading ? (
@@ -162,7 +170,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             </SidebarMenuButton>
                           )}
                         </SidebarMenuItem>
-                      ),
+                      )
                     )}
                   </SidebarMenu>
                 </SidebarGroupContent>
@@ -189,7 +197,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <div
                         className={cn(
                           "relative w-6 h-6 aspect-square rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium mr-2",
-                          user?.plan === "custom" && "ring-1 ring-yellow-500",
+                          user?.plan === "custom" && "ring-1 ring-yellow-500"
                         )}
                       >
                         {user?.avatar ? (

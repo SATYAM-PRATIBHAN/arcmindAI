@@ -23,6 +23,7 @@ interface AIImprovementDialogProps {
   currentCode: string;
   generationId: string;
   onImprove: (improvedCode: string) => void;
+  onShowApiKeyDialog: () => void;
 }
 
 export function AIImprovementDialog({
@@ -31,6 +32,7 @@ export function AIImprovementDialog({
   currentCode,
   generationId,
   onImprove,
+  onShowApiKeyDialog,
 }: AIImprovementDialogProps) {
   const [userPrompt, setUserPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,6 +56,9 @@ export function AIImprovementDialog({
           userPrompt: userPrompt.trim(),
           useAISuggestion,
         },
+        {
+          validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
+        }
       );
 
       if (!response.data.success) {
@@ -71,8 +76,18 @@ export function AIImprovementDialog({
       toast.success("Diagram improved successfully!");
     } catch (err) {
       console.error("Error improving diagram:", err);
+
+      // Check if it's a 503 error (API key issue)
+      if (axios.isAxiosError(err) && err.response?.status === 503) {
+        onShowApiKeyDialog();
+      }
+
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to improve diagram";
+        axios.isAxiosError(err) && err.response?.data?.error
+          ? err.response.data.error
+          : err instanceof Error
+            ? err.message
+            : "Failed to improve diagram";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

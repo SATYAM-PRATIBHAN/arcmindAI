@@ -12,6 +12,7 @@ import { EditorHeader } from "./editor-header";
 import { CodeEditorPanel } from "./code-editor-panel";
 import { DiagramPreviewPanel } from "./diagram-preview-panel";
 import { AIImprovementDialog } from "./ai-improvement-dialog";
+import { ApiKeyDialog } from "@/components/api-key-dialog";
 
 interface MermaidEditorClientProps {
   generationId: string;
@@ -29,6 +30,7 @@ export function MermaidEditorClient({
   const [originalCode] = useState(initialMermaidCode);
   const [saving, setSaving] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
 
   // Custom hooks
   const isMobile = useMobileDetection();
@@ -44,7 +46,7 @@ export function MermaidEditorClient({
     try {
       const response = await axios.put(
         DOC_ROUTES.API.GITHUB.GENERATION(generationId),
-        { mermaidCode: code },
+        { mermaidCode: code }
       );
 
       if (!response.data.success) {
@@ -73,12 +75,25 @@ export function MermaidEditorClient({
     toast.success("Diagram updated! Don't forget to save your changes.");
   };
 
+  const closeApiKeyDialog = () => {
+    setShowApiKeyDialog(false);
+  };
+
   const hasChanges = code !== originalCode;
 
   return (
     <div
       className={`flex flex-col gap-4 ${isMobile ? "min-h-screen" : "h-[calc(100vh-8rem)]"}`}
     >
+      <ApiKeyDialog
+        isOpen={showApiKeyDialog}
+        onClose={closeApiKeyDialog}
+        onSuccess={() => {
+          closeApiKeyDialog();
+          toast.info("API keys saved. Please try improving the diagram again.");
+        }}
+      />
+
       <EditorHeader
         userInput={userInput}
         hasChanges={hasChanges}
@@ -118,6 +133,7 @@ export function MermaidEditorClient({
         currentCode={code}
         generationId={generationId}
         onImprove={handleAIImprove}
+        onShowApiKeyDialog={() => setShowApiKeyDialog(true)}
       />
     </div>
   );

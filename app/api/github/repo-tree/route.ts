@@ -4,17 +4,41 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/prisma";
 import { decryptToken } from "@/lib/encryption";
 import axios from "axios";
+import {
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+  apiGatewayErrorsTotal,
+  databaseQueryDurationSeconds,
+  userLastActivityTimestamp,
+} from "@/lib/metrics";
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  const route = "/api/github/repo-tree";
+  const method = "GET";
+  httpRequestsTotal.inc({ route, method });
+
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
+
+    // Update user activity
+    userLastActivityTimestamp.set(
+      // @ts-expect-error id is added in jwt callback
+      { user_id: session.user.id },
+      Date.now() / 1000
+    );
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -23,16 +47,22 @@ export async function GET(request: NextRequest) {
     const branch = searchParams.get("branch");
 
     if (!owner || !repo || !branch) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         {
           success: false,
           message: "Missing owner, repo, or branch parameter",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Get user's encrypted GitHub token
+    const dbStart = Date.now();
     const user = await db.user.findUnique({
       where: {
         // @ts-expect-error id is added in jwt callback
@@ -42,11 +72,20 @@ export async function GET(request: NextRequest) {
         githubAccessToken: true,
       },
     });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findUnique" },
+      (Date.now() - dbStart) / 1000
+    );
 
     if (!user?.githubAccessToken) {
+      apiGatewayErrorsTotal.inc({ status_code: "403" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         { success: false, message: "GitHub not connected" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -61,7 +100,7 @@ export async function GET(request: NextRequest) {
           Authorization: `Bearer ${githubToken}`,
           Accept: "application/vnd.github.v3+json",
         },
-      },
+      }
     );
 
     return NextResponse.json({
@@ -70,6 +109,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("Error fetching repo tree:", err);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000
+    );
     return NextResponse.json(
       {
         success: false,
@@ -78,7 +122,7 @@ export async function GET(request: NextRequest) {
             ? err.message
             : "Failed to fetch repository tree",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

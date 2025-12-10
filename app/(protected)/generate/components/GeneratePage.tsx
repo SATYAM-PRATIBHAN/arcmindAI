@@ -15,6 +15,8 @@ import DatabaseSchemaSection from "./DatabaseSchemaSection";
 import InfrastructureSection from "./InfrastructureSection";
 import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
+import { ApiKeyDialog } from "@/components/api-key-dialog";
+import { toast } from "sonner";
 
 export default function GeneratePage() {
   const { refetch } = useHistory();
@@ -22,11 +24,13 @@ export default function GeneratePage() {
     generate,
     isLoading,
     error: generateError,
+    showApiKeyDialog,
+    closeApiKeyDialog,
   } = useGenerateSystem(refetch);
   const [userInput, setUserInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
-    null,
+    null
   );
 
   function cleanMermaidString(input: string | undefined | null): string {
@@ -61,7 +65,7 @@ export default function GeneratePage() {
         if (jsonStart !== -1) {
           // Extract from after the ```json marker
           cleanedOutput = cleanedOutput.slice(
-            jsonStart + jsonStartMarker.length,
+            jsonStart + jsonStartMarker.length
           );
 
           // Find the first closing ``` after the JSON start (not the last one in the entire string)
@@ -102,23 +106,37 @@ export default function GeneratePage() {
 
         const parsedData: ArchitectureData = JSON.parse(cleanedOutput);
         setGeneratedData(parsedData);
+        toast.success("System architecture generated successfully!");
       } catch (parseError) {
         console.error("Failed to parse generated data:", parseError);
         console.error("Raw output length:", result.output.length);
         console.error(
           "Raw output preview:",
-          result.output.substring(0, 500) + "...",
+          result.output.substring(0, 500) + "..."
         );
         setGeneratedData(null);
+        toast.error("Failed to parse AI response. Try rephrasing your input.");
       }
     } else {
       setError(generateError);
       setGeneratedData(null);
+      if (generateError) {
+        toast.error(generateError);
+      }
     }
   };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <ApiKeyDialog
+        isOpen={showApiKeyDialog}
+        onClose={closeApiKeyDialog}
+        onSuccess={() => {
+          closeApiKeyDialog();
+          // User can retry generation after adding API keys
+        }}
+      />
+
       <div className="flex gap-4 items-center">
         <Input
           placeholder="Enter your system architecture prompt..."
@@ -196,7 +214,7 @@ export default function GeneratePage() {
               <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
               <MermaidDiagram
                 chart={cleanMermaidString(
-                  generatedData["Architecture Diagram"],
+                  generatedData["Architecture Diagram"]
                 )}
               />
             </section>

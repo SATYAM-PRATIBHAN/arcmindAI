@@ -24,6 +24,8 @@ const plans = [
       "AI-powered architecture generation (10 total)",
       "Basic tech stack visualization",
       "Download generated diagrams (limited)",
+      "Ask doubts about your architecture",
+      "Update system designs with AI",
     ],
   },
   {
@@ -38,6 +40,7 @@ const plans = [
       "Full architecture history",
       "Email delivery of system designs",
       "Get defined Frontend Structure",
+      "Priority support",
     ],
   },
   {
@@ -77,7 +80,7 @@ export const Pricing = ({ className }: { className?: string }) => {
           headers: {
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (!data.success) {
@@ -95,7 +98,7 @@ export const Pricing = ({ className }: { className?: string }) => {
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to process subscription. Please try again.",
+          : "Failed to process subscription. Please try again."
       );
       setLoadingPlan(null);
     }
@@ -157,7 +160,7 @@ export const Pricing = ({ className }: { className?: string }) => {
               <Card
                 className={cn(
                   plan.name === "Pro" &&
-                    "outline-primary origin-top outline-4 shadow-lg shadow-primary/10",
+                    "outline-primary origin-top outline-4 shadow-lg shadow-primary/10"
                 )}
               >
                 <CardContent className="flex flex-col gap-7 px-6 py-5">

@@ -8,6 +8,18 @@ import { db } from "@/lib/prisma";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
+import {
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+  apiGatewayErrorsTotal,
+  databaseQueryDurationSeconds,
+  aiGenerationRequestsTotal,
+  aiGenerationSuccessTotal,
+  aiGenerationFailureTotal,
+  aiGenerationDurationSeconds,
+  cacheHitsTotal,
+  userLastActivityTimestamp,
+} from "@/lib/metrics";
 
 interface GenerateGithubDesignRequest {
   owner: string;
@@ -16,6 +28,11 @@ interface GenerateGithubDesignRequest {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const route = "/api/generate-github-design";
+  const method = "POST";
+  httpRequestsTotal.inc({ route, method });
+
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -23,27 +40,41 @@ export async function POST(request: NextRequest) {
     const userId = session?.user?.id;
 
     if (!userId) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
+
+    // Update user activity
+    userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
 
     const body: GenerateGithubDesignRequest = await request.json();
     const { owner, repo, analysisData } = body;
 
     if (!owner || !repo || !analysisData) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         {
           success: false,
           error: "Missing required fields: owner, repo, or analysisData",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Check if a design already exists for this repository
     const repoIdentifier = `${repo}`;
+    const dbStart = Date.now();
     const existingGeneration = await db.generation.findFirst({
       where: {
         userId: userId,
@@ -56,9 +87,19 @@ export async function POST(request: NextRequest) {
         createdAt: "desc", // Get the most recent one
       },
     });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbStart) / 1000
+    );
 
     // If design already exists, return it from cache
     if (existingGeneration?.githubGeneration) {
+      cacheHitsTotal.inc();
+      httpRequestsTotal.inc({ route, method, status_code: "200" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json({
         success: true,
         generationId: existingGeneration.id,
@@ -71,7 +112,7 @@ export async function POST(request: NextRequest) {
     const userMessage = formatRepositoryAnalysisForAI(
       owner,
       repo,
-      analysisData,
+      analysisData
     );
 
     // Call AI to generate Mermaid diagram
@@ -83,10 +124,17 @@ export async function POST(request: NextRequest) {
     // 🔑 Fetch user's API keys
     const userApiKeys = await getUserApiKeys(userId);
 
+    // Increment AI generation request counter
+    aiGenerationRequestsTotal.inc();
+
+    const aiStart = Date.now();
     const { response } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey,
+      userApiKeys.geminiApiKey
     );
+    const aiDuration = (Date.now() - aiStart) / 1000;
+    aiGenerationDurationSeconds.observe(aiDuration);
+
     let mermaidDiagram = response.content as string;
 
     // Clean up the response - remove markdown code blocks if present
@@ -96,6 +144,7 @@ export async function POST(request: NextRequest) {
       .trim();
 
     // Save to database
+    const dbStart2 = Date.now();
     const generation = await db.generation.create({
       data: {
         userInput: repoIdentifier,
@@ -103,6 +152,20 @@ export async function POST(request: NextRequest) {
         userId: userId,
       },
     });
+    databaseQueryDurationSeconds.observe(
+      { operation: "create" },
+      (Date.now() - dbStart2) / 1000
+    );
+
+    // Increment success counters
+    aiGenerationSuccessTotal.inc();
+
+    // Track total HTTP duration
+    httpRequestsTotal.inc({ route, method, status_code: "200" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000
+    );
 
     return NextResponse.json({
       success: true,
@@ -112,15 +175,38 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("GitHub design generation error:", error);
+
+    aiGenerationFailureTotal.inc();
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    // Check if it's an API key/rate limit error
+    const isApiKeyError =
+      errorMessage.toLowerCase().includes("api key") ||
+      errorMessage.toLowerCase().includes("rate limit") ||
+      errorMessage.toLowerCase().includes("quota") ||
+      errorMessage.toLowerCase().includes("429") ||
+      errorMessage.toLowerCase().includes("insufficient_quota") ||
+      errorMessage.toLowerCase().includes("unauthorized") ||
+      errorMessage.toLowerCase().includes("authentication");
+
+    const status = isApiKeyError ? 503 : 500;
+
+    apiGatewayErrorsTotal.inc({ status_code: status.toString() });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000
+    );
+
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate system design",
+        error: isApiKeyError
+          ? "Gemini API error. Please provide your own API key or try again later."
+          : errorMessage,
       },
-      { status: 500 },
+      { status }
     );
   }
 }

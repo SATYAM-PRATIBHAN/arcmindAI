@@ -14,10 +14,11 @@ export function useUpdateGeneration() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<UpdateGenerationResponse | null>(null);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
 
   const updateGeneration = async (
     generationId: string,
-    userInput: string,
+    userInput: string
   ): Promise<UpdateGenerationResponse | null> => {
     setIsLoading(true);
     setError(null);
@@ -28,8 +29,8 @@ export function useUpdateGeneration() {
         `${DOC_ROUTES.API.GENERATE.ROOT}/${generationId}`,
         { userInput },
         {
-          validateStatus: (status) => status < 500, // Don't throw for 4xx errors, only for 5xx
-        },
+          validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
+        }
       );
 
       if (response.status >= 200 && response.status < 300) {
@@ -44,6 +45,11 @@ export function useUpdateGeneration() {
         return response.data;
       }
     } catch (err) {
+      // Check if it's a 503 error (API key issue)
+      if (axios.isAxiosError(err) && err.response?.status === 503) {
+        setShowApiKeyDialog(true);
+      }
+
       let errorMessage = "Something went wrong";
       if (axios.isAxiosError(err) && err.response) {
         errorMessage = err.response.data?.message || err.message;
@@ -57,10 +63,16 @@ export function useUpdateGeneration() {
     }
   };
 
+  const closeApiKeyDialog = () => {
+    setShowApiKeyDialog(false);
+  };
+
   return {
     updateGeneration,
     isLoading,
     error,
     data,
+    showApiKeyDialog,
+    closeApiKeyDialog,
   };
 }

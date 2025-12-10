@@ -30,6 +30,8 @@ import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
 import { DOC_ROUTES } from "@/lib/routes";
 import { ArchitectureData } from "../utils/types";
+import { ApiKeyDialog } from "@/components/api-key-dialog";
+import { toast } from "sonner";
 
 export default function GenerationPage() {
   const { id } = useParams();
@@ -44,11 +46,13 @@ export default function GenerationPage() {
     updateGeneration,
     isLoading: isUpdating,
     error: updateError,
+    showApiKeyDialog,
+    closeApiKeyDialog,
   } = useUpdateGeneration();
   const { refetch } = useHistory();
 
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
-    null,
+    null
   );
   const [githubGeneration, setGithubGeneration] = useState<string | null>(null);
   const [isGithubRepo, setIsGithubRepo] = useState(false);
@@ -110,8 +114,12 @@ export default function GenerationPage() {
       }
       setResponseText("");
       setIsActionDialogOpen(false);
+      toast.success("Generation updated successfully!");
     } else {
       console.error("Failed to update generation:", updateError);
+      if (updateError) {
+        toast.error(updateError);
+      }
     }
   };
 
@@ -242,6 +250,14 @@ export default function GenerationPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
+      <ApiKeyDialog
+        isOpen={showApiKeyDialog}
+        onClose={closeApiKeyDialog}
+        onSuccess={() => {
+          closeApiKeyDialog();
+          toast.info("API keys saved. Please try updating again.");
+        }}
+      />
       <ActionDialog
         open={isActionDialogOpen}
         onOpenChange={setIsActionDialogOpen}

@@ -20,7 +20,7 @@ import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now();
   const route = "/api/generate/[id]/doubt";
@@ -35,11 +35,11 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -52,14 +52,14 @@ export async function POST(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart1) / 1000,
+      (Date.now() - dbStart1) / 1000
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json({ status: 404, message: "User not Found" });
     }
@@ -68,23 +68,11 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json({
         status: 401,
         message: "Email is not verified",
-      });
-    }
-
-    if (user?.plan == "free") {
-      apiGatewayErrorsTotal.inc({ status_code: "401" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      return NextResponse.json({
-        status: 401,
-        message: "Purchase the pro version to use this feature",
       });
     }
 
@@ -94,20 +82,20 @@ export async function POST(
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000,
+      Date.now() / 1000
     );
 
-    const { question } = await request.json();
+    const { question, conversationHistory } = await request.json();
 
     if (!question || typeof question !== "string" || !question.trim()) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { success: false, message: "Question is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -122,18 +110,18 @@ export async function POST(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000,
+      (Date.now() - dbStart) / 1000
     );
 
     if (!generation) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000,
+        (Date.now() - startTime) / 1000
       );
       return NextResponse.json(
         { success: false, message: "Generation not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -141,19 +129,35 @@ export async function POST(
     aiGenerationRequestsTotal.inc();
 
     let messages;
+
+    // Build conversation context from history
+    const contextMessages = [];
+    if (conversationHistory && Array.isArray(conversationHistory)) {
+      for (const item of conversationHistory) {
+        contextMessages.push(new HumanMessage(item.question));
+        contextMessages.push(
+          new HumanMessage(`Assistant's previous answer: ${item.answer}`)
+        );
+      }
+    }
+
     if (generation.githubGeneration) {
       messages = [
         new SystemMessage(DoubtSystemPrompt),
-        new HumanMessage(`Architecture Data: ${JSON.stringify(generation.githubGeneration)}
-
-User Question: ${question}`),
+        new HumanMessage(
+          `Architecture Data: ${JSON.stringify(generation.githubGeneration)}`
+        ),
+        ...contextMessages,
+        new HumanMessage(`User Question: ${question}`),
       ];
     } else {
       messages = [
         new SystemMessage(DoubtSystemPrompt),
-        new HumanMessage(`Architecture Data: ${JSON.stringify(generation.generatedOutput)}
-
-User Question: ${question}`),
+        new HumanMessage(
+          `Architecture Data: ${JSON.stringify(generation.generatedOutput)}`
+        ),
+        ...contextMessages,
+        new HumanMessage(`User Question: ${question}`),
       ];
     }
 
@@ -164,7 +168,7 @@ User Question: ${question}`),
     const aiStart = Date.now();
     const { response: aiResponse } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey,
+      userApiKeys.geminiApiKey
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -185,7 +189,7 @@ User Question: ${question}`),
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000,
+      (Date.now() - startTime) / 1000
     );
 
     return NextResponse.json({
@@ -194,16 +198,36 @@ User Question: ${question}`),
     });
   } catch (error) {
     console.error("Error answering doubt:", error);
-    apiGatewayErrorsTotal.inc({ status_code: "500" });
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    // Check if it's an API key/rate limit error
+    const isApiKeyError =
+      errorMessage.toLowerCase().includes("api key") ||
+      errorMessage.toLowerCase().includes("rate limit") ||
+      errorMessage.toLowerCase().includes("quota") ||
+      errorMessage.toLowerCase().includes("429") ||
+      errorMessage.toLowerCase().includes("insufficient_quota") ||
+      errorMessage.toLowerCase().includes("unauthorized") ||
+      errorMessage.toLowerCase().includes("authentication");
+
+    const status = isApiKeyError ? 503 : 500;
+
+    apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000,
+      (Date.now() - startTime) / 1000
     );
-    const errorMessage =
-      error instanceof Error ? error.message : "Internal server error";
+
     return NextResponse.json(
-      { success: false, message: errorMessage },
-      { status: 500 },
+      {
+        success: false,
+        message: isApiKeyError
+          ? "Gemini API error. Please provide your own API key or try again later."
+          : errorMessage,
+      },
+      { status }
     );
   }
 }

@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Send, Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAskDoubt } from "../hooks/useAskDoubt";
+import { ApiKeyDialog } from "@/components/api-key-dialog";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -37,7 +39,9 @@ export default function AskDoubtCard({
 }: AskDoubtCardProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { askDoubt, isLoading, error } = useAskDoubt();
+  const loadedGenerationIdRef = useRef<string | null>(null);
+  const { askDoubt, isLoading, error, showApiKeyDialog, closeApiKeyDialog } =
+    useAskDoubt();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,6 +50,45 @@ export default function AskDoubtCard({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load messages from localStorage
+  const loadMessagesFromStorage = (genId: string) => {
+    const storageKey = `doubt_chat_${genId}`;
+    const savedMessages = localStorage.getItem(storageKey);
+
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        const messagesWithDates = parsed.map((msg: Message) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+        return messagesWithDates;
+      } catch (error) {
+        console.error("Failed to parse saved messages:", error);
+        return [];
+      }
+    }
+    return [];
+  };
+
+  // Load conversation history when generationId changes
+  useEffect(() => {
+    if (generationId && loadedGenerationIdRef.current !== generationId) {
+      loadedGenerationIdRef.current = generationId;
+      const loadedMessages = loadMessagesFromStorage(generationId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMessages(loadedMessages);
+    }
+  }, [generationId]);
+
+  // Save messages to localStorage whenever they change
+  const saveMessagesToStorage = (updatedMessages: Message[]) => {
+    if (generationId) {
+      const storageKey = `doubt_chat_${generationId}`;
+      localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
+    }
+  };
 
   const handleSubmit = async () => {
     if (!doubtText.trim() || isLoading) return;
@@ -60,11 +103,29 @@ export default function AskDoubtCard({
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    saveMessagesToStorage(updatedMessages);
     onDoubtTextChange("");
 
-    // Call the API to get AI response
-    const result = await askDoubt(generationId, question);
+    // Build conversation history for AI context
+    const conversationHistory = messages
+      .filter((msg) => msg.sender === "user" || msg.sender === "assistant")
+      .reduce(
+        (acc, msg, idx, arr) => {
+          if (msg.sender === "user" && arr[idx + 1]?.sender === "assistant") {
+            acc.push({
+              question: msg.text,
+              answer: arr[idx + 1].text,
+            });
+          }
+          return acc;
+        },
+        [] as Array<{ question: string; answer: string }>
+      );
+
+    // Call the API to get AI response with conversation context
+    const result = await askDoubt(generationId, question, conversationHistory);
 
     if (result && result.success) {
       const assistantMessage: Message = {
@@ -73,16 +134,26 @@ export default function AskDoubtCard({
         sender: "assistant",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
+      saveMessagesToStorage(finalMessages);
     } else {
+      const errorText =
+        error || "Sorry, I couldn't answer your question. Please try again.";
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text:
-          error || "Sorry, I couldn't answer your question. Please try again.",
+        text: errorText,
         sender: "assistant",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      const finalMessages = [...updatedMessages, errorMessage];
+      setMessages(finalMessages);
+      saveMessagesToStorage(finalMessages);
+
+      // Show toast notification for errors
+      if (error) {
+        toast.error(error);
+      }
     }
   };
 
@@ -95,6 +166,15 @@ export default function AskDoubtCard({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
+      <ApiKeyDialog
+        isOpen={showApiKeyDialog}
+        onClose={closeApiKeyDialog}
+        onSuccess={() => {
+          closeApiKeyDialog();
+          toast.info("API keys saved. Please try asking your question again.");
+        }}
+      />
+
       <SheetContent
         side="right"
         className="w-full sm:max-w-lg flex flex-col p-0"
@@ -124,7 +204,7 @@ export default function AskDoubtCard({
                 key={message.id}
                 className={cn(
                   "flex gap-3",
-                  message.sender === "user" ? "justify-end" : "justify-start",
+                  message.sender === "user" ? "justify-end" : "justify-start"
                 )}
               >
                 {message.sender === "assistant" && (
@@ -137,7 +217,7 @@ export default function AskDoubtCard({
                     "max-w-[80%] rounded-lg px-4 py-2",
                     message.sender === "user"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground",
+                      : "bg-muted text-foreground"
                   )}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.text}</p>
@@ -146,7 +226,7 @@ export default function AskDoubtCard({
                       "text-xs mt-1",
                       message.sender === "user"
                         ? "text-primary-foreground/70"
-                        : "text-muted-foreground",
+                        : "text-muted-foreground"
                     )}
                   >
                     {message.timestamp.toLocaleTimeString([], {

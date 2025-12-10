@@ -8,36 +8,66 @@ import {
   AnalyzeRepositoryRequest,
   AnalyzeRepositoryResponse,
 } from "@/types/repository-analysis";
+import {
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+  apiGatewayErrorsTotal,
+  databaseQueryDurationSeconds,
+  userLastActivityTimestamp,
+} from "@/lib/metrics";
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const route = "/api/analyze-repository";
+  const method = "POST";
+  httpRequestsTotal.inc({ route, method });
+
   try {
     // Authenticate user
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         {
           success: false,
           error: "Unauthorized",
         } as AnalyzeRepositoryResponse,
-        { status: 401 },
+        { status: 401 }
       );
     }
+
+    // Update user activity
+    userLastActivityTimestamp.set(
+      // @ts-expect-error id is added to the session in the session callback
+      { user_id: session.user.id },
+      Date.now() / 1000
+    );
 
     const body: AnalyzeRepositoryRequest = await request.json();
     const { owner, repo } = body;
 
     if (!owner || !repo) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         {
           success: false,
           error: "Missing required fields: owner or repo",
         } as AnalyzeRepositoryResponse,
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Get user's encrypted GitHub token from database
+    const dbStart = Date.now();
     const user = await db.user.findUnique({
       where: {
         // @ts-expect-error id is added in jwt callback
@@ -47,14 +77,23 @@ export async function POST(request: NextRequest) {
         githubAccessToken: true,
       },
     });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findUnique" },
+      (Date.now() - dbStart) / 1000
+    );
 
     if (!user?.githubAccessToken) {
+      apiGatewayErrorsTotal.inc({ status_code: "403" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000
+      );
       return NextResponse.json(
         {
           success: false,
           error: "GitHub not connected",
         } as AnalyzeRepositoryResponse,
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -65,12 +104,23 @@ export async function POST(request: NextRequest) {
     const analyzer = new RepositoryAnalyzer(owner, repo, githubToken);
     const analysis = await analyzer.analyze();
 
+    httpRequestsTotal.inc({ route, method, status_code: "200" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000
+    );
+
     return NextResponse.json({
       success: true,
       data: analysis,
     } as AnalyzeRepositoryResponse);
   } catch (error) {
     console.error("Repository analysis error:", error);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000
+    );
     return NextResponse.json(
       {
         success: false,
@@ -79,7 +129,7 @@ export async function POST(request: NextRequest) {
             ? error.message
             : "Failed to analyze repository",
       } as AnalyzeRepositoryResponse,
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
