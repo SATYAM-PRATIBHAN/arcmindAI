@@ -19,9 +19,21 @@ export function DiagramPreviewPanel({
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragStartRef = useRef({ x: 0, y: 0 });
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || "ontouchstart" in window);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Center diagram on load or update
   const centerDiagram = useCallback(() => {
@@ -58,10 +70,41 @@ export function DiagramPreviewPanel({
     return () => observer.disconnect();
   }, [diagramRef, centerDiagram]);
 
-  // 🔍 Only button zoom (no gestures)
-  const zoomIn = () => setScale((s) => Math.min(s + 0.2, 6));
-  const zoomOut = () => setScale((s) => Math.max(s - 0.2, 0.5));
+  // 🔍 Zoom controls (buttons, keyboard, touchpad)
+  const zoomIn = useCallback(() => setScale((s) => Math.min(s + 0.2, 6)), []);
+  const zoomOut = useCallback(
+    () => setScale((s) => Math.max(s - 0.2, 0.5)),
+    []
+  );
   const resetView = () => centerDiagram();
+
+  // ⌨️ Keyboard shortcuts (Ctrl/Cmd +/-) - only when focused and not on mobile
+  useEffect(() => {
+    // Skip keyboard shortcuts on mobile devices
+    if (isMobile) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts when the diagram container is focused
+      if (!isFocused) return;
+
+      // Check for Ctrl (Windows/Linux) or Cmd (Mac)
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          zoomIn();
+        } else if (e.key === "-" || e.key === "_") {
+          e.preventDefault();
+          zoomOut();
+        } else if (e.key === "0") {
+          e.preventDefault();
+          resetView();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [zoomIn, zoomOut, resetView, isFocused, isMobile]);
 
   // 🖱️ Drag to pan
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -81,6 +124,87 @@ export function DiagramPreviewPanel({
   };
 
   const handleMouseUp = () => setIsDragging(false);
+
+  // 🎯 Touchpad gestures (pinch-to-zoom, two-finger pan)
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+
+    // Pinch-to-zoom (Ctrl/Cmd + scroll)
+    if (e.ctrlKey || e.metaKey) {
+      const delta = -e.deltaY;
+      const zoomFactor = delta > 0 ? 1.1 : 0.9;
+      setScale((s) => Math.min(Math.max(s * zoomFactor, 0.5), 6));
+    } else {
+      // Two-finger pan (scroll without Ctrl/Cmd)
+      setPosition((pos) => ({
+        x: pos.x - e.deltaX,
+        y: pos.y - e.deltaY,
+      }));
+    }
+  }, []);
+
+  // Attach wheel event listener
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
+
+  // 📱 Touch gestures for mobile (pinch-to-zoom, drag)
+  const touchStartRef = useRef<{
+    x: number;
+    y: number;
+    distance: number;
+  } | null>(null);
+
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      // Single finger - prepare for drag
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y,
+      };
+    } else if (e.touches.length === 2) {
+      // Two fingers - prepare for pinch zoom
+      setIsDragging(false);
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      touchStartRef.current = { x: centerX, y: centerY, distance };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent scrolling while interacting with diagram
+
+    if (e.touches.length === 1 && isDragging) {
+      // Single finger drag
+      setPosition({
+        x: e.touches[0].clientX - dragStartRef.current.x,
+        y: e.touches[0].clientY - dragStartRef.current.y,
+      });
+    } else if (e.touches.length === 2 && touchStartRef.current) {
+      // Two finger pinch zoom
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      const scaleDelta = distance / touchStartRef.current.distance;
+      setScale((s) => Math.min(Math.max(s * scaleDelta, 0.5), 6));
+      touchStartRef.current.distance = distance;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    touchStartRef.current = null;
+  };
 
   return (
     <Card className="h-full border-0 rounded-none flex flex-col">
@@ -111,13 +235,19 @@ export function DiagramPreviewPanel({
       <CardContent className="flex-1 overflow-hidden px-4 relative">
         <div
           ref={containerRef}
+          tabIndex={0}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           className={`w-full h-full overflow-hidden bg-background p-2 rounded-lg border ${
             isDragging ? "cursor-grabbing" : "cursor-grab"
-          }`}
+          } ${isFocused ? "ring-2 ring-primary ring-offset-2" : ""}`}
           style={{ touchAction: "none" }}
         >
           <div
@@ -130,6 +260,11 @@ export function DiagramPreviewPanel({
             className="inline-block"
           />
         </div>
+        {!isFocused && !isMobile && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded border pointer-events-none">
+            Click to enable keyboard shortcuts (Ctrl/Cmd +/-)
+          </div>
+        )}
       </CardContent>
 
       <div className="px-4 pb-4">

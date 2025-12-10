@@ -22,12 +22,17 @@ export function EditorHeader({
 }: EditorHeaderProps) {
   const router = useRouter();
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
+    <div className="flex flex-col md:flex-row justify-between w-full gap-4 md:gap-6">
+      {/* Left Section */}
+      <div className="flex flex-col min-w-0">
         <h1 className="text-2xl font-bold">Edit System Design</h1>
-        <p className="text-muted-foreground text-sm mt-1">{userInput}</p>
+        <p className="text-muted-foreground text-sm mt-1 truncate max-w-full">
+          {userInput}
+        </p>
       </div>
-      <div className="flex gap-2">
+
+      {/* Right Section - Buttons */}
+      <div className="flex flex-wrap gap-2 justify-start md:justify-end">
         <Button
           variant="ghost"
           size="sm"
@@ -37,6 +42,7 @@ export function EditorHeader({
           <Home className="w-4 h-4 mr-2" />
           Back to Repositories
         </Button>
+
         <Button
           variant="outline"
           onClick={onReset}
@@ -46,6 +52,7 @@ export function EditorHeader({
           <RotateCcw className="w-4 h-4 mr-2" />
           Reset
         </Button>
+
         <Button
           onClick={onSave}
           disabled={!hasChanges || saving}
