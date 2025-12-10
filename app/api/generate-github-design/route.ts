@@ -43,11 +43,11 @@ export async function POST(request: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -61,14 +61,14 @@ export async function POST(request: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           success: false,
           error: "Missing required fields: owner, repo, or analysisData",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     // If design already exists, return it from cache
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       httpRequestsTotal.inc({ route, method, status_code: "200" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({
         success: true,
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     const userMessage = formatRepositoryAnalysisForAI(
       owner,
       repo,
-      analysisData
+      analysisData,
     );
 
     // Call AI to generate Mermaid diagram
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     const aiStart = Date.now();
     const { response } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey
+      userApiKeys.geminiApiKey,
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "create" },
-      (Date.now() - dbStart2) / 1000
+      (Date.now() - dbStart2) / 1000,
     );
 
     // Increment success counters
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     httpRequestsTotal.inc({ route, method, status_code: "200" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json(
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
           ? "Gemini API error. Please provide your own API key or try again later."
           : errorMessage,
       },
-      { status }
+      { status },
     );
   }
 }

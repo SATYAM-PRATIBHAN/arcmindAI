@@ -15,7 +15,7 @@ export function useAskDoubt() {
   const askDoubt = async (
     generationId: string,
     question: string,
-    conversationHistory?: Array<{ question: string; answer: string }>
+    conversationHistory?: Array<{ question: string; answer: string }>,
   ): Promise<DoubtResponse | null> => {
     setIsLoading(true);
     setError(null);
@@ -29,7 +29,7 @@ export function useAskDoubt() {
             "Content-Type": "application/json",
           },
           validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
-        }
+        },
       );
 
       const data = response.data;

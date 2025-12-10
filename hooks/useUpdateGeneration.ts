@@ -18,7 +18,7 @@ export function useUpdateGeneration() {
 
   const updateGeneration = async (
     generationId: string,
-    userInput: string
+    userInput: string,
   ): Promise<UpdateGenerationResponse | null> => {
     setIsLoading(true);
     setError(null);
@@ -30,7 +30,7 @@ export function useUpdateGeneration() {
         { userInput },
         {
           validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
-        }
+        },
       );
 
       if (response.status >= 200 && response.status < 300) {

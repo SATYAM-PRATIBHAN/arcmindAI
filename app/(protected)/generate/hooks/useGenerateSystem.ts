@@ -15,7 +15,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
 
   const generate = async (
-    userInput: string
+    userInput: string,
   ): Promise<GenerateResponse | null> => {
     // @ts-expect-error accessToken is added to session in NextAuth callbacks
     if (!session?.user?.accessToken) {
@@ -36,7 +36,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
         },
         {
           validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
-        }
+        },
       );
 
       if (response.status < 200 || response.status >= 300) {

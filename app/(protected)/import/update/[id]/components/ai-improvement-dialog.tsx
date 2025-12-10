@@ -58,7 +58,7 @@ export function AIImprovementDialog({
         },
         {
           validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
-        }
+        },
       );
 
       if (!response.data.success) {

@@ -121,7 +121,7 @@ export default function AskDoubtCard({
           }
           return acc;
         },
-        [] as Array<{ question: string; answer: string }>
+        [] as Array<{ question: string; answer: string }>,
       );
 
     // Call the API to get AI response with conversation context
@@ -204,7 +204,7 @@ export default function AskDoubtCard({
                 key={message.id}
                 className={cn(
                   "flex gap-3",
-                  message.sender === "user" ? "justify-end" : "justify-start"
+                  message.sender === "user" ? "justify-end" : "justify-start",
                 )}
               >
                 {message.sender === "assistant" && (
@@ -217,7 +217,7 @@ export default function AskDoubtCard({
                     "max-w-[80%] rounded-lg px-4 py-2",
                     message.sender === "user"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
+                      : "bg-muted text-foreground",
                   )}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.text}</p>
@@ -226,7 +226,7 @@ export default function AskDoubtCard({
                       "text-xs mt-1",
                       message.sender === "user"
                         ? "text-primary-foreground/70"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     {message.timestamp.toLocaleTimeString([], {

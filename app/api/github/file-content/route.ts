@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added in jwt callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     // Get query parameters
@@ -50,11 +50,11 @@ export async function GET(request: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Missing owner, repo, or path parameter" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -71,18 +71,18 @@ export async function GET(request: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findUnique" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!user?.githubAccessToken) {
       apiGatewayErrorsTotal.inc({ status_code: "403" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "GitHub not connected" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
             : "application/vnd.github.raw",
         },
         responseType: isImage ? "arraybuffer" : "text",
-      }
+      },
     );
 
     if (isImage) {
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       {
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
         message:
           err instanceof Error ? err.message : "Failed to fetch file content",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

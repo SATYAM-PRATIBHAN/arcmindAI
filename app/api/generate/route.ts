@@ -31,11 +31,11 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { error: "Invalid request body. Missing 'userInput' field." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       NextResponse.json({ status: 404, message: "User not Found" });
     }
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({
         status: 401,
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
           error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
           upgrade: user?.plan === "free" ? true : false,
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -102,11 +102,11 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { error: "Invalid input. Please provide a valid project idea." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       return NextResponse.json(
         { error: "Missing userId. You must be logged in to generate." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -126,14 +126,14 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "429" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           error:
             "Rate limit exceeded. Please wait 2 minutes before making another request.",
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
     const aiStart = Date.now();
     const { response, allKeysFailed } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey
+      userApiKeys.geminiApiKey,
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -239,7 +239,7 @@ export async function POST(req: NextRequest) {
       if (mermaidStart !== -1) {
         // Extract from after the ```mermaid marker
         let mermaidText = cleanedOutput.slice(
-          mermaidStart + mermaidStartMarker.length
+          mermaidStart + mermaidStartMarker.length,
         );
 
         // Find the first closing ``` after the mermaid start
@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
       });
       databaseQueryDurationSeconds.observe(
         { operation: "create" },
-        (Date.now() - dbStart) / 1000
+        (Date.now() - dbStart) / 1000,
       );
 
       // Increment success counters
@@ -287,7 +287,7 @@ export async function POST(req: NextRequest) {
       // Track total HTTP duration
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
 
       return NextResponse.json({
@@ -304,14 +304,14 @@ export async function POST(req: NextRequest) {
       console.error("JSON parsing error:", jsonError);
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           error: "Failed to parse AI response JSON. Try rephrasing your input.",
           details: errorMessage,
         },
-        { status: 422 }
+        { status: 422 },
       );
     }
   } catch (error: unknown) {
@@ -347,7 +347,7 @@ export async function POST(req: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json(
@@ -356,7 +356,7 @@ export async function POST(req: NextRequest) {
           errorMessage ||
           "An unexpected server error occurred while generating the response.",
       },
-      { status }
+      { status },
     );
   }
 }

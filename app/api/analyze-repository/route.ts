@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           success: false,
           error: "Unauthorized",
         } as AnalyzeRepositoryResponse,
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     const body: AnalyzeRepositoryRequest = await request.json();
@@ -55,14 +55,14 @@ export async function POST(request: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           success: false,
           error: "Missing required fields: owner or repo",
         } as AnalyzeRepositoryResponse,
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,21 +79,21 @@ export async function POST(request: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findUnique" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!user?.githubAccessToken) {
       apiGatewayErrorsTotal.inc({ status_code: "403" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           success: false,
           error: "GitHub not connected",
         } as AnalyzeRepositoryResponse,
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     httpRequestsTotal.inc({ route, method, status_code: "200" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       {
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
             ? error.message
             : "Failed to analyze repository",
       } as AnalyzeRepositoryResponse,
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

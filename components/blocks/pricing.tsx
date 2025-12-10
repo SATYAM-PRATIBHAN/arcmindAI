@@ -80,7 +80,7 @@ export const Pricing = ({ className }: { className?: string }) => {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!data.success) {
@@ -98,7 +98,7 @@ export const Pricing = ({ className }: { className?: string }) => {
       alert(
         error instanceof Error
           ? error.message
-          : "Failed to process subscription. Please try again."
+          : "Failed to process subscription. Please try again.",
       );
       setLoadingPlan(null);
     }
@@ -160,7 +160,7 @@ export const Pricing = ({ className }: { className?: string }) => {
               <Card
                 className={cn(
                   plan.name === "Pro" &&
-                    "outline-primary origin-top outline-4 shadow-lg shadow-primary/10"
+                    "outline-primary origin-top outline-4 shadow-lg shadow-primary/10",
                 )}
               >
                 <CardContent className="flex flex-col gap-7 px-6 py-5">

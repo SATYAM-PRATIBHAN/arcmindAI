@@ -29,7 +29,7 @@ function cleanJsonOutput(content: string): string {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const route = "/api/generate/[id]/frontendStructure";
   const method = "POST";
@@ -45,7 +45,7 @@ export async function POST(
       end();
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -137,7 +137,7 @@ Generate a complete frontend architecture for this backend system.`),
 
     const { response } = await invokeOpenAIWithFallback(
       messages,
-      userApiKeys.openaiApiKey
+      userApiKeys.openaiApiKey,
     );
 
     // @ts-expect-error id is added to the session in the session callback
@@ -153,7 +153,7 @@ Generate a complete frontend architecture for this backend system.`),
             ? item
             : typeof item === "object" && "text" in item
               ? String(item.text)
-              : ""
+              : "",
         )
         .join("");
     } else {
@@ -184,7 +184,7 @@ Generate a complete frontend architecture for this backend system.`),
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     return NextResponse.json({
@@ -220,7 +220,7 @@ Generate a complete frontend architecture for this backend system.`),
           ? "OpenAI API error. Please provide your own API key or try again later."
           : "Internal Server Error",
       },
-      { status }
+      { status },
     );
   }
 }

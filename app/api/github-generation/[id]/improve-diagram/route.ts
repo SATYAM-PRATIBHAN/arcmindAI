@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, error: "Current diagram is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       // Use predefined AI suggestion prompt
       prompt = GITHUB_AI_SUGGEST_PROMPT.replace(
         "{currentDiagram}",
-        currentDiagram
+        currentDiagram,
       );
     } else {
       // Use custom user prompt
@@ -54,16 +54,16 @@ export async function POST(req: NextRequest) {
         apiGatewayErrorsTotal.inc({ status_code: "400" });
         httpRequestDurationSeconds.observe(
           { route },
-          (Date.now() - startTime) / 1000
+          (Date.now() - startTime) / 1000,
         );
         return NextResponse.json(
           { success: false, error: "User prompt is required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       prompt = GITHUB_AI_CUSTOM_PROMPT_TEMPLATE.replace(
         "{userPrompt}",
-        userPrompt
+        userPrompt,
       ).replace("{currentDiagram}", currentDiagram);
     }
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       userLastActivityTimestamp.set(
         // @ts-expect-error id is added to the session in the session callback
         { user_id: session.user.id },
-        Date.now() / 1000
+        Date.now() / 1000,
       );
     }
 
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     // Call OpenAI with fallback
     const { response } = await invokeOpenAIWithFallback(
       [new HumanMessage(prompt)],
-      userApiKeys.openaiApiKey
+      userApiKeys.openaiApiKey,
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     httpRequestsTotal.inc({ route, method, status_code: "200" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json(
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
           ? "OpenAI API error. Please provide your own API key or try again later."
           : "Failed to improve diagram",
       },
-      { status }
+      { status },
     );
   }
 }

@@ -56,7 +56,7 @@ interface UseFrontendStructureReturn {
 }
 
 export const useFrontendStructure = (
-  generationId?: string
+  generationId?: string,
 ): UseFrontendStructureReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,13 +81,13 @@ export const useFrontendStructure = (
         {},
         {
           validateStatus: (status) => status >= 200 && status < 300, // Only accept 2xx status codes
-        }
+        },
       );
       const result = axiosResponse.data;
 
       if (!result.success) {
         throw new Error(
-          result.message || "Failed to generate frontend structure"
+          result.message || "Failed to generate frontend structure",
         );
       }
 

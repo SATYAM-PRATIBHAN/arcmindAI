@@ -20,7 +20,7 @@ import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const startTime = Date.now();
   const route = "/api/generate/[id]/doubt";
@@ -35,11 +35,11 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -52,14 +52,14 @@ export async function POST(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart1) / 1000
+      (Date.now() - dbStart1) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({ status: 404, message: "User not Found" });
     }
@@ -68,7 +68,7 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({
         status: 401,
@@ -82,7 +82,7 @@ export async function POST(
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     const { question, conversationHistory } = await request.json();
@@ -91,11 +91,11 @@ export async function POST(
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Question is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -110,18 +110,18 @@ export async function POST(
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!generation) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Generation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -136,7 +136,7 @@ export async function POST(
       for (const item of conversationHistory) {
         contextMessages.push(new HumanMessage(item.question));
         contextMessages.push(
-          new HumanMessage(`Assistant's previous answer: ${item.answer}`)
+          new HumanMessage(`Assistant's previous answer: ${item.answer}`),
         );
       }
     }
@@ -145,7 +145,7 @@ export async function POST(
       messages = [
         new SystemMessage(DoubtSystemPrompt),
         new HumanMessage(
-          `Architecture Data: ${JSON.stringify(generation.githubGeneration)}`
+          `Architecture Data: ${JSON.stringify(generation.githubGeneration)}`,
         ),
         ...contextMessages,
         new HumanMessage(`User Question: ${question}`),
@@ -154,7 +154,7 @@ export async function POST(
       messages = [
         new SystemMessage(DoubtSystemPrompt),
         new HumanMessage(
-          `Architecture Data: ${JSON.stringify(generation.generatedOutput)}`
+          `Architecture Data: ${JSON.stringify(generation.generatedOutput)}`,
         ),
         ...contextMessages,
         new HumanMessage(`User Question: ${question}`),
@@ -168,7 +168,7 @@ export async function POST(
     const aiStart = Date.now();
     const { response: aiResponse } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey
+      userApiKeys.geminiApiKey,
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -189,7 +189,7 @@ export async function POST(
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -217,7 +217,7 @@ export async function POST(
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json(
@@ -227,7 +227,7 @@ export async function POST(
           ? "Gemini API error. Please provide your own API key or try again later."
           : errorMessage,
       },
-      { status }
+      { status },
     );
   }
 }

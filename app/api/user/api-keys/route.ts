@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     const dbStart = Date.now();
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findUnique" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!user) {
@@ -73,11 +73,11 @@ export async function GET(req: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       { error: "Failed to check API keys" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     const body = await req.json();
@@ -120,11 +120,11 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { error: "At least one API key must be provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -133,14 +133,14 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           error:
             "Invalid Gemini API key format. Keys should start with 'AI' and be at least 30 characters.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -148,14 +148,14 @@ export async function POST(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         {
           error:
             "Invalid OpenAI API key format. Keys should start with 'sk-' and be at least 20 characters.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -168,14 +168,14 @@ export async function POST(req: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findUnique" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -211,13 +211,13 @@ export async function POST(req: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "update" },
-      (Date.now() - dbStart2) / 1000
+      (Date.now() - dbStart2) / 1000,
     );
 
     httpRequestsTotal.inc({ route, method, status_code: "200" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -233,11 +233,11 @@ export async function POST(req: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       { error: "Failed to save API keys" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -260,7 +260,7 @@ export async function DELETE(req: NextRequest) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -269,7 +269,7 @@ export async function DELETE(req: NextRequest) {
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     const { searchParams } = new URL(req.url);
@@ -300,13 +300,13 @@ export async function DELETE(req: NextRequest) {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "update" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     httpRequestsTotal.inc({ route, method, status_code: "200" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
 
     return NextResponse.json({
@@ -318,11 +318,11 @@ export async function DELETE(req: NextRequest) {
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       { error: "Failed to delete API keys" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

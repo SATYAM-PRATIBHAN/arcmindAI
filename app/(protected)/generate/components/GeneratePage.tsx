@@ -30,7 +30,7 @@ export default function GeneratePage() {
   const [userInput, setUserInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
-    null
+    null,
   );
 
   function cleanMermaidString(input: string | undefined | null): string {
@@ -65,7 +65,7 @@ export default function GeneratePage() {
         if (jsonStart !== -1) {
           // Extract from after the ```json marker
           cleanedOutput = cleanedOutput.slice(
-            jsonStart + jsonStartMarker.length
+            jsonStart + jsonStartMarker.length,
           );
 
           // Find the first closing ``` after the JSON start (not the last one in the entire string)
@@ -112,7 +112,7 @@ export default function GeneratePage() {
         console.error("Raw output length:", result.output.length);
         console.error(
           "Raw output preview:",
-          result.output.substring(0, 500) + "..."
+          result.output.substring(0, 500) + "...",
         );
         setGeneratedData(null);
         toast.error("Failed to parse AI response. Try rephrasing your input.");
@@ -214,7 +214,7 @@ export default function GeneratePage() {
               <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
               <MermaidDiagram
                 chart={cleanMermaidString(
-                  generatedData["Architecture Diagram"]
+                  generatedData["Architecture Diagram"],
                 )}
               />
             </section>

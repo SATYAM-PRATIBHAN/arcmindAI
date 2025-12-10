@@ -46,7 +46,7 @@ export function MermaidEditorClient({
     try {
       const response = await axios.put(
         DOC_ROUTES.API.GITHUB.GENERATION(generationId),
-        { mermaidCode: code }
+        { mermaidCode: code },
       );
 
       if (!response.data.success) {

@@ -25,11 +25,11 @@ export async function GET() {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -37,7 +37,7 @@ export async function GET() {
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added in jwt callback
       { user_id: session.user.id },
-      Date.now() / 1000
+      Date.now() / 1000,
     );
 
     // Get user's encrypted GitHub token
@@ -53,18 +53,18 @@ export async function GET() {
     });
     databaseQueryDurationSeconds.observe(
       { operation: "findUnique" },
-      (Date.now() - dbStart) / 1000
+      (Date.now() - dbStart) / 1000,
     );
 
     if (!user?.githubAccessToken) {
       apiGatewayErrorsTotal.inc({ status_code: "403" });
       httpRequestDurationSeconds.observe(
         { route },
-        (Date.now() - startTime) / 1000
+        (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
         { success: false, message: "GitHub not connected" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -91,14 +91,14 @@ export async function GET() {
     httpRequestsTotal.inc({ route, method, status_code: "200" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
   } catch (err) {
     console.error("Error fetching GitHub repos:", err);
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
-      (Date.now() - startTime) / 1000
+      (Date.now() - startTime) / 1000,
     );
     return NextResponse.json(
       {
@@ -106,7 +106,7 @@ export async function GET() {
         message:
           err instanceof Error ? err.message : "Failed to fetch repositories",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
