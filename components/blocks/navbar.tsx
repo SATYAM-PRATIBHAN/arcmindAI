@@ -21,7 +21,7 @@ import { useGetUser, User } from "@/hooks/useGetUser";
 
 const ITEMS = [
   {
-    label: "Miscellaneous",
+    label: "Legal",
     dropdownItems: [
       {
         title: "Privacy Policy",
@@ -30,10 +30,10 @@ const ITEMS = [
           "Learn about our privacy policy and how we handle your data.",
       },
       {
-        title: "Features",
-        href: `${DOC_ROUTES.HOME}#features`,
+        title: "Terms and Conditions",
+        href: DOC_ROUTES.TERMS,
         description:
-          "Explore app features: architecture generation, feedback, visualizations, export, and more.",
+          "Read our terms and conditions to understand the terms of use.",
       },
     ],
   },
