@@ -258,8 +258,8 @@ export default function AskDoubtCard({
             <Alert className="border-destructive/50 bg-destructive/10">
               <Crown className="h-4 w-4 text-destructive" />
               <AlertDescription className="text-sm">
-                You&apos;ve reached the limit of {FREE_TIER_DOUBT_LIMIT} doubt chats
-                for this generation.
+                You&apos;ve reached the limit of {FREE_TIER_DOUBT_LIMIT} doubt
+                chats for this generation.
                 <Button
                   variant="link"
                   className="p-0 h-auto ml-1 text-primary"

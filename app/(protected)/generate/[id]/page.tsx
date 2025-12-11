@@ -48,7 +48,7 @@ export default function GenerationPage() {
   const { refetch } = useHistory();
 
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
-    null
+    null,
   );
   const [githubGeneration, setGithubGeneration] = useState<string | null>(null);
   const [isGithubRepo, setIsGithubRepo] = useState(false);

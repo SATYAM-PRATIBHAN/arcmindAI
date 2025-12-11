@@ -83,7 +83,7 @@ export const Navbar = () => {
     <section
       className={cn(
         "bg-background/70 absolute left-1/2 z-50 w-[min(90%,800px)] -translate-x-1/2 rounded-4xl border backdrop-blur-md transition-all duration-300",
-        "top-5 lg:top-12"
+        "top-5 lg:top-12",
       )}
     >
       <div className="flex items-center justify-between px-6 py-3">
@@ -139,13 +139,13 @@ export const Navbar = () => {
                     href={link.href}
                     className={cn(
                       "relative bg-transparent px-1.5 text-sm font-medium transition-opacity hover:opacity-75",
-                      pathname === link.href && "text-muted-foreground"
+                      pathname === link.href && "text-muted-foreground",
                     )}
                   >
                     {link.label}
                   </Link>
                 </NavigationMenuItem>
-              )
+              ),
             )}
           </NavigationMenuList>
         </NavigationMenu>
@@ -160,7 +160,7 @@ export const Navbar = () => {
                     <div
                       className={cn(
                         "relative cursor-pointer flex h-8 w-8 items-center justify-center rounded-full text-primary-foreground text-sm",
-                        user?.plan === "custom" && "ring-2 ring-yellow-500"
+                        user?.plan === "custom" && "ring-2 ring-yellow-500",
                       )}
                     >
                       {user?.avatar ? (
@@ -265,7 +265,7 @@ export const Navbar = () => {
           "bg-background fixed inset-x-0 top-[calc(100%+1rem)] flex flex-col rounded-2xl border p-6 transition-all duration-300 ease-in-out lg:hidden",
           isMenuOpen
             ? "visible translate-y-0 opacity-100"
-            : "invisible -translate-y-4 opacity-0"
+            : "invisible -translate-y-4 opacity-0",
         )}
       >
         <nav className="divide-border flex flex-1 flex-col divide-y">
@@ -275,7 +275,7 @@ export const Navbar = () => {
                 <button
                   onClick={() =>
                     setOpenDropdown(
-                      openDropdown === link.label ? null : link.label
+                      openDropdown === link.label ? null : link.label,
                     )
                   }
                   className="text-primary flex w-full items-center justify-between text-base font-medium"
@@ -284,7 +284,7 @@ export const Navbar = () => {
                   <ChevronRight
                     className={cn(
                       "size-4 transition-transform duration-200",
-                      openDropdown === link.label ? "rotate-90" : ""
+                      openDropdown === link.label ? "rotate-90" : "",
                     )}
                   />
                 </button>
@@ -293,7 +293,7 @@ export const Navbar = () => {
                     "overflow-hidden transition-all duration-300",
                     openDropdown === link.label
                       ? "mt-4 max-h-[1000px] opacity-100"
-                      : "max-h-0 opacity-0"
+                      : "max-h-0 opacity-0",
                   )}
                 >
                   <div className="bg-muted/50 space-y-3 rounded-lg p-4">
@@ -327,13 +327,13 @@ export const Navbar = () => {
                 href={link.href}
                 className={cn(
                   "text-primary hover:text-primary/80 py-4 text-base font-medium transition-colors first:pt-0 last:pb-0",
-                  pathname === link.href && "text-muted-foreground"
+                  pathname === link.href && "text-muted-foreground",
                 )}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
               </Link>
-            )
+            ),
           )}
         </nav>
 

@@ -169,7 +169,7 @@ export function UserDetailsCard({
                   variant="outline"
                   onClick={() =>
                     router.push(
-                      `${DOC_ROUTES.AUTH.VERIFY_REQUEST}?email=${encodeURIComponent(user?.email || "")}`
+                      `${DOC_ROUTES.AUTH.VERIFY_REQUEST}?email=${encodeURIComponent(user?.email || "")}`,
                     )
                   }
                   className="cursor-pointer flex items-center gap-2 mt-2"
