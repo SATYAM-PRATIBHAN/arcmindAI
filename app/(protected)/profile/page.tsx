@@ -79,7 +79,7 @@ export default function ProfilePage() {
     setValidationError(null);
     const res = await updatePassword(
       passwords.previousPassword,
-      passwords.newPassword,
+      passwords.newPassword
     );
 
     if (res?.success) {

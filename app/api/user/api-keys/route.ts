@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 import {
   encryptApiKey,
-  decryptApiKey,
   generateEncryptionKey,
   validateApiKeyFormat,
 } from "@/lib/crypto/encryption";
@@ -13,7 +12,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
  * GET /api/user/api-keys
  * Check if user has API keys configured (doesn't return actual keys)
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 

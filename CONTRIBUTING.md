@@ -288,7 +288,7 @@ export function encryptData(data: string, encryptionKey: string): string {
   const cipher = crypto.createCipheriv(
     "aes-256-gcm",
     Buffer.from(encryptionKey, "hex"),
-    iv
+    iv,
   );
 
   let encrypted = cipher.update(data, "utf8", "hex");

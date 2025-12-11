@@ -15,16 +15,16 @@ import {
 } from "@/lib/metrics";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { DoubtSystemPrompt } from "@/lib/prompts/askDoubtPrompt";
+import { TaskGenerationSystemPrompt } from "@/lib/prompts/taskGenerationPrompt";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
-export async function POST(
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const startTime = Date.now();
-  const route = "/api/generate/[id]/doubt";
-  const method = "POST";
+  const route = "/api/generate/[id]/tasks";
+  const method = "GET";
   httpRequestsTotal.inc({ route, method });
 
   try {
@@ -85,20 +85,6 @@ export async function POST(
       Date.now() / 1000,
     );
 
-    const { question, conversationHistory } = await request.json();
-
-    if (!question || typeof question !== "string" || !question.trim()) {
-      apiGatewayErrorsTotal.inc({ status_code: "400" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      return NextResponse.json(
-        { success: false, message: "Question is required" },
-        { status: 400 },
-      );
-    }
-
     // Fetch the generation
     const dbStart = Date.now();
     const generation = await db.generation.findFirst({
@@ -125,77 +111,44 @@ export async function POST(
       );
     }
 
-    // Check doubt chat limit for free users
-    const FREE_TIER_DOUBT_LIMIT = 5;
-    const isFreeTier = user.plan === "free";
-
-    if (isFreeTier) {
-      // Check if limit has been reached
-      if (generation.doubtChatCount >= FREE_TIER_DOUBT_LIMIT) {
-        apiGatewayErrorsTotal.inc({ status_code: "403" });
-        httpRequestDurationSeconds.observe(
-          { route },
-          (Date.now() - startTime) / 1000,
-        );
-        return NextResponse.json(
-          {
-            success: false,
-            message: `You've reached the limit of ${FREE_TIER_DOUBT_LIMIT} doubt chats for this generation. Upgrade to Pro for unlimited doubt chats.`,
-            limitReached: true,
-            currentCount: generation.doubtChatCount,
-            limit: FREE_TIER_DOUBT_LIMIT,
-          },
-          { status: 403 },
-        );
-      }
-
-      // Increment doubt chat count for every question
-      const dbUpdateStart = Date.now();
-      await db.generation.update({
-        where: { id: generationId },
-        data: { doubtChatCount: generation.doubtChatCount + 1 },
-      });
-      databaseQueryDurationSeconds.observe(
-        { operation: "update" },
-        (Date.now() - dbUpdateStart) / 1000,
+    // Check if tasks already exist in the database
+    if (generation.tasksData) {
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
       );
+      return NextResponse.json({
+        success: true,
+        tasks: generation.tasksData,
+        fromCache: true,
+      });
     }
 
-    // Increment AI generation request counter
+    // Tasks don't exist, generate them using AI
     aiGenerationRequestsTotal.inc();
 
-    let messages;
-
-    // Build conversation context from history
-    const contextMessages = [];
-    if (conversationHistory && Array.isArray(conversationHistory)) {
-      for (const item of conversationHistory) {
-        contextMessages.push(new HumanMessage(item.question));
-        contextMessages.push(
-          new HumanMessage(`Assistant's previous answer: ${item.answer}`),
-        );
-      }
-    }
-
+    // Prepare the architecture data for AI
+    let architectureData;
     if (generation.githubGeneration) {
-      messages = [
-        new SystemMessage(DoubtSystemPrompt),
-        new HumanMessage(
-          `Architecture Data: ${JSON.stringify(generation.githubGeneration)}`,
-        ),
-        ...contextMessages,
-        new HumanMessage(`User Question: ${question}`),
-      ];
+      architectureData = {
+        type: "github",
+        userInput: generation.userInput,
+        mermaidDiagram: generation.githubGeneration,
+      };
     } else {
-      messages = [
-        new SystemMessage(DoubtSystemPrompt),
-        new HumanMessage(
-          `Architecture Data: ${JSON.stringify(generation.generatedOutput)}`,
-        ),
-        ...contextMessages,
-        new HumanMessage(`User Question: ${question}`),
-      ];
+      architectureData = {
+        type: "standard",
+        userInput: generation.userInput,
+        architecture: generation.generatedOutput,
+      };
     }
+
+    const messages = [
+      new SystemMessage(TaskGenerationSystemPrompt),
+      new HumanMessage(
+        `Generate a comprehensive task breakdown for the following system architecture:\n\n${JSON.stringify(architectureData, null, 2)}`,
+      ),
+    ];
 
     // 🔑 Fetch user's API keys
     // @ts-expect-error id is added to the session in the session callback
@@ -214,10 +167,42 @@ export async function POST(
       throw new Error("Empty AI response received.");
     }
 
-    const answer =
+    const responseContent =
       typeof aiResponse.content === "string"
         ? aiResponse.content
         : JSON.stringify(aiResponse.content);
+
+    // Parse the AI response
+    let tasksData;
+    try {
+      // Remove markdown code blocks if present
+      const cleanedResponse = responseContent
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+      tasksData = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", parseError);
+      aiGenerationFailureTotal.inc();
+      throw new Error("Failed to parse task data from AI response");
+    }
+
+    // Validate the structure
+    if (!tasksData.tasks || !Array.isArray(tasksData.tasks)) {
+      aiGenerationFailureTotal.inc();
+      throw new Error("Invalid task data structure from AI");
+    }
+
+    // Store the generated tasks in the database
+    const dbUpdateStart = Date.now();
+    await db.generation.update({
+      where: { id: generationId },
+      data: { tasksData: tasksData },
+    });
+    databaseQueryDurationSeconds.observe(
+      { operation: "update" },
+      (Date.now() - dbUpdateStart) / 1000,
+    );
 
     // Increment success counters
     aiGenerationSuccessTotal.inc();
@@ -230,10 +215,11 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      answer: answer.trim(),
+      tasks: tasksData,
+      fromCache: false,
     });
   } catch (error) {
-    console.error("Error answering doubt:", error);
+    console.error("Error generating tasks:", error);
     apiGatewayErrorsTotal.inc({ status_code: "500" });
     httpRequestDurationSeconds.observe(
       { route },
