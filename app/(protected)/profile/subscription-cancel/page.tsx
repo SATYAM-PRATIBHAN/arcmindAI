@@ -175,7 +175,17 @@ export default function SubscriptionCancelPage() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>I agree to the terms and conditions</FormLabel>
+                      <FormLabel>
+                        I agree to the{" "}
+                        <a
+                          href="/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline hover:text-primary/80"
+                        >
+                          Terms and Conditions
+                        </a>
+                      </FormLabel>
                     </div>
                     <FormMessage />
                   </FormItem>
