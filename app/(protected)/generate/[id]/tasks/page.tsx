@@ -104,6 +104,7 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
+          className="cursor-pointer"
           variant="outline"
           size="icon"
           onClick={() => router.push(`/generate/${id}`)}

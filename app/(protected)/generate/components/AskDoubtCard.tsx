@@ -262,7 +262,7 @@ export default function AskDoubtCard({
                 chats for this generation.
                 <Button
                   variant="link"
-                  className="p-0 h-auto ml-1 text-primary"
+                  className="p-0 h-auto ml-1 text-primary cursor-pointer"
                   onClick={() => (window.location.href = "/pricing")}
                 >
                   Upgrade to Pro

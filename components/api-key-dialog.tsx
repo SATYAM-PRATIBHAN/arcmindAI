@@ -170,7 +170,7 @@ export function ApiKeyDialog({
             <Button
               type="submit"
               disabled={isLoading || (!geminiKey && !openaiKey)}
-              className="flex-1"
+              className="flex-1 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -186,6 +186,7 @@ export function ApiKeyDialog({
               variant="outline"
               onClick={handleRemoveKeys}
               disabled={isLoading}
+              className="cursor-pointer"
             >
               Remove Keys
             </Button>

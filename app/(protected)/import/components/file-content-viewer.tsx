@@ -47,7 +47,12 @@ export function FileContentViewer({
         <h3 className="font-medium text-sm truncate">
           {selectedFile.split("/").pop()}
         </h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="cursor-pointer"
+        >
           <X className="w-4 h-4" />
         </Button>
       </div>
