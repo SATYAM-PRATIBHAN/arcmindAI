@@ -106,8 +106,8 @@ export default function TermsPage() {
           </p>
           <ul className="list-disc list-inside space-y-1 mt-2">
             <li>
-              AI-generated content is provided "as is" without warranties of any
-              kind
+              AI-generated content is provided &quot;as is&quot; without
+              warranties of any kind
             </li>
             <li>
               Generated designs should be reviewed and validated before
@@ -192,8 +192,8 @@ export default function TermsPage() {
             </li>
             <li>Engage in any fraudulent, abusive, or harmful activities</li>
             <li>
-              Attempt to gain unauthorized access to our systems or other users'
-              accounts
+              Attempt to gain unauthorized access to our systems or other
+              users&apos; accounts
             </li>
             <li>
               Reverse engineer, decompile, or disassemble any part of our
@@ -285,9 +285,9 @@ export default function TermsPage() {
             11. Disclaimer of Warranties
           </h2>
           <p>
-            ArcMind AI is provided "as is" and "as available" without warranties
-            of any kind, either express or implied, including but not limited
-            to:
+            ArcMind AI is provided &quot;as is&quot; and &quot;as
+            available&quot; without warranties of any kind, either express or
+            implied, including but not limited to:
           </p>
           <ul className="list-disc list-inside space-y-1 mt-2">
             <li>
@@ -334,9 +334,9 @@ export default function TermsPage() {
           <p>
             We reserve the right to modify these Terms and Conditions at any
             time. We will notify users of any material changes by updating the
-            "Last updated" date at the top of this page. Your continued use of
-            ArcMind AI after such changes constitutes your acceptance of the new
-            terms.
+            &quot;Last updated&quot; date at the top of this page. Your
+            continued use of ArcMind AI after such changes constitutes your
+            acceptance of the new terms.
           </p>
         </div>
 

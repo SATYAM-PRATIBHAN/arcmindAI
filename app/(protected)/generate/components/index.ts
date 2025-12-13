@@ -9,3 +9,5 @@ export { default as UpdateResponseCard } from "./UpdateResponseCard";
 export { default as AskDoubtCard } from "./AskDoubtCard";
 export { default as ActionButton } from "./ActionButton";
 export { default as DeleteDialog } from "./DeleteDialog";
+export { default as FrontendStructureDialog } from "./FrontendStructureDialog";
+export { default as TaskGenerationDialog } from "./TaskGenerationDialog";

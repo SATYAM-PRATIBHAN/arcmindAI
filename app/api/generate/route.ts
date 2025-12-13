@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
 
     // 🧠 Call Gemini model with timing and automatic fallback
     const aiStart = Date.now();
-    const { response, allKeysFailed } = await invokeGeminiWithFallback(
+    const { response } = await invokeGeminiWithFallback(
       messages,
       userApiKeys.geminiApiKey,
     );

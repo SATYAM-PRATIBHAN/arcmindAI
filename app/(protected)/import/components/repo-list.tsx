@@ -132,7 +132,7 @@ export function RepoList() {
               size="sm"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="whitespace-nowrap flex items-center gap-1"
+              className="whitespace-nowrap flex items-center gap-1 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Previous</span>
@@ -147,7 +147,7 @@ export function RepoList() {
                     variant={currentPage === page ? "default" : "outline"}
                     size="sm"
                     onClick={() => setCurrentPage(page)}
-                    className="min-w-[40px]"
+                    className="min-w-[40px] cursor-pointer"
                   >
                     {page}
                   </Button>
@@ -163,7 +163,7 @@ export function RepoList() {
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
-              className="whitespace-nowrap flex items-center gap-1"
+              className="whitespace-nowrap flex items-center gap-1 cursor-pointer"
             >
               <span className="hidden sm:inline">Next</span>
               <ChevronRight className="w-4 h-4" />

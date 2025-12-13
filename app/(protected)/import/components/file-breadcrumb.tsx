@@ -13,7 +13,7 @@ export function FileBreadcrumb({ selectedFile, onBack }: FileBreadcrumbProps) {
       <Button
         variant="ghost"
         size="sm"
-        className="lg:hidden shrink-0"
+        className="lg:hidden shrink-0 cursor-pointer"
         onClick={onBack}
       >
         <ChevronRight className="w-4 h-4 rotate-180" />

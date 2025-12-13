@@ -5,8 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Code2 } from "lucide-react";
-import Link from "next/link";
-
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
@@ -24,6 +22,8 @@ import {
   AskDoubtCard,
   ActionButton,
   DeleteDialog,
+  FrontendStructureDialog,
+  TaskGenerationDialog,
 } from "../components";
 
 import Lottie from "lottie-react";
@@ -54,6 +54,10 @@ export default function GenerationPage() {
   const [isGithubRepo, setIsGithubRepo] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
+  const [isFrontendStructureDialogOpen, setIsFrontendStructureDialogOpen] =
+    useState(false);
+  const [isTaskGenerationDialogOpen, setIsTaskGenerationDialogOpen] =
+    useState(false);
   const [selectedAction, setSelectedAction] = useState<
     "update" | "doubt" | null
   >(null);
@@ -278,6 +282,18 @@ export default function GenerationPage() {
         generationId={id as string}
       />
 
+      <FrontendStructureDialog
+        open={isFrontendStructureDialogOpen}
+        onOpenChange={setIsFrontendStructureDialogOpen}
+        generationId={id as string}
+      />
+
+      <TaskGenerationDialog
+        open={isTaskGenerationDialogOpen}
+        onOpenChange={setIsTaskGenerationDialogOpen}
+        generationId={id as string}
+      />
+
       <ActionButton onClick={() => setIsActionDialogOpen(true)} />
 
       <Card>
@@ -293,11 +309,21 @@ export default function GenerationPage() {
         </CardContent>
 
         <div className="flex flex-col gap-2 mx-4 sm:flex-row sm:items-center">
-          <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link href={`/generate/${id}/frontendStructure`}>
-              <Code2 className="mr-2 h-4 w-4" />
-              Frontend Structure
-            </Link>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto cursor-pointer"
+            onClick={() => setIsFrontendStructureDialogOpen(true)}
+          >
+            <Code2 className="mr-2 h-4 w-4" />
+            Frontend Structure
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto cursor-pointer"
+            onClick={() => setIsTaskGenerationDialogOpen(true)}
+          >
+            <Code2 className="mr-2 h-4 w-4" />
+            Task Generation
           </Button>
           <DeleteDialog
             open={isDeleteDialogOpen}

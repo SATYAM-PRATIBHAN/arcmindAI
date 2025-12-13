@@ -178,10 +178,16 @@ export function RepositoryPageClient() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleCancelUpdate}>
+            <Button
+              variant="outline"
+              onClick={handleCancelUpdate}
+              className="cursor-pointer"
+            >
               Cancel
             </Button>
-            <Button onClick={handleConfirmUpdate}>Confirm</Button>
+            <Button onClick={handleConfirmUpdate} className="cursor-pointer">
+              Confirm
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
