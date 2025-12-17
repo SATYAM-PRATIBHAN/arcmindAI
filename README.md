@@ -5,6 +5,12 @@ Generate structured system designs using AI. Describe your requirements and get 
 ## Features
 
 - **AI-Powered Generation**: Leverage Google Gemini and LangChain to create comprehensive system designs from natural language descriptions
+- **Task Generation**: AI-powered task breakdown that converts system architectures into actionable development tasks
+  - Automatic task categorization (Frontend, Backend, Database, etc.)
+  - Priority assignment (high, medium, low)
+  - Time estimates for each task
+  - Dependency tracking between tasks
+  - Cached results for instant retrieval
 - **GitHub Integration**: Import and analyze GitHub repositories to automatically generate system architecture diagrams
   - Secure OAuth authentication with GitHub
   - Repository browsing and file exploration
@@ -164,6 +170,34 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
    - Edit generated Mermaid diagrams
    - Save changes to the database
    - Reset to original if needed
+
+### Task Generation
+
+After generating a system design (either from natural language or GitHub import), you can get an AI-powered task breakdown:
+
+1. **Access Task Breakdown**
+   - Navigate to any generated design
+   - Click on the "Tasks" or "View Tasks" button
+   - AI automatically generates tasks if not already cached
+
+2. **Task Organization**
+   - Tasks are automatically categorized by area (Frontend, Backend, Database, DevOps, etc.)
+   - Each task includes:
+     - **Title**: Clear, actionable task name
+     - **Description**: Detailed explanation of what needs to be done
+     - **Priority**: High, medium, or low priority assignment
+     - **Estimated Hours**: Time estimate for completion
+     - **Dependencies**: Other tasks that must be completed first
+3. **Project Overview**
+   - View total task count
+   - See total estimated hours
+   - Track high-priority tasks
+   - Monitor progress by category
+
+4. **Caching**
+   - Generated tasks are cached in the database
+   - Instant retrieval on subsequent visits
+   - Consistent task breakdown for team collaboration
 
 ### History
 
