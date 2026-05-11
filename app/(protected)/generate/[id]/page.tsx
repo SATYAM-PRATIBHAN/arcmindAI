@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2 } from "lucide-react";
+import { Code2, Download } from "lucide-react";
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
 import { useHistory } from "@/lib/contexts/HistoryContext";
+import { exportSystemDesignPdf } from "@/lib/exportPdf";
 
 import {
   MermaidDiagram,
@@ -312,6 +313,14 @@ export default function GenerationPage() {
           <Button
             variant="outline"
             className="w-full sm:w-auto cursor-pointer"
+            onClick={() => exportSystemDesignPdf(generatedData as ArchitectureData, "diagram-capture-area")}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto cursor-pointer"
             onClick={() => setIsFrontendStructureDialogOpen(true)}
           >
             <Code2 className="mr-2 h-4 w-4" />
@@ -373,9 +382,11 @@ export default function GenerationPage() {
       {generatedData["Architecture Diagram"] && (
         <section>
           <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
-          <MermaidDiagram
-            chart={cleanMermaidString(generatedData["Architecture Diagram"])}
-          />
+          <div id="diagram-capture-area" className="bg-white p-4 rounded-lg border border-gray-200">
+            <MermaidDiagram
+              chart={cleanMermaidString(generatedData["Architecture Diagram"])}
+            />
+          </div>
         </section>
       )}
     </div>

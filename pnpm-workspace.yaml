@@ -1,0 +1,10 @@
+allowBuilds:
+  '@google/genai': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  bcrypt: true
+  core-js: true
+  prisma: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
