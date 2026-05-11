@@ -19,6 +19,8 @@ import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { DOC_ROUTES } from "@/lib/routes";
 import { useGetUser, User } from "@/hooks/useGetUser";
+import { useTheme } from "next-themes"; // ADD THIS IMPORT
+import { Moon, Sun } from "lucide-react"; // ADD THIS IMPORT
 
 const ITEMS = [
   {
@@ -67,6 +69,10 @@ export const Navbar = () => {
   const { getUser } = useGetUser();
   const isAuthenticated = status === "authenticated";
   const [user, setUser] = useState<User | null>(null);
+  
+  // ADD THEME TOGGLE HOOKS
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -79,6 +85,11 @@ export const Navbar = () => {
       fetchUser();
     }
   }, [session]);
+
+  // ADD THIS USE EFFECT FOR THEME
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <section
@@ -230,6 +241,24 @@ export const Navbar = () => {
               </Button>
             </Link>
           )}
+          
+          {/* ADD THEME TOGGLE BUTTON HERE - RIGHT BEFORE GITHUB LINK */}
+          {mounted && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-8 h-8"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+          
           <Link
             href={DOC_ROUTES.SOCIAL.GITHUB}
             className="text-muted-foreground hover:text-foreground transition-colors"
