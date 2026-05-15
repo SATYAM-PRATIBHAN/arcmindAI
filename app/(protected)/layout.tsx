@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
-import { Providers } from "../../lib/providers";
+import { Providers } from "../lib/providers";
 import "./globals.css";
 import "./prism.css";
 
