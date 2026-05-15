@@ -199,14 +199,14 @@ const Item = ({ item, isLast, className }: ItemProps) => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  className="bg-background grid aspect-square size-16 place-items-center rounded-2xl p-2 lg:size-20"
+                  className="bg-card grid aspect-square size-16 place-items-center rounded-2xl p-2 shadow-sm lg:size-20 dark:bg-card"
                 >
                   <Image
                     src={image.src}
                     alt={image.alt}
                     width={image.width}
                     height={image.height}
-                    className="object-contain object-top-left"
+                    className="object-contain object-top-left dark:brightness-90"
                   />
                 </motion.div>
               ))}
@@ -228,14 +228,14 @@ const Item = ({ item, isLast, className }: ItemProps) => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  className="bg-background grid aspect-square size-16 place-items-center rounded-2xl lg:size-20"
+                  className="bg-card grid aspect-square size-16 place-items-center rounded-2xl p-2 shadow-sm lg:size-20 dark:bg-card"
                 >
                   <Image
                     src={image.src}
                     alt={image.alt}
                     width={image.width}
                     height={image.height}
-                    className="object-contain object-top-left"
+                    className="object-contain object-top-left dark:brightness-90"
                   />
                 </motion.div>
               ))}

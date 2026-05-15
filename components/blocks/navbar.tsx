@@ -19,8 +19,6 @@ import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { DOC_ROUTES } from "@/lib/routes";
 import { useGetUser, User } from "@/hooks/useGetUser";
-import { useTheme } from "next-themes"; // ADD THIS IMPORT
-import { Moon, Sun } from "lucide-react"; // ADD THIS IMPORT
 
 const ITEMS = [
   {
@@ -49,7 +47,7 @@ const ITEMS = [
       {
         title: "Generate",
         href: DOC_ROUTES.GENERATE,
-        description: "Generate arcitecture diagrams through single prompt",
+        description: "Generate architecture diagrams through single prompt",
       },
       {
         title: "GitHub Import",
@@ -69,9 +67,7 @@ export const Navbar = () => {
   const { getUser } = useGetUser();
   const isAuthenticated = status === "authenticated";
   const [user, setUser] = useState<User | null>(null);
-  
-  // ADD THEME TOGGLE HOOKS
-  const { theme, setTheme } = useTheme();
+  const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -86,10 +82,35 @@ export const Navbar = () => {
     }
   }, [session]);
 
-  // ADD THIS USE EFFECT FOR THEME
+  // Load saved theme on initial load
   useEffect(() => {
     setMounted(true);
+    const savedTheme = localStorage.getItem('arcmind-theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else if (savedTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    } else {
+      // Default to light mode
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    }
   }, []);
+
+  const toggleTheme = () => {
+    const html = document.documentElement;
+    if (html.classList.contains('dark')) {
+      html.classList.remove('dark');
+      localStorage.setItem('arcmind-theme', 'light');
+      setIsDark(false);
+    } else {
+      html.classList.add('dark');
+      localStorage.setItem('arcmind-theme', 'dark');
+      setIsDark(true);
+    }
+  };
 
   return (
     <section
@@ -186,7 +207,7 @@ export const Navbar = () => {
                           className="rounded-full object-cover w-6 h-6"
                         />
                       ) : (
-                        <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-black text-xs font-bold uppercase">
+                        <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-black dark:text-white text-xs font-bold uppercase">
                           {session?.user?.name?.charAt(0).toUpperCase() || "U"}
                         </span>
                       )}
@@ -221,7 +242,7 @@ export const Navbar = () => {
                             className="cursor-pointer group hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground flex items-center justify-start rounded-md p-2 leading-none no-underline outline-hidden transition-colors select-none w-full text-left"
                           >
                             <div className="space-y-1 transition-transform duration-300 group-hover:translate-x-1">
-                              <div className="text-sm leading-none font-medium flex items-start gap-2 text-red-600">
+                              <div className="text-sm leading-none font-medium flex items-start gap-2 text-red-600 dark:text-red-400">
                                 <LogOut className="h-4 w-4" />
                                 Logout
                               </div>
@@ -236,27 +257,37 @@ export const Navbar = () => {
             </NavigationMenu>
           ) : (
             <Link href={DOC_ROUTES.AUTH.LOGIN} className="max-lg:hidden">
-              <Button className="cursor-pointer" variant="outline">
+              <Button className="cursor-pointer px-6 py-5 text-base" variant="outline">
                 <span className="relative z-10">Login</span>
               </Button>
             </Link>
           )}
           
-          {/* ADD THEME TOGGLE BUTTON HERE - RIGHT BEFORE GITHUB LINK */}
+          {/* Theme Toggle Button */}
           {mounted && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8"
+            <button
+              onClick={toggleTheme}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 w-10 h-10"
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
+              {isDark ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-moon h-4 w-4">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                </svg>
               ) : (
-                <Moon className="h-4 w-4" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sun h-4 w-4">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2"></path>
+                  <path d="M12 20v2"></path>
+                  <path d="m4.93 4.93 1.41 1.41"></path>
+                  <path d="m17.66 17.66 1.41 1.41"></path>
+                  <path d="M2 12h2"></path>
+                  <path d="M20 12h2"></path>
+                  <path d="m6.34 17.66-1.41 1.41"></path>
+                  <path d="m19.07 4.93-1.41 1.41"></path>
+                </svg>
               )}
-            </Button>
+            </button>
           )}
           
           <Link
@@ -291,7 +322,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/*  Mobile Menu Navigation */}
+      {/* Mobile Menu Navigation */}
       <div
         className={cn(
           "bg-background fixed inset-x-0 top-[calc(100%+1rem)] flex flex-col rounded-2xl border p-6 transition-all duration-300 ease-in-out lg:hidden",
