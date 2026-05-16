@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+body {
+  scroll-behavior: smooth;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -41,60 +45,60 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ── LIGHT MODE ─────────────────────────────────────────── */
+/* ── LIGHT MODE - COMPLETELY ORIGINAL ───────── */
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.10 0.028 262);
-  --card: oklch(0.99 0.002 247);
-  --card-foreground: oklch(0.10 0.028 262);
+  --foreground: oklch(0.13 0.028 261.692);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.13 0.028 261.692);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.10 0.028 262);
-  --primary: oklch(0.42 0.18 265);
-  --primary-foreground: oklch(0.99 0.002 247);
-  --secondary: oklch(0.95 0.005 265);
-  --secondary-foreground: oklch(0.18 0.034 265);
-  --muted: oklch(0.96 0.004 265);
-  --muted-foreground: oklch(0.50 0.025 264);
-  --accent: oklch(0.94 0.008 265);
-  --accent-foreground: oklch(0.18 0.034 265);
+  --popover-foreground: oklch(0.13 0.028 261.692);
+  --primary: oklch(0.21 0.034 264.665);
+  --primary-foreground: oklch(0.985 0.002 247.839);
+  --secondary: oklch(0.967 0.003 264.542);
+  --secondary-foreground: oklch(0.21 0.034 264.665);
+  --muted: oklch(0.967 0.003 264.542);
+  --muted-foreground: oklch(0.551 0.027 264.364);
+  --accent: oklch(0.967 0.003 264.542);
+  --accent-foreground: oklch(0.21 0.034 264.665);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.008 265);
-  --input: oklch(0.90 0.008 265);
-  --ring: oklch(0.65 0.12 265);
+  --border: oklch(0.928 0.006 264.531);
+  --input: oklch(0.928 0.006 264.531);
+  --ring: oklch(0.707 0.022 261.325);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.97 0.003 265);
-  --sidebar-foreground: oklch(0.10 0.028 262);
-  --sidebar-primary: oklch(0.42 0.18 265);
-  --sidebar-primary-foreground: oklch(0.99 0.002 247);
-  --sidebar-accent: oklch(0.94 0.008 265);
-  --sidebar-accent-foreground: oklch(0.18 0.034 265);
-  --sidebar-border: oklch(0.90 0.008 265);
-  --sidebar-ring: oklch(0.65 0.12 265);
+  --sidebar: oklch(0.985 0.002 247.839);
+  --sidebar-foreground: oklch(0.13 0.028 261.692);
+  --sidebar-primary: oklch(0.21 0.034 264.665);
+  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
+  --sidebar-accent: oklch(0.967 0.003 264.542);
+  --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
+  --sidebar-border: oklch(0.928 0.006 264.531);
+  --sidebar-ring: oklch(0.707 0.022 261.325);
 }
 
-/* ── DARK MODE ──────────────────────────────────────────── */
+/* ── DARK MODE ── */
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.96 0.005 247);
-  --card: oklch(0.04 0.01 265);
-  --card-foreground: oklch(0.96 0.005 247);
-  --popover: oklch(0.04 0.01 265);
-  --popover-foreground: oklch(0.96 0.005 247);
-  --primary: oklch(0.62 0.20 265);
-  --primary-foreground: oklch(0.98 0.01 265);
-  --secondary: oklch(0.06 0.01 265);
-  --secondary-foreground: oklch(0.96 0.005 247);
-  --muted: oklch(0.06 0.01 265);
+  --background: oklch(0.08 0.02 265);
+  --foreground: oklch(0.985 0.002 247.839);
+  --card: oklch(0.10 0.02 265);
+  --card-foreground: oklch(0.985 0.002 247.839);
+  --popover: oklch(0.10 0.02 265);
+  --popover-foreground: oklch(0.985 0.002 247.839);
+  --primary: oklch(0.21 0.034 264.665);
+  --primary-foreground: oklch(0.985 0.002 247.839);
+  --secondary: oklch(0.15 0.02 265);
+  --secondary-foreground: oklch(0.985 0.002 247.839);
+  --muted: oklch(0.15 0.02 265);
   --muted-foreground: oklch(0.65 0.02 264);
-  --accent: oklch(0.08 0.01 265);
-  --accent-foreground: oklch(0.96 0.005 247);
+  --accent: oklch(0.15 0.02 265);
+  --accent-foreground: oklch(0.985 0.002 247.839);
   --destructive: oklch(0.65 0.22 22);
-  --border: oklch(0.62 0.20 265 / 0.4);
+  --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.55 0.16 265);
   --chart-1: oklch(0.55 0.22 265);
@@ -102,233 +106,111 @@
   --chart-3: oklch(0.72 0.18 70);
   --chart-4: oklch(0.60 0.25 300);
   --chart-5: oklch(0.62 0.24 16);
-  --sidebar: oklch(0.02 0.01 265);
-  --sidebar-foreground: oklch(0.96 0.005 247);
-  --sidebar-primary: oklch(0.55 0.22 265);
-  --sidebar-primary-foreground: oklch(0.96 0.005 247);
-  --sidebar-accent: oklch(0.06 0.01 265);
-  --sidebar-accent-foreground: oklch(0.96 0.005 247);
-  --sidebar-border: oklch(0.62 0.20 265 / 0.3);
+  --sidebar: oklch(0.06 0.02 265);
+  --sidebar-foreground: oklch(0.985 0.002 247.839);
+  --sidebar-primary: oklch(0.21 0.034 264.665);
+  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
+  --sidebar-accent: oklch(0.15 0.02 265);
+  --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
+  --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.50 0.13 265);
 }
 
-/* ── BASE LAYER ─────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
-    @apply text-foreground font-sans;
-    scroll-behavior: smooth;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
-/* ── LIGHT MODE: body background ────────────────────────── */
-html:not(.dark) body {
-  background-color: white;
-}
-
-/* ── DARK MODE: NO UPPER GLOW, JUST DARK BACKGROUND ─────── */
-html.dark {
-  background-color: #000000;
-  min-height: 100%;
-}
-
-html.dark body {
-  background: transparent !important;
-}
-
-/* ── NAVBAR WHITE OUTLINE ───────────────────────────────── */
+/* ── DARK MODE NAVBAR STYLES ── */
 html.dark .bg-background\/70,
 html.dark section[class*="bg-background\/70"] {
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-/* ── COMPLETELY REMOVE BORDERS FROM NAVBAR DROPDOWN BUTTONS ─ */
 html.dark button.navigation-menu-trigger,
-html.dark [data-slot="navigation-menu-trigger"],
-html.dark .navigation-menu-trigger,
-html.dark .bg-transparent\!.px-1\.5,
-html.dark [data-radix-collection-item] button {
+html.dark [data-slot="navigation-menu-trigger"] {
   border: none !important;
   outline: none !important;
-  box-shadow: none !important;
   background-color: transparent !important;
 }
 
-html.dark button.navigation-menu-trigger:hover,
-html.dark .navigation-menu-trigger:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: none !important;
+/* ── DARK MODE TEXT COLORS ── */
+html.dark .text-gray-900,
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #e5e5e5 !important;
 }
 
-html.dark button.navigation-menu-trigger:focus,
-html.dark button.navigation-menu-trigger:focus-visible {
-  outline: none !important;
-  ring: none !important;
-  box-shadow: none !important;
-}
+/* ============================================ */
+/* ⚡ 360° GLOW EFFECT FROM ALL SIDES ⚡ */
+/* ============================================ */
 
-/* ── REGULAR CARDS - SUBTLE GLOW ────────────────────────── */
-html.dark .bg-card:not(.hero-card),
-html.dark [class*="bg-card"]:not(.hero-card),
-html.dark .rounded-lg:not(.hero-card),
-html.dark .rounded-2xl:not(.hero-card) {
-  background-color: #0a0a0f !important;
-  border: 1px solid rgba(139, 92, 246, 0.2) !important;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.08) !important;
-  transition: all 0.3s ease;
-}
-
-/* ── HERO CARD - CIRCULAR GLOW (NO SQUARE SHAPES) ───────── */
-html.dark .hero-card {
+html.dark .hero-image-container {
   position: relative;
-  background-color: #0a0a0f !important;
-  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  display: block;
   border-radius: 12px;
-  transition: all 0.4s ease;
 }
 
-/* Circular glow behind the card - completely round, not square */
-html.dark .hero-card::before {
+/* Permanent thin glowing border */
+html.dark .hero-image-container::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  min-width: 300px;
-  min-height: 300px;
-  background: radial-gradient(circle, 
-    rgba(139, 92, 246, 0.4) 0%, 
-    rgba(79, 70, 229, 0.25) 35%, 
-    rgba(59, 130, 246, 0.1) 60%,
-    transparent 80%);
-  filter: blur(35px);
-  opacity: 0.7;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(135deg, 
+    #3b82f6, #60a5fa, #3b82f6, #2563eb, #3b82f6);
+  border-radius: 13px;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 360° glow - expands from center to ALL FOUR SIDES */
+html.dark .hero-image-container::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  right: -40px;
+  bottom: -40px;
+  background: radial-gradient(circle at center, 
+    rgba(59, 130, 246, 0.7) 0%, 
+    rgba(37, 99, 235, 0.5) 30%, 
+    rgba(59, 130, 246, 0.2) 60%,
+    transparent 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
   pointer-events: none;
   z-index: -1;
-  transition: all 0.4s ease;
-  border-radius: 50%;
+  filter: blur(35px);
 }
 
-/* Hover effect - GLOW INTENSIFIES dramatically */
-html.dark .hero-card:hover {
-  border: 1px solid rgba(139, 92, 246, 0.8) !important;
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3) !important;
-}
-
-html.dark .hero-card:hover::before {
-  width: 120%;
-  height: 120%;
-  background: radial-gradient(circle, 
-    rgba(139, 92, 246, 0.7) 0%, 
-    rgba(79, 70, 229, 0.45) 35%, 
-    rgba(59, 130, 246, 0.2) 60%,
-    transparent 85%);
-  filter: blur(45px);
+/* Show 360° glow on hover - radiates from center to all sides */
+html.dark .hero-image-container:hover::before {
   opacity: 1;
 }
 
-/* Inner glow effect for the card itself */
-html.dark .hero-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, 
-    rgba(139, 92, 246, 0.08) 0%, 
-    transparent 70%);
-  pointer-events: none;
+/* Side glows for top, bottom, left, right */
+html.dark .hero-image-container:hover {
+  box-shadow: 
+    0 0 50px rgba(59, 130, 246, 0.5),
+    -0 0 50px rgba(59, 130, 246, 0.5),
+    0 -0 50px rgba(59, 130, 246, 0.5),
+    0 0 50px rgba(59, 130, 246, 0.5);
+  transition: box-shadow 0.4s ease;
+}
+
+/* Ensure image stays above effects */
+html.dark .hero-image-container img {
+  position: relative;
   z-index: 1;
-  border-radius: inherit;
-  opacity: 0.5;
-  transition: opacity 0.4s ease;
-}
-
-html.dark .hero-card:hover::after {
-  opacity: 1;
-  background: radial-gradient(circle at center, 
-    rgba(139, 92, 246, 0.15) 0%, 
-    transparent 70%);
-}
-
-/* ── BUTTON DESIGN (matching the image) ─────────────────── */
-html.dark .bg-primary,
-html.dark button.bg-primary,
-html.dark .bg-primary span {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
-
-html.dark button[variant="outline"],
-html.dark .variant-outline,
-html.dark button:not(.bg-primary) {
-  background-color: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-}
-
-html.dark button[variant="outline"]:hover,
-html.dark .variant-outline:hover,
-html.dark button:not(.bg-primary):hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-}
-
-/* ── TEXT COLORS ────────────────────────────────────────── */
-html.dark,
-html.dark .text-foreground,
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark p {
-  color: #ffffff !important;
-}
-
-html.dark .text-muted-foreground,
-html.dark .text-gray-500,
-html.dark .text-gray-600 {
-  color: #9ca3af !important;
-}
-
-html.dark .text-primary {
-  color: #ffffff !important;
-}
-
-/* ── FIX WHITE BACKGROUNDS ──────────────────────────────── */
-html.dark .bg-white,
-html.dark [class*="bg-white"],
-html.dark [class*="bg-gray-100"],
-html.dark [class*="bg-gray-50"],
-html.dark [class*="bg-gray-200"] {
-  background-color: #0a0a0f !important;
-}
-
-/* ── BORDER COLORS ──────────────────────────────────────── */
-html.dark .border,
-html.dark .border-t,
-html.dark .border-b,
-html.dark .border-gray-200,
-html.dark .border-gray-100 {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-/* ── INPUT FIELDS ───────────────────────────────────────── */
-html.dark input,
-html.dark textarea,
-html.dark select {
-  background-color: #0a0a0f !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-html.dark input:focus,
-html.dark textarea:focus,
-html.dark select:focus {
-  border-color: rgba(139, 92, 246, 0.5) !important;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2) !important;
-  outline: none;
+  border-radius: 12px;
 }
