@@ -56,6 +56,7 @@ export const DOC_ROUTES = {
     CANCEL_SUBSCRIPTION: "/profile/subscription-cancel",
   },
   GENERATE: "/generate",
+  WEBHOOKS: "/webhooks",
   ABOUT: "/about",
   PRICING: "/pricing",
   CONTACT: "/contact",
