@@ -140,8 +140,8 @@ export default function About() {
                 >
                   <Card className="h-full border border-gray-200 dark:border-gray-800 hover:shadow-md bg-background/60 backdrop-blur-sm text-left">
                     <CardHeader className="flex flex-col items-start space-y-2">
-                      <feature.icon className="h-7 w-7 text-primary" />
-                      <CardTitle className="text-xl text-foreground font-semibold">
+                      <feature.icon className="h-7 w-7 text-primary dark:text-blue-400" />
+                        <CardTitle className="text-xl text-foreground font-semibold">
                         {feature.title}
                       </CardTitle>
                     </CardHeader>

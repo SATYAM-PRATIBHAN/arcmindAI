@@ -188,17 +188,17 @@ export function ContactForm() {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>
-                  I agree to the{" "}
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline hover:text-primary/80"
-                  >
-                    Terms and Conditions
-                  </a>
-                </FormLabel>
+                <FormLabel className="text-gray-700 dark:text-gray-300">
+  I agree to the{" "}
+  <a
+    href="/terms"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-primary underline hover:text-primary/80 dark:text-blue-400 dark:hover:text-blue-300"
+  >
+    Terms and Conditions
+  </a>
+</FormLabel>
               </div>
               <FormMessage />
             </FormItem>

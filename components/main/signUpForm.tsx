@@ -72,9 +72,9 @@ const SignUpForm = () => {
   };
 
   return (
-    <section className="flex h-screen mt-10 lg:mt-0 bg-white text-black">
+    <section className="flex h-screen mt-10 lg:mt-0 bg-white dark:bg-black text-black dark:text-white">
       {/* Left Section (Image) */}
-      <div className="hidden md:flex w-1/2 items-center justify-center m-4 rounded-4xl bg-gray-200">
+      <div className="hidden md:flex w-1/2 items-center justify-center m-4 rounded-4xl bg-gray-200 dark:bg-gray-800">
         <Image
           src="/signupImage.webp"
           alt="Signup"
@@ -91,57 +91,61 @@ const SignUpForm = () => {
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="mb-12 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-black">ArcMind AI</h1>
+            <h1 className="text-2xl font-semibold text-black dark:text-white">
+              ArcMind AI
+            </h1>
             <Link
               href={DOC_ROUTES.HOME}
-              className="text-sm text-gray-600 hover:text-black transition underline"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition underline"
             >
               ← Back to Home
             </Link>
           </div>
-          <h2 className="text-4xl font-light text-black mb-3">
+          <h2 className="text-4xl font-light text-black dark:text-white mb-3">
             Create an account
           </h2>
-          <p className="text-gray-600 text-sm mb-8">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-8">
             Join ArcMind AI and start designing smarter systems.
           </p>
 
           <form onSubmit={handleSignup} className="space-y-6">
             {/* Username Field */}
             <div>
-              <label className="block text-xs text-gray-700 mb-2">
+              <label className="block text-xs text-gray-700 dark:text-gray-300 mb-2">
                 Username
               </label>
               <Input
                 type="text"
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
-                className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition"
+                className="w-full px-5 py-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-600 transition"
                 required
               />
               {errors.username && (
-                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.username}</p>
               )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label className="block text-xs text-gray-700 mb-2">Email</label>
+              <label className="block text-xs text-gray-700 dark:text-gray-300 mb-2">
+                Email
+              </label>
               <Input
                 type="email"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition"
+                className="w-full px-5 py-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-600 transition"
                 required
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.email}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-xs text-gray-700 mb-2">
+              <label className="block text-xs text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -149,26 +153,26 @@ const SignUpForm = () => {
                   type={showPassword ? "text" : "password"}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••••••••••••"
-                  className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition pr-12"
+                  className="w-full px-5 py-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-600 transition pr-12"
                   required
                   onPaste={(e) => e.preventDefault()}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.password}</p>
               )}
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label className="block text-xs text-gray-700 mb-2">
+              <label className="block text-xs text-gray-700 dark:text-gray-300 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -176,7 +180,7 @@ const SignUpForm = () => {
                   type={showConfirmPassword ? "text" : "password"}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••••••••••••••••"
-                  className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition pr-12"
+                  className="w-full px-5 py-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-600 transition pr-12"
                   required
                   onCopy={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
@@ -184,7 +188,7 @@ const SignUpForm = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={18} />
@@ -194,7 +198,7 @@ const SignUpForm = () => {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 dark:text-red-400 text-xs mt-1">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -204,23 +208,23 @@ const SignUpForm = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="cursor-pointer w-full bg-black text-white font-medium py-3 rounded-full hover:bg-gray-800 transition mt-4"
+              className="cursor-pointer w-full bg-black dark:bg-white text-white dark:text-black font-medium py-3 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition mt-4"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
           {/* Footer Links */}
-          <div className="mt-12 flex items-center justify-between text-xs text-gray-600">
+          <div className="mt-12 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
             <Link
               href={DOC_ROUTES.AUTH.LOGIN}
-              className="hover:text-black transition"
+              className="hover:text-black dark:hover:text-white transition"
             >
               Already have an account? <span className="underline">Login</span>
             </Link>
             <Link
               href={DOC_ROUTES.PRIVACY_POLICY}
-              className="hover:text-black transition underline"
+              className="hover:text-black dark:hover:text-white transition underline"
             >
               Privacy Policy
             </Link>

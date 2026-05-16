@@ -57,30 +57,32 @@ const LoginInFormContent = () => {
   };
 
   return (
-    <section className="flex h-screen bg-white text-black">
+    <section className="flex h-screen bg-white dark:bg-black text-black dark:text-white">
       {/* Left Section (Form) */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-24 py-12">
         {/* Form Container */}
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="mb-12 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-black">ArcMind AI</h1>
+            <h1 className="text-2xl font-semibold text-black dark:text-white">
+              ArcMind AI
+            </h1>
             <Link
               href={DOC_ROUTES.HOME}
-              className="text-sm text-gray-600 hover:text-black transition underline"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition underline"
             >
               ← Back to Home
             </Link>
           </div>
-          <h2 className="text-4xl font-light text-black mb-3">
+          <h2 className="text-4xl font-light text-black dark:text-white mb-3">
             Sign in to your account
           </h2>
-          <p className="text-gray-600 text-sm mb-8">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-8">
             Welcome back! Please sign in to your account.
           </p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-lg">
               {error}
             </div>
           )}
@@ -88,19 +90,21 @@ const LoginInFormContent = () => {
           <form onSubmit={onSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <Label className="block text-xs text-gray-700 mb-2">Email</Label>
+              <Label className="block text-xs text-gray-700 dark:text-gray-300 mb-2">
+                Email
+              </Label>
               <Input
                 type="email"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition"
+                className="w-full px-5 py-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-600 transition"
                 required
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <Label className="block text-xs text-gray-700 mb-2">
+              <Label className="block text-xs text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </Label>
               <div className="relative">
@@ -108,13 +112,13 @@ const LoginInFormContent = () => {
                   type={showPassword ? "text" : "password"}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••••••••••••"
-                  className="w-full px-5 py-6 rounded-full border border-gray-200 bg-gray-50 text-black placeholder-gray-400 focus:outline-none focus:bg-white focus:border-gray-300 transition pr-12"
+                  className="w-full px-5 py-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-600 transition pr-12"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -124,7 +128,7 @@ const LoginInFormContent = () => {
             <div className="text-right">
               <Link
                 href={DOC_ROUTES.AUTH.FORGOT_PASSWORD}
-                className="text-xs text-gray-600 hover:text-black transition underline"
+                className="text-xs text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition underline"
               >
                 Forgot Password?
               </Link>
@@ -134,24 +138,24 @@ const LoginInFormContent = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="cursor-pointer w-full bg-black text-white font-medium py-3 rounded-full hover:bg-gray-800 transition mt-4"
+              className="cursor-pointer w-full bg-black dark:bg-white text-white dark:text-black font-medium py-3 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition mt-4"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
           {/* Footer Links */}
-          <div className="mt-12 flex items-center justify-between text-xs text-gray-600">
+          <div className="mt-12 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
             <Link
               href={DOC_ROUTES.AUTH.SIGN_UP}
-              className="hover:text-black transition"
+              className="hover:text-black dark:hover:text-white transition"
             >
               Don&apos;t have an account?{" "}
               <span className="underline">Sign up</span>
             </Link>
             <Link
               href={DOC_ROUTES.PRIVACY_POLICY}
-              className="hover:text-black transition underline"
+              className="hover:text-black dark:hover:text-white transition underline"
             >
               Privacy Policy
             </Link>
@@ -160,7 +164,7 @@ const LoginInFormContent = () => {
       </div>
 
       {/* Right Section (Image Placeholder) */}
-      <div className="hidden md:flex w-1/2 items-center justify-center m-4 rounded-4xl bg-gray-200">
+      <div className="hidden md:flex w-1/2 items-center justify-center m-4 rounded-4xl bg-gray-200 dark:bg-gray-800">
         <Image
           src="/loginImage.webp"
           alt="Login"
@@ -178,7 +182,7 @@ const LoginInForm = () => {
   return (
     <Suspense
       fallback={
-        <section className="flex h-screen items-center justify-center bg-white text-black">
+        <section className="flex h-screen items-center justify-center bg-white dark:bg-black text-black dark:text-white">
           <div className="text-lg">Loading...</div>
         </section>
       }

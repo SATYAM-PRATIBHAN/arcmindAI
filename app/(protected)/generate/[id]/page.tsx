@@ -167,12 +167,12 @@ export default function GenerationPage() {
         <Card
           className={
             error
-              ? "border-red-200 bg-red-50"
-              : "border-yellow-200 bg-yellow-50"
+              ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50"
+              : "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/50"
           }
         >
           <CardContent className="pt-4">
-            <p className={error ? "text-red-800" : "text-yellow-800"}>
+            <p className={error ? "text-red-800 dark:text-red-300" : "text-yellow-800 dark:text-yellow-300"}>
               {error
                 ? `Error: ${error}`
                 : "Generation not found or failed to load."}
@@ -221,7 +221,7 @@ export default function GenerationPage() {
             <CardTitle className="text-2xl">GitHub Repository Design</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               System architecture generated from GitHub repository analysis
             </p>
             <DeleteDialog
@@ -234,7 +234,7 @@ export default function GenerationPage() {
         </Card>
 
         <section>
-          <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Architecture Diagram</h2>
           <MermaidDiagram chart={cleanMermaidString(githubGeneration)} />
         </section>
       </div>
@@ -298,12 +298,12 @@ export default function GenerationPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl">
+          <CardTitle className="text-2xl text-gray-900 dark:text-white">
             {generatedData.systemName || "System Architecture"}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             {generatedData.summary || "No summary available."}
           </p>
         </CardContent>
@@ -337,42 +337,42 @@ export default function GenerationPage() {
       {/* Sections */}
       {generatedData.microservices && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Microservices</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Microservices</h2>
           <MicroservicesSection microservices={generatedData.microservices} />
         </section>
       )}
 
       {generatedData.entities && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Entities</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Entities</h2>
           <EntitiesSection entities={generatedData.entities} />
         </section>
       )}
 
       {generatedData.apiRoutes && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">API Routes</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">API Routes</h2>
           <ApiRoutesSection apiRoutes={generatedData.apiRoutes} />
         </section>
       )}
 
       {generatedData.databaseSchema && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Database Schema</h2>
           <DatabaseSchemaSection schema={generatedData.databaseSchema} />
         </section>
       )}
 
       {generatedData.infrastructure && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Infrastructure</h2>
           <InfrastructureSection infra={generatedData.infrastructure} />
         </section>
       )}
 
       {generatedData["Architecture Diagram"] && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Architecture Diagram</h2>
           <MermaidDiagram
             chart={cleanMermaidString(generatedData["Architecture Diagram"])}
           />
