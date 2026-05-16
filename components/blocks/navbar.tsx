@@ -257,7 +257,7 @@ export const Navbar = () => {
             </NavigationMenu>
           ) : (
             <Link href={DOC_ROUTES.AUTH.LOGIN} className="max-lg:hidden">
-              <Button className="cursor-pointer px-6 py-5 text-base" variant="outline">
+              <Button className="cursor-pointer" variant="outline">
                 <span className="relative z-10">Login</span>
               </Button>
             </Link>
@@ -267,7 +267,7 @@ export const Navbar = () => {
           {mounted && (
             <button
               onClick={toggleTheme}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9 w-10 h-10"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 w-9"
               aria-label="Toggle theme"
             >
               {isDark ? (
