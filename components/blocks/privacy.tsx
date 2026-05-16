@@ -55,7 +55,132 @@ export default function PrivacyPage() {
           </p>
         </div>
 
-        {/* Update all remaining sections with same pattern */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            2. How We Use Your Data
+          </h2>
+          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+            <li>
+              Provide and improve ArcMind AI features (e.g., history,
+              downloads).
+            </li>
+            <li>
+              Maintain system performance and prevent misuse (via rate limiting
+              and analytics).
+            </li>
+            <li>
+              Send occasional platform or policy updates (only if you opt in).
+            </li>
+          </ul>
+          <p className="mt-2 text-gray-700 dark:text-gray-300">
+            All stored data is used solely to make ArcMind AI more reliable and
+            user-friendly.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            3. Data Storage and Security
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            We use modern and secure infrastructure, including:
+          </p>
+          <ul className="list-disc list-inside space-y-1 mt-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>Redis</strong> and <strong>MongoDB</strong> for caching
+              and data management.
+            </li>
+            <li>
+              <strong>Vercel</strong> and <strong>Prometheus</strong> for
+              hosting and performance monitoring.
+            </li>
+            <li>Encrypted HTTPS connections for all API communication.</li>
+          </ul>
+          <p className="mt-2 text-gray-700 dark:text-gray-300">
+            We retain only necessary information — you can request deletion
+            anytime by contacting us.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            4. Cookies and Tracking
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            ArcMind AI uses minimal cookies to:
+          </p>
+          <ul className="list-disc list-inside space-y-1 mt-2 text-gray-700 dark:text-gray-300">
+            <li>Keep you signed in.</li>
+            <li>Save your app preferences.</li>
+            <li>Collect anonymous analytics for performance monitoring.</li>
+          </ul>
+          <p className="mt-2 text-gray-700 dark:text-gray-300">
+            You can disable cookies in your browser, but some features may not
+            work properly.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            5. Third-Party Services
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            We may use trusted third-party tools like:
+          </p>
+          <ul className="list-disc list-inside space-y-1 mt-2 text-gray-700 dark:text-gray-300">
+            <li>
+              <strong>Email delivery</strong> (for user notifications)
+            </li>
+            <li>
+              <strong>Analytics</strong> (for performance tracking)
+            </li>
+            <li>
+              <strong>Authentication providers</strong> (if you log in via
+              OAuth)
+            </li>
+          </ul>
+          <p className="mt-2 text-gray-700 dark:text-gray-300">
+            These providers follow their own privacy and security practices in
+            compliance with modern data standards.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            6. Children's Privacy
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            ArcMind AI is not designed for users under 13 years old. We do not
+            knowingly collect data from minors. If such data is discovered, we
+            will delete it immediately.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            7. Changes to This Policy
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            We may update this Privacy Policy periodically. Any changes will be
+            reflected here with an updated date. Continued use of the platform
+            means you accept these updates.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-100">
+            8. Contact Us
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            For questions or data-related requests, reach us at:{" "}
+            <Link
+              href={`mailto:${process.env.ADMIN_EMAIL}`}
+              className="text-gray-700 dark:text-gray-300 underline hover:text-gray-900 dark:hover:text-white"
+            >
+              {process.env.ADMIN_EMAIL}
+            </Link>
+          </p>
+        </div>
       </section>
     </main>
   );
