@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { db } from "@/lib/prisma";
 import { generationRateLimit } from "@/lib/rateLimit";
-import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
   aiGenerationRequestsTotal,
   aiGenerationSuccessTotal,
@@ -16,7 +14,6 @@ import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
   apiGatewayErrorsTotal,
-  databaseQueryDurationSeconds,
 } from "@/lib/metrics";
 
 export async function POST(req: NextRequest) {
