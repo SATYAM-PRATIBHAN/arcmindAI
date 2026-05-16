@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChevronRight, LogOut } from "lucide-react";
 import { SearchForm } from "@/components/search-form";
 import {
@@ -44,6 +44,7 @@ import Image from "next/image";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { history, isLoading } = useHistory();
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
@@ -51,11 +52,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = useState<User | null>(null);
   const { getUser } = useGetUser();
 
-  const filteredHistory = history.filter((gen) =>
-    (gen.systemName || gen.userInput)
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase()),
-  );
+  const filteredHistory = useMemo(() => {
+    return history.filter((gen) => {
+      const matchesSearch = (gen.systemName || gen.userInput)
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      if (dateFilter === "all") return matchesSearch;
+
+      const createdDate = new Date(gen.createdAt);
+      const now = new Date();
+
+      const diffTime = now.getTime() - createdDate.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+      if (dateFilter === "today") {
+        return matchesSearch && diffDays < 1;
+      }
+
+      if (dateFilter === "7days") {
+        return matchesSearch && diffDays <= 7;
+      }
+
+      if (dateFilter === "30days") {
+        return matchesSearch && diffDays <= 30;
+      }
+
+      return matchesSearch;
+    });
+  }, [history, searchQuery, dateFilter]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -120,6 +145,43 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         {/* @ts-expect-error: setSearchQuery (from useState) signature does not exactly match SearchForm's onChange prop, but is safe here */}
         <SearchForm value={searchQuery} onChange={setSearchQuery} />
+        <div className="flex flex-wrap gap-2 px-2 pb-2">
+          <Button
+            variant={dateFilter === "all" ? "default" : "outline"}
+            size="sm"
+            className="text-xs sm:text-sm"
+            onClick={() => setDateFilter("all")}
+          >
+            All
+          </Button>
+
+          <Button
+            variant={dateFilter === "today" ? "default" : "outline"}
+            size="sm"
+            className="text-xs sm:text-sm"
+            onClick={() => setDateFilter("today")}
+          >
+            Today
+          </Button>
+
+          <Button
+            variant={dateFilter === "7days" ? "default" : "outline"}
+            size="sm"
+            className="text-xs sm:text-sm"
+            onClick={() => setDateFilter("7days")}
+          >
+            7 Days
+          </Button>
+
+          <Button
+            variant={dateFilter === "30days" ? "default" : "outline"}
+            size="sm"
+            className="text-xs sm:text-sm"
+            onClick={() => setDateFilter("30days")}
+          >
+            30 Days
+          </Button>
+        </div>
       </SidebarHeader>
       <SidebarContent className="gap-0">
         {data.navMain.map((item) => (
