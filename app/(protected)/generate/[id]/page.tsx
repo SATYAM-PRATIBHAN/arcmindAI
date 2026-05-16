@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Code2, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
@@ -12,6 +19,7 @@ import { useHistory } from "@/lib/contexts/HistoryContext";
 
 import {
   MermaidDiagram,
+  CopyDiagramButton,
   MicroservicesSection,
   EntitiesSection,
   ApiRoutesSection,
@@ -30,7 +38,11 @@ import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
 import { DOC_ROUTES } from "@/lib/routes";
 import { ArchitectureData } from "../utils/types";
+import { cleanMermaidString } from "../utils/cleanMermaidString";
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 export default function GenerationPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -71,7 +83,6 @@ export default function GenerationPage() {
       if (id && typeof id === "string") {
         const result = await getGenerationById(id);
         if (result && result.success) {
-          // Check if this is a GitHub generation
           if (result.output.githubGeneration) {
             setGithubGeneration(result.output.githubGeneration);
             setIsGithubRepo(true);
@@ -99,7 +110,6 @@ export default function GenerationPage() {
   const handleUpdate = async () => {
     if (!id || typeof id !== "string" || !responseText.trim()) return;
 
-    // GitHub generations don't support updates yet
     if (isGithubRepo) {
       alert("Updates are not yet supported for GitHub repository designs.");
       return;
@@ -130,24 +140,6 @@ export default function GenerationPage() {
     }
     setIsDeleteDialogOpen(false);
   };
-
-  function cleanMermaidString(input: string | undefined | null): string {
-    if (!input || typeof input !== "string") return "";
-
-    return (
-      input
-        // Remove code block markers if present (for backward compatibility)
-        .replace(/^```mermaid\n?/g, "")
-        .replace(/\n?```$/g, "")
-        .replace(/```/g, "")
-        // Convert escaped newlines to actual newlines
-        .replace(/\\n/g, "\n")
-        // Handle any other escaped characters
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .trim()
-    );
-  }
 
   if (isLoading) {
     return (
@@ -183,15 +175,16 @@ export default function GenerationPage() {
     );
   }
 
-  // Render GitHub generation view
+  // ── GitHub generation view ──────────────────────────────────────────────
   if (isGithubRepo && githubGeneration) {
+    const cleanedGithubDiagram = cleanMermaidString(githubGeneration);
+
     return (
       <div className="flex flex-1 flex-col gap-4 p-4">
         <ActionDialog
           open={isActionDialogOpen}
           onOpenChange={setIsActionDialogOpen}
           onSelectUpdate={() => {
-            // For GitHub generations, route to the update page
             router.push(DOC_ROUTES.IMPORT.UPDATE(id as string));
             setIsActionDialogOpen(false);
           }}
@@ -234,15 +227,23 @@ export default function GenerationPage() {
         </Card>
 
         <section>
-          <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
-          <MermaidDiagram chart={cleanMermaidString(githubGeneration)} />
+          {/* Section header with copy button */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">Architecture Diagram</h2>
+            <CopyDiagramButton code={cleanedGithubDiagram} />
+          </div>
+          <MermaidDiagram chart={cleanedGithubDiagram} />
         </section>
       </div>
     );
   }
 
-  // Render regular generation view
-  if (!generatedData) return null; // Safety check
+  // ── Regular generation view ─────────────────────────────────────────────
+  if (!generatedData) return null;
+
+  const cleanedDiagram = cleanMermaidString(
+    generatedData["Architecture Diagram"],
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -372,10 +373,12 @@ export default function GenerationPage() {
 
       {generatedData["Architecture Diagram"] && (
         <section>
-          <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
-          <MermaidDiagram
-            chart={cleanMermaidString(generatedData["Architecture Diagram"])}
-          />
+          {/* Section header with copy button */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">Architecture Diagram</h2>
+            <CopyDiagramButton code={cleanedDiagram} />
+          </div>
+          <MermaidDiagram chart={cleanedDiagram} />
         </section>
       )}
     </div>
