@@ -95,6 +95,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Import Project",
             url: DOC_ROUTES.IMPORT.ROOT,
           },
+          {
+            title: "Webhooks",
+            url: DOC_ROUTES.WEBHOOKS,
+            isActive: pathname === DOC_ROUTES.WEBHOOKS,
+          },
         ],
       },
       {
