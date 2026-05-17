@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { db } from "@/lib/prisma";
 import { generationRateLimit } from "@/lib/rateLimit";
+import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
   aiGenerationRequestsTotal,
   aiGenerationSuccessTotal,
@@ -14,6 +16,7 @@ import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
   apiGatewayErrorsTotal,
+  databaseQueryDurationSeconds,
 } from "@/lib/metrics";
 
 export async function POST(req: NextRequest) {
@@ -26,8 +29,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => null);
     if (!body || !body.userInput) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
@@ -44,15 +46,13 @@ export async function POST(req: NextRequest) {
         id: userId,
       },
     });
-    databaseQueryDurationSeconds.observe(
-      { operation: "findFirst" },
+    databaseQueryDurationSeconds.labels({ operation: "findFirst" }).observe(
       (Date.now() - dbStart) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
       NextResponse.json({ status: 404, message: "User not Found" });
@@ -60,8 +60,7 @@ export async function POST(req: NextRequest) {
 
     if (user?.isVerified === false) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
       return NextResponse.json({
@@ -97,8 +96,7 @@ export async function POST(req: NextRequest) {
 
     if (!userInput || userInput.trim().length === 0) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
@@ -118,11 +116,10 @@ export async function POST(req: NextRequest) {
 
     // Rate limiting: 1 request every 2 minutes per user
     const { success, limit, remaining, reset } =
-      await generationRateLimit.limit(userId);
+      await generationRateLimit.limit();
     if (!success) {
       apiGatewayErrorsTotal.inc({ status_code: "429" });
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
@@ -193,17 +190,15 @@ export async function POST(req: NextRequest) {
         // Extract from after the ```json marker
         jsonText = jsonText.slice(jsonStart + jsonStartMarker.length);
 
-        // Find the first closing ``` after the JSON start (not the last one in the entire string)
+        // Find the first closing ``` after the JSON start
         const jsonEnd = jsonText.indexOf("```");
         if (jsonEnd !== -1) {
           jsonText = jsonText.slice(0, jsonEnd);
         }
       } else {
         // If no ```json marker, try to find JSON object directly
-        // Look for first { and last } to extract JSON
         const firstBrace = jsonText.indexOf("{");
         if (firstBrace !== -1) {
-          // Find matching closing brace
           let braceCount = 0;
           let lastBrace = -1;
           for (let i = firstBrace; i < jsonText.length; i++) {
@@ -234,31 +229,27 @@ export async function POST(req: NextRequest) {
       const mermaidStart = cleanedOutput.indexOf(mermaidStartMarker);
 
       if (mermaidStart !== -1) {
-        // Extract from after the ```mermaid marker
         let mermaidText = cleanedOutput.slice(
           mermaidStart + mermaidStartMarker.length,
         );
 
-        // Find the first closing ``` after the mermaid start
         const mermaidEnd = mermaidText.indexOf("```");
         if (mermaidEnd !== -1) {
           mermaidText = mermaidText.slice(0, mermaidEnd);
         }
 
-        // Clean up the mermaid diagram
         mermaidText = mermaidText
           .replace(/```mermaid/g, "")
           .replace(/```/g, "")
           .trim();
 
-        // Add to parsedData
         if (mermaidText) {
           parsedData["Architecture Diagram"] = mermaidText;
         }
       }
 
       // 💾 Save generation result in DB with timing
-      const dbStart = Date.now();
+      const dbSaveStart = Date.now();
       await db.generation.create({
         data: {
           userInput,
@@ -266,9 +257,8 @@ export async function POST(req: NextRequest) {
           userId,
         },
       });
-      databaseQueryDurationSeconds.observe(
-        { operation: "create" },
-        (Date.now() - dbStart) / 1000,
+      databaseQueryDurationSeconds.labels({ operation: "create" }).observe(
+        (Date.now() - dbSaveStart) / 1000,
       );
 
       // Increment success counters
@@ -282,8 +272,7 @@ export async function POST(req: NextRequest) {
       aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
 
       // Track total HTTP duration
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
 
@@ -299,8 +288,7 @@ export async function POST(req: NextRequest) {
       const errorMessage =
         jsonError instanceof Error ? jsonError.message : "Unknown error";
       console.error("JSON parsing error:", jsonError);
-      httpRequestDurationSeconds.observe(
-        { route },
+      httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
       return NextResponse.json(
@@ -315,12 +303,10 @@ export async function POST(req: NextRequest) {
     aiGenerationFailureTotal.inc();
     console.error("Error generating response:", error);
 
-    // Handle specific Prisma or AI-related errors
     let status = 500;
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
-    // Check if all API keys failed (trigger user to add their own keys)
     const isApiKeyError =
       errorMessage.toLowerCase().includes("api key") ||
       errorMessage.toLowerCase().includes("rate limit") ||
@@ -336,14 +322,13 @@ export async function POST(req: NextRequest) {
     ) {
       status = 409;
     } else if (isApiKeyError) {
-      status = 503; // Service Unavailable - signals client to show API key dialog
+      status = 503;
     } else if (errorMessage.includes("AI")) {
       status = 502;
     }
 
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
-    httpRequestDurationSeconds.observe(
-      { route },
+    httpRequestDurationSeconds.labels({ route }).observe(
       (Date.now() - startTime) / 1000,
     );
 
