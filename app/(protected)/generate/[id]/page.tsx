@@ -4,14 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Code2, Copy, Check } from "lucide-react";
-import { toast } from "sonner";
+import { Code2, Sparkles } from "lucide-react";
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
@@ -297,90 +290,143 @@ export default function GenerationPage() {
 
       <ActionButton onClick={() => setIsActionDialogOpen(true)} />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-2xl">
-            {generatedData.systemName || "System Architecture"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">
-            {generatedData.summary || "No summary available."}
-          </p>
-        </CardContent>
-
-        <div className="flex flex-col gap-2 mx-4 sm:flex-row sm:items-center">
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto cursor-pointer"
-            onClick={() => setIsFrontendStructureDialogOpen(true)}
-          >
-            <Code2 className="mr-2 h-4 w-4" />
-            Frontend Structure
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto cursor-pointer"
-            onClick={() => setIsTaskGenerationDialogOpen(true)}
-          >
-            <Code2 className="mr-2 h-4 w-4" />
-            Task Generation
-          </Button>
-          <DeleteDialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
-        </div>
-      </Card>
-
-      {/* Sections */}
-      {generatedData.microservices && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Microservices</h2>
-          <MicroservicesSection microservices={generatedData.microservices} />
-        </section>
-      )}
-
-      {generatedData.entities && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Entities</h2>
-          <EntitiesSection entities={generatedData.entities} />
-        </section>
-      )}
-
-      {generatedData.apiRoutes && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">API Routes</h2>
-          <ApiRoutesSection apiRoutes={generatedData.apiRoutes} />
-        </section>
-      )}
-
-      {generatedData.databaseSchema && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
-          <DatabaseSchemaSection schema={generatedData.databaseSchema} />
-        </section>
-      )}
-
-      {generatedData.infrastructure && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
-          <InfrastructureSection infra={generatedData.infrastructure} />
-        </section>
-      )}
-
-      {generatedData["Architecture Diagram"] && (
-        <section>
-          {/* Section header with copy button */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Architecture Diagram</h2>
-            <CopyDiagramButton code={cleanedDiagram} />
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-px flex-1 bg-border/60"></div>
+            <Sparkles className="w-4 h-4 text-muted-foreground/60" />
+            <div className="h-px flex-1 bg-border/60"></div>
           </div>
-          <MermaidDiagram chart={cleanedDiagram} />
-        </section>
-      )}
+
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+              {generatedData.systemName || "System Architecture"}
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              {generatedData.summary || "No summary available."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button
+              variant="outline"
+              className="h-10 px-6 rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300 shadow-sm"
+              onClick={() => setIsFrontendStructureDialogOpen(true)}
+            >
+              <Code2 className="mr-2 h-4 w-4 text-muted-foreground" />
+              Frontend Structure
+            </Button>
+            <Button
+              variant="outline"
+              className="h-10 px-6 rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300 shadow-sm"
+              onClick={() => setIsTaskGenerationDialogOpen(true)}
+            >
+              <Code2 className="mr-2 h-4 w-4 text-muted-foreground" />
+              Task Generation
+            </Button>
+            <DeleteDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+              onDelete={handleDelete}
+              isDeleting={isDeleting}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-20 pt-12">
+          {/* Sections */}
+          {generatedData.microservices && (
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  01
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Microservices
+                </h2>
+              </div>
+              <MicroservicesSection
+                microservices={generatedData.microservices}
+              />
+            </section>
+          )}
+
+          {generatedData.entities && (
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  02
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Core Entities
+                </h2>
+              </div>
+              <EntitiesSection entities={generatedData.entities} />
+            </section>
+          )}
+
+          {generatedData.apiRoutes && (
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  03
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  API Infrastructure
+                </h2>
+              </div>
+              <ApiRoutesSection apiRoutes={generatedData.apiRoutes} />
+            </section>
+          )}
+
+          {generatedData.databaseSchema && (
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  04
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Database Architecture
+                </h2>
+              </div>
+              <DatabaseSchemaSection schema={generatedData.databaseSchema} />
+            </section>
+          )}
+
+          {generatedData.infrastructure && (
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  05
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Deployment & Infra
+                </h2>
+              </div>
+              <InfrastructureSection infra={generatedData.infrastructure} />
+            </section>
+          )}
+
+          {generatedData["Architecture Diagram"] && (
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    06
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    Architecture Visual
+                  </h2>
+                </div>
+                <CopyDiagramButton code={cleanedDiagram} />
+              </div>
+              <div className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner">
+                <MermaidDiagram chart={cleanedDiagram} />
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -161,8 +161,6 @@ export async function POST(req: NextRequest) {
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
 
-    console.log("si response: ", response);
-
     if (!response || !response.content) {
       aiGenerationFailureTotal.inc();
       throw new Error("Empty AI response received.");
@@ -228,7 +226,6 @@ export async function POST(req: NextRequest) {
       jsonText = jsonText.trim();
 
       if (!jsonText) throw new Error("No JSON content found in AI response.");
-      console.log("json text: ", jsonText);
 
       const parsedData = JSON.parse(jsonText);
 
