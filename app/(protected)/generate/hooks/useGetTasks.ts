@@ -57,8 +57,13 @@ export function useGetTasks() {
       }
       return data;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
+      let errorMessage = "An error occurred";
+      if (axios.isAxiosError(err)) {
+        errorMessage =
+          err.response?.data?.error || err.response?.data?.message || err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
       return null;
     } finally {
