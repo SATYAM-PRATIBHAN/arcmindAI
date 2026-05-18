@@ -24,46 +24,63 @@ export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const route = "/api/generate";
   const method = "POST";
+
   httpRequestsTotal.inc({ route, method });
+
+  // Needed for catch block access
+  let userId = "";
+  let userInput = "";
 
   try {
     const body = await req.json().catch(() => null);
+
     if (!body || !body.userInput) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
+
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
+
       return NextResponse.json(
         { error: "Invalid request body. Missing 'userInput' field." },
         { status: 400 },
       );
     }
 
-    const { userInput, userId } = body;
+    ({ userInput, userId } = body);
 
     const dbStart = Date.now();
+
     const user = await db.user.findFirst({
       where: {
         id: userId,
       },
     });
+
     databaseQueryDurationSeconds.labels({ operation: "findFirst" }).observe(
       (Date.now() - dbStart) / 1000,
     );
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
+
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
-      NextResponse.json({ status: 404, message: "User not Found" });
+
+      return NextResponse.json(
+        { status: 404, message: "User not Found" },
+        { status: 404 },
+      );
     }
 
     if (user?.isVerified === false) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
+
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
+
       return NextResponse.json({
         status: 401,
         message: "Email is not verified",
@@ -74,22 +91,23 @@ export async function POST(req: NextRequest) {
       where: { userId },
     });
 
-    // 2. Get user limit based on plan
+    // Get user limit based on plan
     const planLimits = {
       free: 10,
       pro: 200,
-      enterprise: 9999, // or unlimited
+      enterprise: 9999,
     };
 
     const plan = user?.plan as keyof typeof planLimits | undefined;
+
     const userLimit = plan ? planLimits[plan] : undefined;
 
-    // 3. Enforce plan limits
+    // Enforce plan limits
     if (userLimit !== undefined && generationCount >= userLimit) {
       return NextResponse.json(
         {
           error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
-          upgrade: user?.plan === "free" ? true : false,
+          upgrade: user?.plan === "free",
         },
         { status: 403 },
       );
@@ -97,9 +115,11 @@ export async function POST(req: NextRequest) {
 
     if (!userInput || userInput.trim().length === 0) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
+
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
+
       return NextResponse.json(
         { error: "Invalid input. Please provide a valid project idea." },
         { status: 400 },
@@ -108,21 +128,26 @@ export async function POST(req: NextRequest) {
 
     if (!userId) {
       httpRequestsTotal.inc({ route, method, status_code: "400" });
+
       apiGatewayErrorsTotal.inc({ status_code: "400" });
+
       return NextResponse.json(
         { error: "Missing userId. You must be logged in to generate." },
         { status: 400 },
       );
     }
 
-    // Rate limiting: 1 request every 2 minutes per user
+    // Rate limiting
     const { success, limit, remaining, reset } =
       await generationRateLimit.limit();
+
     if (!success) {
       apiGatewayErrorsTotal.inc({ status_code: "429" });
+
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
+
       return NextResponse.json(
         {
           error:
@@ -132,41 +157,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Increment AI generation request counter
+    // AI metrics
     aiGenerationRequestsTotal.inc();
 
-    // Update user activity
     userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
 
-    // ✅ Construct the AI messages
+    // Construct AI messages
     const messages = [
       new SystemMessage(SystemPrompt),
       new HumanMessage(userInput),
     ];
 
-    // 🔑 Fetch user's API keys
+    // Fetch user's API keys
     const userApiKeys = await getUserApiKeys(userId);
 
-    // 🧠 Call Gemini model with timing and automatic fallback
+    // Invoke AI
     const aiStart = Date.now();
+
     const { response } = await invokeGeminiWithFallback(
       messages,
       userApiKeys.geminiApiKey,
     );
+
     const aiDuration = (Date.now() - aiStart) / 1000;
+
     aiGenerationDurationSeconds.observe(aiDuration);
 
-    console.log("si response: ", response);
+    console.log("AI response:", response);
 
     if (!response || !response.content) {
       aiGenerationFailureTotal.inc();
+
       throw new Error("Empty AI response received.");
     }
 
     const finalAIresponse = response.content;
+
     let cleanedOutput: string;
 
-    // ✅ Handle both object and string types safely
+    // Handle object/string responses safely
     if (typeof finalAIresponse === "string") {
       cleanedOutput = finalAIresponse;
     } else if (
@@ -176,42 +205,48 @@ export async function POST(req: NextRequest) {
       cleanedOutput = finalAIresponse.output as string;
     } else {
       aiGenerationFailureTotal.inc();
+
       throw new Error("Unexpected AI response format.");
     }
 
-    // 🧹 Clean up the AI output and extract JSON
+    // Parse AI output
     try {
       let jsonText = cleanedOutput;
 
-      // Find the start of JSON code block
       const jsonStartMarker = "```json";
+
       const jsonStart = jsonText.indexOf(jsonStartMarker);
 
       if (jsonStart !== -1) {
-        // Extract from after the ```json marker
         jsonText = jsonText.slice(jsonStart + jsonStartMarker.length);
 
-        // Find the first closing ``` after the JSON start
         const jsonEnd = jsonText.indexOf("```");
+
         if (jsonEnd !== -1) {
           jsonText = jsonText.slice(0, jsonEnd);
         }
       } else {
-        // If no ```json marker, try to find JSON object directly
         const firstBrace = jsonText.indexOf("{");
+
         if (firstBrace !== -1) {
           let braceCount = 0;
+
           let lastBrace = -1;
+
           for (let i = firstBrace; i < jsonText.length; i++) {
             if (jsonText[i] === "{") braceCount++;
+
             if (jsonText[i] === "}") {
               braceCount--;
+
               if (braceCount === 0) {
                 lastBrace = i;
+
                 break;
               }
             }
           }
+
           if (lastBrace !== -1) {
             jsonText = jsonText.slice(firstBrace, lastBrace + 1);
           }
@@ -220,13 +255,17 @@ export async function POST(req: NextRequest) {
 
       jsonText = jsonText.trim();
 
-      if (!jsonText) throw new Error("No JSON content found in AI response.");
-      console.log("json text: ", jsonText);
+      if (!jsonText) {
+        throw new Error("No JSON content found in AI response.");
+      }
+
+      console.log("json text:", jsonText);
 
       const parsedData = JSON.parse(jsonText);
 
-      // 🎨 Extract mermaid diagram if present
+      // Extract Mermaid diagram if present
       const mermaidStartMarker = "```mermaid";
+
       const mermaidStart = cleanedOutput.indexOf(mermaidStartMarker);
 
       if (mermaidStart !== -1) {
@@ -235,6 +274,7 @@ export async function POST(req: NextRequest) {
         );
 
         const mermaidEnd = mermaidText.indexOf("```");
+
         if (mermaidEnd !== -1) {
           mermaidText = mermaidText.slice(0, mermaidEnd);
         }
@@ -249,30 +289,46 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 💾 Save generation result in DB with timing
+      // Save generation
       const dbSaveStart = Date.now();
-      await db.generation.create({
+
+      const generation = await db.generation.create({
         data: {
           userInput,
           generatedOutput: parsedData,
           userId,
         },
       });
+
       databaseQueryDurationSeconds.labels({ operation: "create" }).observe(
         (Date.now() - dbSaveStart) / 1000,
       );
 
-      // Increment success counters
+      // Trigger success webhooks
+      await triggerGenerationWebhooks({
+        event: "generation.completed",
+        userId,
+        data: {
+          generationId: generation.id,
+          prompt: userInput,
+          status: "success",
+        },
+      });
+
+      // Metrics
       aiGenerationSuccessTotal.inc();
+
       userGenerationsTotal.inc({ user_id: userId });
 
-      // Update user activity
-      userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
+      userLastActivityTimestamp.set(
+        { user_id: userId },
+        Date.now() / 1000,
+      );
 
-      // Set output size
-      aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
+      aiGenerationOutputSizeBytes.set(
+        JSON.stringify(parsedData).length,
+      );
 
-      // Track total HTTP duration
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
@@ -280,18 +336,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         output: finalAIresponse,
-        limit: limit,
-        remaining: remaining,
-        reset: reset,
+        limit,
+        remaining,
+        reset,
       });
     } catch (jsonError: unknown) {
       aiGenerationFailureTotal.inc();
+
       const errorMessage =
-        jsonError instanceof Error ? jsonError.message : "Unknown error";
+        jsonError instanceof Error
+          ? jsonError.message
+          : "Unknown error";
+
       console.error("JSON parsing error:", jsonError);
+
       httpRequestDurationSeconds.labels({ route }).observe(
         (Date.now() - startTime) / 1000,
       );
+
       return NextResponse.json(
         {
           error: "Failed to parse AI response JSON. Try rephrasing your input.",
@@ -302,9 +364,11 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: unknown) {
     aiGenerationFailureTotal.inc();
+
     console.error("Error generating response:", error);
 
     let status = 500;
+
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
@@ -328,7 +392,21 @@ export async function POST(req: NextRequest) {
       status = 502;
     }
 
+    // Trigger failure webhooks
+    if (userId) {
+      await triggerGenerationWebhooks({
+        event: "generation.failed",
+        userId,
+        data: {
+          prompt: userInput,
+          status: "failed",
+          error: errorMessage,
+        },
+      });
+    }
+
     apiGatewayErrorsTotal.inc({ status_code: status.toString() });
+
     httpRequestDurationSeconds.labels({ route }).observe(
       (Date.now() - startTime) / 1000,
     );
