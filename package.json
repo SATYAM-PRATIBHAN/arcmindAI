@@ -22,7 +22,7 @@
     "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
   },
   "dependencies": {
-    "@google/genai": "^1.51.0",
+    "@google/genai": "^2.4.0",
     "@hookform/resolvers": "^5.2.2",
     "@langchain/core": "^1.1.45",
     "@langchain/google-genai": "^2.1.30",
