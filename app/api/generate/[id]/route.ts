@@ -446,3 +446,56 @@ User feedback/input for update: ${userInput}`),
     );
   }
 }
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    // @ts-expect-error id is added to the session in the session callback
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const { id: generationId } = await params;
+    const { rating } = await request.json();
+
+    if (
+      typeof rating !== "number" ||
+      rating < 1 ||
+      rating > 5
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid rating value" },
+        { status: 400 },
+      );
+    }
+
+    const generation = await db.generation.update({
+      where: {
+        id: generationId,
+        // @ts-expect-error id is added to the session in the session callback
+        userId: session.user.id,
+      },
+      data: {
+        rating,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      output: generation,
+    });
+  } catch (error) {
+    console.error("Error updating rating:", error);
+
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}

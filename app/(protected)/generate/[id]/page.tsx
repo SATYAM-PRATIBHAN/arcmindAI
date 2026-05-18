@@ -1,5 +1,5 @@
 "use client";
-
+import GenerationRating from "@/components/GenerationRating";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -302,10 +302,21 @@ export default function GenerationPage() {
             {generatedData.systemName || "System Architecture"}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
           <p className="text-gray-600">
             {generatedData.summary || "No summary available."}
           </p>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Rate this generation:
+            </span>
+
+            <GenerationRating
+              generationId={id as string}
+              initialRating={(generatedData as any)?.rating}
+            />
+          </div>
         </CardContent>
 
         <div className="flex flex-col gap-2 mx-4 sm:flex-row sm:items-center">
