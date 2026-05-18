@@ -1,5 +1,4 @@
 export { default as MermaidDiagram } from "./mermaidDiagram";
-export { default as CopyDiagramButton } from "./CopyDiagramButton";
 export { default as MicroservicesSection } from "./MicroservicesSection";
 export { default as EntitiesSection } from "./EntitiesSection";
 export { default as ApiRoutesSection } from "./ApiRoutesSection";
@@ -12,3 +11,4 @@ export { default as ActionButton } from "./ActionButton";
 export { default as DeleteDialog } from "./DeleteDialog";
 export { default as FrontendStructureDialog } from "./FrontendStructureDialog";
 export { default as TaskGenerationDialog } from "./TaskGenerationDialog";
+export { default as CopyDiagramButton } from "./CopyDiagramButton";

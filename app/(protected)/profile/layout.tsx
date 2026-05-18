@@ -4,24 +4,20 @@ import { Navbar } from "@/components/blocks/navbar";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Webhooks",
+  title: "Profile",
 };
 
-export default function WebhooksLayout({
+export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <Background
-        variant="top"
-        className="from-muted/80 via-muted to-muted/80"
-      >
+      <Background variant="top" className="from-muted/80 via-muted to-muted/80">
         <Navbar />
         {children}
       </Background>
-
       <Footer />
     </div>
   );

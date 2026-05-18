@@ -22,26 +22,25 @@ model User {
   id                  String                @id @default(auto()) @map("_id") @db.ObjectId
   username            String
   email               String                @unique
-  password            String
-  avatar              String?
+  password            String                // hashed password
+  avatar              String?               // optional profile picture
   isVerified          Boolean               @default(false)
-  otp                 String?
-  otpExpiry           DateTime?
+  otp                 String?               // optional OTP code
+  otpExpiry           DateTime?             // optional OTP expiry
   role                Role                  @default(USER)
-  plan                Plan                  @default(free)
-  subscriptionId      String?
-  subscriptionStatus  String?
-  currentPeriodEnd    DateTime?
-  githubAccessToken   String?
-  geminiApiKey        String?
-  openaiApiKey        String?
-  encryptionKey       String?
+  plan                Plan                  @default(free) // free, pro, enterprise
+  subscriptionId      String?               // Dodo subscription ID
+  subscriptionStatus  String?               // active, canceled, expired, null
+  currentPeriodEnd    DateTime?             // end of current billing period
+  githubAccessToken   String?               // GitHub OAuth access token
+  geminiApiKey        String?               // Encrypted Gemini API key
+  openaiApiKey        String?               // Encrypted OpenAI API key
+  encryptionKey       String?               // User-specific encryption key for API keys
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
   generations         Generation[]
   resetPasswordTokens ResetPasswordToken[]
-  webhooks            Webhook[]
 
   @@map("users")
 }
@@ -51,56 +50,24 @@ model Generation {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   userInput        String
-  generatedOutput  Json?
+  generatedOutput  Json?     // stores structured system design JSON
   frontendData     Json?
-  githubGeneration String?
-  tasksData        Json?
-  doubtChatCount   Int      @default(0)
-  status           String   @default("success")
-  
+  githubGeneration String?   // stores Mermaid diagram for GitHub repos
+  tasksData        Json?     // stores AI-generated task breakdown
+  doubtChatCount   Int      @default(0) // tracks number of doubt questions for free tier limit
+  rating           Int?
   userId           String   @db.ObjectId
   user             User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
-model Webhook {
-  id          String              @id @default(auto()) @map("_id") @db.ObjectId
-  url         String
-  secret      String
-  isActive    Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  userId      String              @db.ObjectId
-  user        User                @relation(fields: [userId], references: [id])
-
-  deliveries  WebhookDelivery[]
-
-  @@index([userId])
-}
-
-model WebhookDelivery {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  event          String
-  status         String
-  responseCode   Int?
-  responseBody   String?
-  attempts       Int       @default(1)
-  createdAt      DateTime  @default(now())
-
-  webhookId      String    @db.ObjectId
-  webhook        Webhook   @relation(fields: [webhookId], references: [id])
-
-  @@index([webhookId])
-}
-
 model ResetPasswordToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  tokenHash String
+  tokenHash String   // hashed reset token
   userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
-  expiresAt DateTime
+  expiresAt DateTime // token expiry time
 
   @@index([tokenHash])
   @@index([userId])
