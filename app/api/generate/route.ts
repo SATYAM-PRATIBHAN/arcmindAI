@@ -183,8 +183,6 @@ export async function POST(req: NextRequest) {
 
     aiGenerationDurationSeconds.observe(aiDuration);
 
-    console.log("AI response:", response);
-
     if (!response || !response.content) {
       aiGenerationFailureTotal.inc();
 
@@ -256,11 +254,7 @@ export async function POST(req: NextRequest) {
 
       jsonText = jsonText.trim();
 
-      if (!jsonText) {
-        throw new Error("No JSON content found in AI response.");
-      }
-
-      console.log("json text:", jsonText);
+      if (!jsonText) throw new Error("No JSON content found in AI response.");
 
       const parsedData = JSON.parse(jsonText);
 

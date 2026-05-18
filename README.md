@@ -110,6 +110,10 @@ Required environment variables:
 - `UPSTASH_REDIS_REST_URL`: Upstash Redis REST API URL (for rate limiting)
 - `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis REST token
 
+**Request Limits:**
+
+- `API_BODY_LIMIT_BYTES`: Maximum allowed request body size in bytes for `/api/*` routes. Requests exceeding this limit receive HTTP 413. Optional — defaults to `768000` (750 KB) if unset or invalid.
+
 **Email & Media:**
 
 - `ADMIN_EMAIL`: Email of the admin (notifications, etc.)
@@ -247,6 +251,15 @@ After generating a system design (either from natural language or GitHub import)
 - `pnpm prisma:studio` - Open Prisma Studio for database management
 - `pnpm prisma:generate` - Generate Prisma Client
 - `pnpm prisma:push` - Push schema changes to database
+
+## Development Workflow
+
+This project uses **Husky** and **lint-staged** to ensure code quality. A pre-commit hook automatically runs:
+
+1. **ESLint** with `--fix` to catch and fix linting errors.
+2. **Prettier** to ensure consistent code formatting.
+
+This happens automatically whenever you run `git commit`. If there are unfixable errors, the commit will be blocked until they are resolved.
 
 ## Deployment
 

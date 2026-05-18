@@ -27,13 +27,8 @@ interface GenerateGithubDesignRequest {
 export async function POST(request: NextRequest) {
   const route = "/api/generate-github-design";
   const method = "POST";
-
   let aiRequested = false;
   let aiFailureRecorded = false;
-
-  // Needed in catch block
-  let userId: string | undefined;
-  let repoIdentifier = "";
 
   try {
     // Check authentication
@@ -43,12 +38,7 @@ export async function POST(request: NextRequest) {
     userId = session?.user?.id;
 
     if (!userId) {
-      httpRequestsTotal.inc({
-        route,
-        method,
-        status_code: "401",
-      });
-
+      httpRequestsTotal.inc({ route, method, status_code: "401" });
       return NextResponse.json(
         {
           success: false,
@@ -65,12 +55,7 @@ export async function POST(request: NextRequest) {
     const { owner, repo, analysisData } = body;
 
     if (!owner || !repo || !analysisData) {
-      httpRequestsTotal.inc({
-        route,
-        method,
-        status_code: "400",
-      });
-
+      httpRequestsTotal.inc({ route, method, status_code: "400" });
       return NextResponse.json(
         {
           success: false,
@@ -83,12 +68,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Repository identifier
-    repoIdentifier = `${repo}`;
-
-    // Check cache
+    // Check if a design already exists for this repository
+    const repoIdentifier = `${repo}`;
     const dbFindStart = Date.now();
-
     const existingGeneration = await db.generation.findFirst({
       where: {
         userId,
@@ -101,6 +83,10 @@ export async function POST(request: NextRequest) {
         createdAt: "desc",
       },
     });
+    databaseQueryDurationSeconds.observe(
+      { operation: "findFirst" },
+      (Date.now() - dbFindStart) / 1000,
+    );
 
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
@@ -109,12 +95,7 @@ export async function POST(request: NextRequest) {
 
     // Return cached result
     if (existingGeneration?.githubGeneration) {
-      httpRequestsTotal.inc({
-        route,
-        method,
-        status_code: "200",
-      });
-
+      httpRequestsTotal.inc({ route, method, status_code: "200" });
       return NextResponse.json({
         success: true,
         generationId: existingGeneration.id,
@@ -140,28 +121,20 @@ export async function POST(request: NextRequest) {
     const userApiKeys = await getUserApiKeys(userId);
 
     aiGenerationRequestsTotal.inc();
-
     aiRequested = true;
-
     const aiStart = Date.now();
-
     const { response } = await invokeGeminiWithFallback(
       messages,
       userApiKeys.geminiApiKey,
     );
-
     const aiDuration = (Date.now() - aiStart) / 1000;
-
     aiGenerationDurationSeconds.observe(aiDuration);
 
     if (!response || !response.content) {
       aiGenerationFailureTotal.inc();
-
       aiFailureRecorded = true;
-
       throw new Error("Empty AI response received.");
     }
-
     let mermaidDiagram = response.content as string;
 
     // Clean markdown formatting
@@ -170,9 +143,8 @@ export async function POST(request: NextRequest) {
       .replace(/```\n?/g, "")
       .trim();
 
-    // Save generation
+    // Save to database
     const dbCreateStart = Date.now();
-
     const generation = await db.generation.create({
       data: {
         userInput: repoIdentifier,
@@ -180,28 +152,14 @@ export async function POST(request: NextRequest) {
         userId,
       },
     });
-
     databaseQueryDurationSeconds.observe(
       { operation: "create" },
       (Date.now() - dbCreateStart) / 1000,
     );
 
-    // Trigger success webhooks
-    await triggerGenerationWebhooks({
-      event: "generation.completed",
-      userId,
-      generationId: generation.id,
-      status: "completed",
-    });
-
     aiGenerationSuccessTotal.inc();
 
-    httpRequestsTotal.inc({
-      route,
-      method,
-      status_code: "200",
-    });
-
+    httpRequestsTotal.inc({ route, method, status_code: "200" });
     return NextResponse.json({
       success: true,
       generationId: generation.id,
@@ -212,27 +170,8 @@ export async function POST(request: NextRequest) {
     if (aiRequested && !aiFailureRecorded) {
       aiGenerationFailureTotal.inc();
     }
-
-    // Trigger failure webhooks
-    if (userId) {
-      await triggerGenerationWebhooks({
-        event: "generation.failed",
-        userId,
-        status: "failed",
-      });
-    }
-
-    console.error(
-      "GitHub design generation error:",
-      error,
-    );
-
-    httpRequestsTotal.inc({
-      route,
-      method,
-      status_code: "500",
-    });
-
+    console.error("GitHub design generation error:", error);
+    httpRequestsTotal.inc({ route, method, status_code: "500" });
     return NextResponse.json(
       {
         success: false,
