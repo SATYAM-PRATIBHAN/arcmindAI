@@ -60,7 +60,7 @@
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.3",
     "lottie-react": "^2.4.1",
-    "lucide-react": "^0.575.0",
+    "lucide-react": "^1.16.0",
     "mermaid": "^11.14.0",
     "mongoose": "^9.6.2",
     "next": "16.2.6",
