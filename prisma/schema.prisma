@@ -18,7 +18,6 @@ enum Plan {
   enterprise
 }
 
-
 model User {
   id                  String                @id @default(auto()) @map("_id") @db.ObjectId
   username            String
@@ -41,6 +40,7 @@ model User {
   updatedAt           DateTime              @updatedAt
 
   generations         Generation[]
+  webhooks            Webhook[]
   resetPasswordTokens ResetPasswordToken[]
 
   @@map("users")
@@ -60,6 +60,37 @@ model Generation {
   user             User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Webhook {
+  id          String              @id @default(auto()) @map("_id") @db.ObjectId
+  url         String
+  secret      String
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  userId      String              @db.ObjectId
+  user        User                @relation(fields: [userId], references: [id])
+
+  deliveries  WebhookDelivery[]
+
+  @@index([userId])
+}
+
+model WebhookDelivery {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  event          String
+  status         String
+  responseCode   Int?
+  responseBody   String?
+  attempts       Int       @default(1)
+  createdAt      DateTime  @default(now())
+
+  webhookId      String    @db.ObjectId
+  webhook        Webhook   @relation(fields: [webhookId], references: [id])
+
+  @@index([webhookId])
 }
 
 model ResetPasswordToken {

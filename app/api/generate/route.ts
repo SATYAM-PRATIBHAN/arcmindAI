@@ -1,3 +1,4 @@
+import { triggerGenerationWebhooks } from "@/lib/webhooks/webhook.service";
 import { NextRequest, NextResponse } from "next/server";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
