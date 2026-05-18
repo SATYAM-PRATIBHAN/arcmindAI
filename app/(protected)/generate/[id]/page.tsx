@@ -25,6 +25,7 @@ import {
   DeleteDialog,
   FrontendStructureDialog,
   TaskGenerationDialog,
+  RatingComponent,
 } from "../components";
 
 import Lottie from "lottie-react";
@@ -67,6 +68,7 @@ export default function GenerationPage() {
     "update" | "doubt" | null
   >(null);
   const [isDoubtChatOpen, setIsDoubtChatOpen] = useState(false);
+  const [generationRating, setGenerationRating] = useState<number | null>(null);
 
   const [responseText, setResponseText] = useState("");
   const [doubtText, setDoubtText] = useState("");
@@ -91,9 +93,11 @@ export default function GenerationPage() {
               setGeneratedData(null);
             }
           }
+          setGenerationRating(result.output.rating || null);
         } else {
           setGeneratedData(null);
           setGithubGeneration(null);
+          setGenerationRating(null);
         }
       }
     };
@@ -205,6 +209,7 @@ export default function GenerationPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-2xl">GitHub Repository Design</CardTitle>
+            <RatingComponent generationId={id as string} initialRating={generationRating} />
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
@@ -305,6 +310,9 @@ export default function GenerationPage() {
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {generatedData.summary || "No summary available."}
             </p>
+            <div className="flex justify-center pt-2">
+              <RatingComponent generationId={id as string} initialRating={generationRating} />
+            </div>
           </div>
 
           <div className="flex flex-wrap justify-center gap-4">
