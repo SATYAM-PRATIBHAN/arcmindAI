@@ -219,7 +219,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             <HistorySideBarSkeleton />
                           ) : (
                             <SidebarMenuButton asChild isActive={item.isActive}>
-                              <Link href={item.url}>{item.title}</Link>
+                              {item.title === "New Chat" ? (
+                                <a href={item.url}>{item.title}</a>
+                              ) : (
+                                <Link href={item.url}>{item.title}</Link>
+                              )}
                             </SidebarMenuButton>
                           )}
                         </SidebarMenuItem>
