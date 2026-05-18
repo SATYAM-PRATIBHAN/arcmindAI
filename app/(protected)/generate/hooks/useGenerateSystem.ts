@@ -15,11 +15,12 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
 
   const generate = async (
     userInput: string,
-  ): Promise<GenerateResponse | null> => {
+  ): Promise<{ success: boolean; output?: string; error?: string } | null> => {
     // @ts-expect-error accessToken is added to session in NextAuth callbacks
     if (!session?.user?.accessToken) {
-      setError("No access token available. Please log in.");
-      return null;
+      const msg = "No access token available. Please log in.";
+      setError(msg);
+      return { success: false, error: msg };
     }
 
     setIsLoading(true);
@@ -47,7 +48,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
       const errorMessage =
         err instanceof Error ? err.message : "An error occurred";
       setError(errorMessage);
-      return null;
+      return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);
     }

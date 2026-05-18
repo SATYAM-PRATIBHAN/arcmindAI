@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ListTodo } from "lucide-react";
+import { ArrowLeft, ListTodo, RefreshCcw } from "lucide-react";
 import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
 
@@ -32,12 +32,21 @@ export default function TasksPage() {
 
   const [tasksData, setTasksData] = useState<TasksData | null>(null);
   const [fromCache, setFromCache] = useState(false);
-  const hasFetched = useRef(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const lastFetchedId = useRef<string | null>(null);
+  const lastRetryCount = useRef<number>(-1);
 
   useEffect(() => {
     const fetchTasks = async () => {
-      if (id && typeof id === "string" && !hasFetched.current) {
-        hasFetched.current = true;
+      if (id && typeof id === "string") {
+        if (
+          lastFetchedId.current === id &&
+          lastRetryCount.current === retryCount
+        ) {
+          return;
+        }
+        lastFetchedId.current = id;
+        lastRetryCount.current = retryCount;
         const result = await getTasks(id);
         if (result && result.success) {
           setTasksData(result.tasks);
@@ -46,7 +55,7 @@ export default function TasksPage() {
       }
     };
     fetchTasks();
-  }, [id, getTasks]);
+  }, [id, getTasks, retryCount]);
 
   if (isLoading) {
     return (
@@ -65,12 +74,20 @@ export default function TasksPage() {
 
   if (error || !tasksData) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4">
-            <p className="text-red-800">
+      <div className="container mx-auto p-6 flex flex-col items-center justify-center space-y-4">
+        <Card className="border-red-200 bg-red-50 w-full max-w-2xl">
+          <CardContent className="pt-4 flex flex-col items-center text-center">
+            <p className="text-red-800 mb-4">
               {error || "Failed to load tasks. Please try again."}
             </p>
+            <Button
+              onClick={() => setRetryCount((prev) => prev + 1)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Retry
+            </Button>
           </CardContent>
         </Card>
       </div>

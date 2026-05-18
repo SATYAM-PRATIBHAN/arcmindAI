@@ -70,8 +70,9 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
+    setError(null);
     const result = await generate(userInput);
-    if (result && result.success) {
+    if (result && result.success && result.output) {
       try {
         let cleanedOutput = result.output;
         const jsonStartMarker = "```json";
@@ -138,9 +139,10 @@ export default function GeneratePage() {
       } catch (parseError) {
         console.error("Failed to parse generated data:", parseError);
         setGeneratedData(null);
+        setError("Failed to parse generated data. Please try again.");
       }
     } else {
-      setError(generateError);
+      setError(result?.error || generateError || "An error occurred during generation.");
       setGeneratedData(null);
     }
   };

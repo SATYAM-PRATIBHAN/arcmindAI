@@ -15,6 +15,8 @@ interface Generation {
 interface GenerationResponse {
   success: boolean;
   output: Generation;
+  message?: string;
+  error?: string;
 }
 
 export function useGetGenerationById() {
@@ -49,6 +51,11 @@ export function useGetGenerationById() {
       }
 
       const data: GenerationResponse = response.data;
+      
+      if (!data.success) {
+        throw new Error(data.message || data.error || "Failed to fetch generation");
+      }
+      
       return data;
     } catch (err) {
       const errorMessage =

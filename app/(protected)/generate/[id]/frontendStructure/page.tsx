@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useFrontendStructure } from "@/hooks/useFrontendStructure";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,14 +20,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { FileTreeRenderer } from "@/components/ui/file-tree";
 
 export default function FrontendStructurePage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data, isLoading, error } = useFrontendStructure(id);
+  const { data, isLoading, error, generateFrontendStructure } =
+    useFrontendStructure(id);
 
   if (isLoading) {
     return (
@@ -40,12 +42,24 @@ export default function FrontendStructurePage() {
 
   if (error || !data) {
     return (
-      <Alert variant="destructive" className="mx-auto max-w-2xl">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load frontend structure. {error || "Please try again."}
-        </AlertDescription>
-      </Alert>
+      <div className="container mx-auto p-6 space-y-4 max-w-2xl">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load frontend structure. {error || "Please try again."}
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center">
+          <Button
+            onClick={() => generateFrontendStructure()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCcw className="h-4 w-4" />
+            Retry
+          </Button>
+        </div>
+      </div>
     );
   }
 

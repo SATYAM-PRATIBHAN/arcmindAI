@@ -52,6 +52,9 @@ export function useGetTasks() {
       }
 
       const data: TasksResponse = response.data;
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch tasks");
+      }
       return data;
     } catch (err) {
       const errorMessage =
