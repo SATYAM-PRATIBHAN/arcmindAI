@@ -4,10 +4,13 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/prisma";
 import { decryptToken } from "@/lib/encryption";
 import { RepositoryAnalyzer } from "@/lib/repository-analyzer";
+import { getCacheKey, withCache } from "@/lib/cache";
 import {
   AnalyzeRepositoryRequest,
   AnalyzeRepositoryResponse,
 } from "@/types/repository-analysis";
+
+const CACHE_TTL_SECONDS = 60 * 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,11 +40,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // @ts-expect-error id is added in jwt callback
+    const userId = session.user.id;
+
     // Get user's encrypted GitHub token from database
     const user = await db.user.findUnique({
       where: {
-        // @ts-expect-error id is added in jwt callback
-        id: session.user.id,
+        id: userId,
       },
       select: {
         githubAccessToken: true,
@@ -61,9 +66,20 @@ export async function POST(request: NextRequest) {
     // Decrypt the token
     const githubToken = decryptToken(user.githubAccessToken);
 
-    // Create analyzer and run analysis
-    const analyzer = new RepositoryAnalyzer(owner, repo, githubToken);
-    const analysis = await analyzer.analyze();
+    // Create analyzer and run analysis with caching
+    const analysis = await withCache(
+      getCacheKey("repository-analysis", userId, owner, repo),
+      CACHE_TTL_SECONDS,
+      async () => {
+        const analyzer = new RepositoryAnalyzer(
+          userId,
+          owner,
+          repo,
+          githubToken,
+        );
+        return await analyzer.analyze();
+      },
+    );
 
     return NextResponse.json({
       success: true,

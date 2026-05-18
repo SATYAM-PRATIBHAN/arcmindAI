@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Crown } from "lucide-react";
+import { Send, Bot, User, Crown, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAskDoubt } from "../hooks/useAskDoubt";
 import { toast } from "sonner";
@@ -218,23 +218,26 @@ export default function AskDoubtCard({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-lg flex flex-col p-0"
+        className="w-full sm:max-w-lg flex flex-col p-0 border-l border-border/40 bg-card/95 backdrop-blur-2xl shadow-2xl"
       >
-        <SheetHeader className="px-4 py-4 border-b">
-          <SheetTitle className="flex items-center gap-2">
-            <Bot className="w-5 h-5" />
+        <SheetHeader className="px-6 py-6 border-b border-border/40 space-y-3">
+          <SheetTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
+            <div className="p-2 bg-foreground text-background rounded-xl">
+              <Bot className="w-5 h-5" />
+            </div>
             Ask a Doubt
           </SheetTitle>
           {userPlan === "free" && (
-            <div className="text-xs text-muted-foreground mt-2">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
               {doubtChatCount >= FREE_TIER_DOUBT_LIMIT ? (
-                <span className="text-destructive font-medium">
+                <span className="text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   Limit reached ({FREE_TIER_DOUBT_LIMIT}/{FREE_TIER_DOUBT_LIMIT}
                   )
                 </span>
               ) : (
-                <span>
-                  {FREE_TIER_DOUBT_LIMIT - doubtChatCount} doubt chats remaining
+                <span className="bg-accent px-2 py-0.5 rounded text-foreground">
+                  {FREE_TIER_DOUBT_LIMIT - doubtChatCount} chats left
                 </span>
               )}
             </div>
@@ -242,62 +245,68 @@ export default function AskDoubtCard({
         </SheetHeader>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
           {limitReached && messages.length === 0 && (
-            <Alert className="border-destructive/50 bg-destructive/10">
+            <Alert className="border-destructive/20 bg-destructive/5 rounded-2xl">
               <Crown className="h-4 w-4 text-destructive" />
               <AlertDescription className="text-sm">
-                You&apos;ve reached the limit of {FREE_TIER_DOUBT_LIMIT} doubt
-                chats for this generation.
+                You&apos;ve reached the free limit.
                 <Button
                   variant="link"
-                  className="p-0 h-auto ml-1 text-primary cursor-pointer"
+                  className="p-0 h-auto ml-1 text-foreground font-bold underline cursor-pointer"
                   onClick={() => (window.location.href = "/pricing")}
                 >
                   Upgrade to Pro
-                </Button>{" "}
-                for unlimited doubt chats.
+                </Button>
               </AlertDescription>
             </Alert>
           )}
+
           {messages.length === 0 && !limitReached ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-              <Bot className="w-12 h-12 mb-4 opacity-50" />
-              <p className="text-sm">
-                Ask any questions about this architecture
-              </p>
-              <p className="text-xs mt-2">
-                Type your doubt and press Enter to send
-              </p>
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 animate-in fade-in zoom-in duration-700">
+              <div className="p-6 bg-accent/30 rounded-full">
+                <Bot className="w-12 h-12 text-muted-foreground/40" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-semibold tracking-tight">
+                  Architecture Assistant
+                </p>
+                <p className="text-xs text-muted-foreground max-w-[200px] mx-auto leading-relaxed">
+                  I can clarify component roles, tech stack choices, or
+                  integration workflows.
+                </p>
+              </div>
             </div>
           ) : (
             messages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
-                  "flex gap-3",
+                  "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
                   message.sender === "user" ? "justify-end" : "justify-start",
                 )}
               >
                 {message.sender === "assistant" && (
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-primary" />
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center border border-border/40">
+                    <Bot className="w-4 h-4 text-foreground" />
                   </div>
                 )}
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-lg px-4 py-2",
+                    "max-w-[85%] rounded-2xl px-4 py-3 shadow-sm",
                     message.sender === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground",
+                      ? "bg-foreground text-background font-medium"
+                      : "bg-accent/40 text-foreground border border-border/40",
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                  <p className="text-[13px] whitespace-pre-wrap leading-relaxed">
+                    {message.text}
+                  </p>
                   <p
                     className={cn(
-                      "text-xs mt-1",
+                      "text-[9px] mt-2 font-bold uppercase tracking-tighter opacity-50",
                       message.sender === "user"
-                        ? "text-primary-foreground/70"
+                        ? "text-background"
                         : "text-muted-foreground",
                     )}
                   >
@@ -308,27 +317,27 @@ export default function AskDoubtCard({
                   </p>
                 </div>
                 {message.sender === "user" && (
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-foreground flex items-center justify-center">
+                    <User className="w-4 h-4 text-background" />
                   </div>
                 )}
               </div>
             ))
           )}
           {isLoading && (
-            <div className="flex gap-3 justify-start">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-primary" />
+            <div className="flex gap-3 justify-start animate-in fade-in duration-300">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center border border-border/40">
+                <Bot className="w-4 h-4 text-foreground" />
               </div>
-              <div className="bg-muted rounded-lg px-4 py-2">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+              <div className="bg-accent/40 rounded-2xl px-4 py-3 border border-border/40">
+                <div className="flex gap-1.5">
+                  <div className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce" />
                   <div
-                    className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce"
                     style={{ animationDelay: "0.2s" }}
                   />
                   <div
-                    className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-foreground/40 rounded-full animate-bounce"
                     style={{ animationDelay: "0.4s" }}
                   />
                 </div>
@@ -339,30 +348,32 @@ export default function AskDoubtCard({
         </div>
 
         {/* Input Area */}
-        <div className="border-t px-4 py-4">
-          <div className="flex gap-2">
+        <div className="p-6 border-t border-border/40 bg-card/50">
+          <div className="relative group">
             <Input
               type="text"
               value={doubtText}
               onChange={(e) => onDoubtTextChange(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={
-                limitReached
-                  ? "Limit reached - Upgrade to continue"
-                  : "Type your doubt..."
+                limitReached ? "Daily limit reached" : "Type your question..."
               }
-              className="flex-1"
+              className="flex-1 rounded-xl bg-accent/30 border-border/40 focus-visible:ring-1 focus-visible:ring-foreground/20 pr-12 h-11 text-sm"
               disabled={isLoading || limitReached}
             />
             <Button
               onClick={handleSubmit}
               disabled={!doubtText.trim() || isLoading || limitReached}
-              className="cursor-pointer"
+              variant="ghost"
               size="icon"
+              className="absolute right-1.5 top-1.5 h-8 w-8 rounded-lg hover:bg-foreground hover:text-background transition-colors duration-300"
             >
               <Send className="w-4 h-4" />
             </Button>
           </div>
+          <p className="text-[10px] text-center text-muted-foreground mt-3">
+            Press Enter to send your message
+          </p>
         </div>
       </SheetContent>
     </Sheet>

@@ -1,4 +1,5 @@
 export { default as MermaidDiagram } from "./mermaidDiagram";
+export { default as CopyDiagramButton } from "./CopyDiagramButton";
 export { default as MicroservicesSection } from "./MicroservicesSection";
 export { default as EntitiesSection } from "./EntitiesSection";
 export { default as ApiRoutesSection } from "./ApiRoutesSection";

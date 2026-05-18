@@ -1,23 +1,28 @@
-import { RepositoryAnalysis, RepoMetadata } from "@/types/repository-analysis";
+import { getCacheKey, withCache } from "@/lib/cache";
+import { RepoMetadata, RepositoryAnalysis } from "@/types/repository-analysis";
 import axios from "axios";
-import { GitHubTreeNode, FILE_PATTERNS } from "./constants";
-import { ArchitectureAnalyzer } from "./architecture-analyzer";
-import { DependencyAnalyzer } from "./dependency-analyzer";
-import { DatabaseAnalyzer } from "./database-analyzer";
 import { APIAnalyzer } from "./api-analyzer";
-import { InfrastructureAnalyzer } from "./infrastructure-analyzer";
+import { ArchitectureAnalyzer } from "./architecture-analyzer";
+import { FILE_PATTERNS, GitHubTreeNode } from "./constants";
+import { DatabaseAnalyzer } from "./database-analyzer";
+import { DependencyAnalyzer } from "./dependency-analyzer";
 import { EnvironmentAnalyzer } from "./environment-analyzer";
-import { TestAnalyzer } from "./test-analyzer";
+import { InfrastructureAnalyzer } from "./infrastructure-analyzer";
 import { MessagingAnalyzer } from "./messaging-analyzer";
+import { TestAnalyzer } from "./test-analyzer";
+
+const CACHE_TTL_SECONDS = 60 * 60;
 
 export class RepositoryAnalyzer {
+  private userId: string;
   private owner: string;
   private repo: string;
   private token: string;
   private tree: GitHubTreeNode[] = [];
   private fileContents: Map<string, string> = new Map();
 
-  constructor(owner: string, repo: string, token: string) {
+  constructor(userId: string, owner: string, repo: string, token: string) {
+    this.userId = userId;
     this.owner = owner;
     this.repo = repo;
     this.token = token;
@@ -85,20 +90,35 @@ export class RepositoryAnalyzer {
   }
 
   private async fetchMetadata(): Promise<RepoMetadata> {
-    const [repoRes, languagesRes] = await Promise.all([
-      axios.get(`https://api.github.com/repos/${this.owner}/${this.repo}`, {
-        headers: { Authorization: `Bearer ${this.token}` },
-      }),
-      axios.get(
-        `https://api.github.com/repos/${this.owner}/${this.repo}/languages`,
-        {
-          headers: { Authorization: `Bearer ${this.token}` },
+    const [repo, languages] = await Promise.all([
+      withCache(
+        getCacheKey("github:repo-info", this.userId, this.owner, this.repo),
+        CACHE_TTL_SECONDS,
+        async () => {
+          const response = await axios.get(
+            `https://api.github.com/repos/${this.owner}/${this.repo}`,
+            { headers: { Authorization: `Bearer ${this.token}` } },
+          );
+          return response.data;
+        },
+      ),
+      withCache(
+        getCacheKey(
+          "github:repo-languages",
+          this.userId,
+          this.owner,
+          this.repo,
+        ),
+        CACHE_TTL_SECONDS,
+        async () => {
+          const response = await axios.get(
+            `https://api.github.com/repos/${this.owner}/${this.repo}/languages`,
+            { headers: { Authorization: `Bearer ${this.token}` } },
+          );
+          return response.data || {};
         },
       ),
     ]);
-
-    const repo = repoRes.data;
-    const languages = languagesRes.data || {};
 
     return {
       name: repo.name,
@@ -119,12 +139,24 @@ export class RepositoryAnalyzer {
   }
 
   private async fetchTree(branch: string): Promise<void> {
-    const res = await axios.get(
-      `https://api.github.com/repos/${this.owner}/${this.repo}/git/trees/${branch}?recursive=1`,
-      { headers: { Authorization: `Bearer ${this.token}` } },
+    const data = await withCache(
+      getCacheKey(
+        "github:repo-tree",
+        this.userId,
+        this.owner,
+        this.repo,
+        branch,
+      ),
+      CACHE_TTL_SECONDS,
+      async () => {
+        const response = await axios.get(
+          `https://api.github.com/repos/${this.owner}/${this.repo}/git/trees/${branch}?recursive=1`,
+          { headers: { Authorization: `Bearer ${this.token}` } },
+        );
+        return response.data;
+      },
     );
-
-    this.tree = res.data.tree;
+    this.tree = data.tree;
   }
 
   private async fetchImportantFiles(): Promise<void> {
@@ -154,18 +186,30 @@ export class RepositoryAnalyzer {
 
   private async fetchFileContent(path: string): Promise<void> {
     try {
-      const res = await axios.get(
-        `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            Accept: "application/vnd.github.raw",
-          },
-          responseType: "text",
+      const data = await withCache<string>(
+        getCacheKey(
+          "github:file-content",
+          this.userId,
+          this.owner,
+          this.repo,
+          path,
+        ),
+        CACHE_TTL_SECONDS,
+        async () => {
+          const response = await axios.get(
+            `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}`,
+            {
+              headers: {
+                Authorization: `Bearer ${this.token}`,
+                Accept: "application/vnd.github.raw",
+              },
+              responseType: "text",
+            },
+          );
+          return response.data;
         },
       );
-
-      this.fileContents.set(path, res.data);
+      this.fileContents.set(path, data);
     } catch (error) {
       console.error(`Failed to fetch ${path}:`, error);
     }
