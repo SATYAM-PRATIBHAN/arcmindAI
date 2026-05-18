@@ -7,6 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import axios from "axios";
+import SignUpPromptDialog from "./SignUpPromptDialog";
 import MermaidDiagram from "./mermaidDiagram";
 import CopyDiagramButton from "./CopyDiagramButton";
 import { ArchitectureData } from "../utils/types";
@@ -34,6 +38,47 @@ export default function GeneratePage() {
     null,
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const { data: session } = useSession();
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsGuestMode(localStorage.getItem("guestMode") === "true");
+    }
+  }, []);
+
+  // Seamless Transfer of Guest Generation on Signup/Login
+  useEffect(() => {
+    const transferGuestGeneration = async () => {
+      const guestGen = localStorage.getItem("guestGeneration");
+      // @ts-expect-error id is added to session custom properties
+      if (guestGen && session?.user?.id) {
+        try {
+          const parsed = JSON.parse(guestGen);
+          const response = await axios.post("/api/generate/transfer", {
+            userInput: parsed.userInput,
+            generatedOutput: parsed.generatedOutput,
+          });
+          if (response.data.success) {
+            localStorage.removeItem("guestGeneration");
+            localStorage.removeItem("guestMode");
+            setIsGuestMode(false);
+            toast.success("✨ Your guest architecture design has been saved to your account history!");
+            if (refetch) refetch(); // Refresh history
+          }
+        } catch (err) {
+          console.error("Failed to transfer guest generation:", err);
+          toast.error("Failed to save guest generation to your account.");
+        }
+      }
+    };
+    // @ts-expect-error id is added to session custom properties
+    if (session?.user?.id) {
+      transferGuestGeneration();
+    }
+  }, [session, refetch]);
 
   const userInput = watch("userInput", "");
 
@@ -135,6 +180,15 @@ export default function GeneratePage() {
         }
 
         setGeneratedData(parsedData);
+
+        // If guest mode is active, trigger CTA to save the generation!
+        if (isGuestMode) {
+          localStorage.setItem(
+            "guestGeneration",
+            JSON.stringify({ userInput, generatedOutput: parsedData })
+          );
+          setIsSignUpModalOpen(true);
+        }
       } catch (parseError) {
         console.error("Failed to parse generated data:", parseError);
         setGeneratedData(null);
@@ -154,6 +208,25 @@ export default function GeneratePage() {
 
   return (
     <div className="container max-w-5xl mx-auto p-8 space-y-12">
+      {/* If guest and has data, show the warning banner! */}
+      {isGuestMode && generatedData && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top duration-500 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
+            <p className="text-sm font-medium text-amber-600 dark:text-amber-400 text-center sm:text-left">
+              ⚠️ You are previewing a <strong>Guest Generation</strong>. Sign up now to save it to your account!
+            </p>
+          </div>
+          <Button
+            onClick={() => setIsSignUpModalOpen(true)}
+            size="sm"
+            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium px-4 shadow-sm"
+          >
+            Save Architecture
+          </Button>
+        </div>
+      )}
+
       {!generatedData && (
         <div className="space-y-4">
           <div className="relative group">
@@ -361,6 +434,8 @@ export default function GeneratePage() {
           </div>
         </div>
       )}
+
+      <SignUpPromptDialog open={isSignUpModalOpen} onOpenChange={setIsSignUpModalOpen} />
     </div>
   );
 }

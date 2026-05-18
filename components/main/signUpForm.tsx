@@ -26,6 +26,11 @@ const SignUpForm = () => {
   const [errors, setErrors] = useState<FormErrors>({}); // 🧠 error state
   const router = useRouter();
 
+  const handleTryAsGuest = () => {
+    localStorage.setItem("guestMode", "true");
+    router.push(DOC_ROUTES.GENERATE);
+  };
+
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(true);
     e.preventDefault();
@@ -207,6 +212,16 @@ const SignUpForm = () => {
               className="cursor-pointer w-full bg-black text-white font-medium py-3 rounded-full hover:bg-gray-800 transition mt-4"
             >
               {loading ? "Creating Account..." : "Create Account"}
+            </Button>
+
+            {/* Try as Guest Button */}
+            <Button
+              type="button"
+              onClick={handleTryAsGuest}
+              variant="outline"
+              className="w-full border border-gray-300 text-black font-medium py-3 rounded-full hover:bg-gray-50 transition mt-2 cursor-pointer"
+            >
+              Try as Guest (1 Free Generation)
             </Button>
           </form>
 

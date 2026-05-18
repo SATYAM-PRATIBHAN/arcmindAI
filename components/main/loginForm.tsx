@@ -20,6 +20,11 @@ const LoginInFormContent = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleTryAsGuest = () => {
+    localStorage.setItem("guestMode", "true");
+    router.push(DOC_ROUTES.GENERATE);
+  };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -137,6 +142,16 @@ const LoginInFormContent = () => {
               className="cursor-pointer w-full bg-black text-white font-medium py-3 rounded-full hover:bg-gray-800 transition mt-4"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
+            </Button>
+
+            {/* Try as Guest Button */}
+            <Button
+              type="button"
+              onClick={handleTryAsGuest}
+              variant="outline"
+              className="w-full border border-gray-300 text-black font-medium py-3 rounded-full hover:bg-gray-50 transition mt-2 cursor-pointer"
+            >
+              Try as Guest (1 Free Generation)
             </Button>
           </form>
 

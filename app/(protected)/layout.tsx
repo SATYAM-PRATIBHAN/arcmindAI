@@ -3,7 +3,7 @@
 import { DOC_ROUTES } from "@/lib/routes";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function ProtectedLayout({
   children,
@@ -12,15 +12,24 @@ export default function ProtectedLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [isGuest, setIsGuest] = useState(false);
+  const [checkingGuest, setCheckingGuest] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
+    if (typeof window !== "undefined") {
+      setIsGuest(localStorage.getItem("guestMode") === "true");
+    }
+    setCheckingGuest(false);
+  }, []);
+
+  useEffect(() => {
+    if (status === "loading" || checkingGuest) return;
+    if (!session && !isGuest) {
       router.push(DOC_ROUTES.AUTH.LOGIN);
     }
-  }, [session, status, router]);
+  }, [session, status, router, isGuest, checkingGuest]);
 
-  if (status === "loading") {
+  if (status === "loading" || checkingGuest) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex items-center gap-3 text-lg font-medium text-muted-foreground">
@@ -31,7 +40,7 @@ export default function ProtectedLayout({
     );
   }
 
-  if (!session) {
+  if (!session && !isGuest) {
     return null;
   }
 

@@ -3,7 +3,7 @@ import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiCli
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { db } from "@/lib/prisma";
-import { generationRateLimit } from "@/lib/rateLimit";
+import { generationRateLimit, redis } from "@/lib/rateLimit";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
   aiGenerationRequestsTotal,
@@ -41,62 +41,7 @@ export async function POST(req: NextRequest) {
 
     const { userInput, userId } = body;
 
-    const dbStart = Date.now();
-    const user = await db.user.findFirst({
-      where: {
-        id: userId,
-      },
-    });
-    databaseQueryDurationSeconds.observe(
-      { operation: "findFirst" },
-      (Date.now() - dbStart) / 1000,
-    );
-
-    if (!user) {
-      apiGatewayErrorsTotal.inc({ status_code: "404" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      NextResponse.json({ status: 404, message: "User not Found" });
-    }
-
-    if (user?.isVerified === false) {
-      apiGatewayErrorsTotal.inc({ status_code: "401" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      return NextResponse.json({
-        status: 401,
-        message: "Email is not verified",
-      });
-    }
-
-    const generationCount = await db.generation.count({
-      where: { userId },
-    });
-
-    // 2. Get user limit based on plan
-    const planLimits = {
-      free: 10,
-      pro: 200,
-      enterprise: 9999, // or unlimited
-    };
-
-    const plan = user?.plan as keyof typeof planLimits | undefined;
-    const userLimit = plan ? planLimits[plan] : undefined;
-
-    // 3. Enforce plan limits
-    if (userLimit !== undefined && generationCount >= userLimit) {
-      return NextResponse.json(
-        {
-          error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
-          upgrade: user?.plan === "free" ? true : false,
-        },
-        { status: 403 },
-      );
-    }
+    const isGuest = userId === "guest";
 
     if (!userInput || userInput.trim().length === 0) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
@@ -119,29 +64,116 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Rate limiting: 1 request every 2 minutes per user
-    const { success, limit, remaining, reset } =
-      await generationRateLimit.limit(userId);
-    if (!success) {
-      apiGatewayErrorsTotal.inc({ status_code: "429" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Rate limit exceeded. Please wait 2 minutes before making another request.",
+    let limit = 2;
+    let remaining = 2;
+    let reset = 120;
+
+    if (isGuest) {
+      // 1. Check IP-based guest limit using Redis
+      const ip = req.headers.get("x-forwarded-for") || "anonymous";
+      const guestKey = `guest_generated:${ip}`;
+      const hasGenerated = await redis.get(guestKey);
+      if (hasGenerated) {
+        return NextResponse.json(
+          {
+            error: "You have reached the guest limit of 1 free generation. Please sign up to save your architecture and generate more!",
+            signupPrompt: true
+          },
+          { status: 403 }
+        );
+      }
+
+      // 2. Rate limit guests by IP (1 request per 2 mins)
+      const { success } = await generationRateLimit.limit(`guest_rate:${ip}`);
+      if (!success) {
+        apiGatewayErrorsTotal.inc({ status_code: "429" });
+        return NextResponse.json(
+          {
+            error: "Rate limit exceeded. Please wait 2 minutes before making another request.",
+          },
+          { status: 429 },
+        );
+      }
+    } else {
+      const dbStart = Date.now();
+      const user = await db.user.findFirst({
+        where: {
+          id: userId,
         },
-        { status: 429 },
+      });
+      databaseQueryDurationSeconds.observe(
+        { operation: "findFirst" },
+        (Date.now() - dbStart) / 1000,
       );
+
+      if (!user) {
+        apiGatewayErrorsTotal.inc({ status_code: "404" });
+        httpRequestDurationSeconds.observe(
+          { route },
+          (Date.now() - startTime) / 1000,
+        );
+        return NextResponse.json({ status: 404, message: "User not Found" });
+      }
+
+      if (user?.isVerified === false) {
+        apiGatewayErrorsTotal.inc({ status_code: "401" });
+        httpRequestDurationSeconds.observe(
+          { route },
+          (Date.now() - startTime) / 1000,
+        );
+        return NextResponse.json({
+          status: 401,
+          message: "Email is not verified",
+        });
+      }
+
+      const generationCount = await db.generation.count({
+        where: { userId },
+      });
+
+      // Get user limit based on plan
+      const planLimits = {
+        free: 10,
+        pro: 200,
+        enterprise: 9999,
+      };
+
+      const plan = user?.plan as keyof typeof planLimits | undefined;
+      const userLimit = plan ? planLimits[plan] : undefined;
+
+      // Enforce plan limits
+      if (userLimit !== undefined && generationCount >= userLimit) {
+        return NextResponse.json(
+          {
+            error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
+            upgrade: user?.plan === "free" ? true : false,
+          },
+          { status: 403 },
+        );
+      }
+
+      // Rate limiting: 1 request every 2 minutes per user
+      const rateLimitResult = await generationRateLimit.limit(userId);
+      if (!rateLimitResult.success) {
+        apiGatewayErrorsTotal.inc({ status_code: "429" });
+        httpRequestDurationSeconds.observe(
+          { route },
+          (Date.now() - startTime) / 1000,
+        );
+        return NextResponse.json(
+          {
+            error: "Rate limit exceeded. Please wait 2 minutes before making another request.",
+          },
+          { status: 429 },
+        );
+      }
+      limit = rateLimitResult.limit;
+      remaining = rateLimitResult.remaining;
+      reset = rateLimitResult.reset;
+
+      // Update user activity
+      userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
     }
-
-    // Increment AI generation request counter
-    aiGenerationRequestsTotal.inc();
-
-    // Update user activity
-    userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
 
     // ✅ Construct the AI messages
     const messages = [
@@ -150,13 +182,13 @@ export async function POST(req: NextRequest) {
     ];
 
     // 🔑 Fetch user's API keys
-    const userApiKeys = await getUserApiKeys(userId);
+    const userApiKeys = !isGuest ? await getUserApiKeys(userId) : { geminiApiKey: null };
 
     // 🧠 Call Gemini model with timing and automatic fallback
     const aiStart = Date.now();
     const { response } = await invokeGeminiWithFallback(
       messages,
-      userApiKeys.geminiApiKey,
+      userApiKeys.geminiApiKey || undefined,
     );
     const aiDuration = (Date.now() - aiStart) / 1000;
     aiGenerationDurationSeconds.observe(aiDuration);
@@ -257,26 +289,35 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 💾 Save generation result in DB with timing
-      const dbStart = Date.now();
-      await db.generation.create({
-        data: {
-          userInput,
-          generatedOutput: parsedData,
-          userId,
-        },
-      });
-      databaseQueryDurationSeconds.observe(
-        { operation: "create" },
-        (Date.now() - dbStart) / 1000,
-      );
+      if (!isGuest) {
+        // 💾 Save generation result in DB with timing
+        const dbStart = Date.now();
+        await db.generation.create({
+          data: {
+            userInput,
+            generatedOutput: parsedData,
+            userId,
+          },
+        });
+        databaseQueryDurationSeconds.observe(
+          { operation: "create" },
+          (Date.now() - dbStart) / 1000,
+        );
 
-      // Increment success counters
-      aiGenerationSuccessTotal.inc();
-      userGenerationsTotal.inc({ user_id: userId });
+        // Increment success counters
+        aiGenerationSuccessTotal.inc();
+        userGenerationsTotal.inc({ user_id: userId });
 
-      // Update user activity
-      userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
+        // Update user activity
+        userLastActivityTimestamp.set({ user_id: userId }, Date.now() / 1000);
+      } else {
+        // Track guest generated state in Redis (expires in 30 days)
+        const ip = req.headers.get("x-forwarded-for") || "anonymous";
+        const guestKey = `guest_generated:${ip}`;
+        await redis.set(guestKey, "true", { ex: 30 * 24 * 60 * 60 });
+        
+        aiGenerationSuccessTotal.inc();
+      }
 
       // Set output size
       aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
