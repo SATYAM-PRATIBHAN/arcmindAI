@@ -1,7 +1,5 @@
 "use client";
-
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-
+const DotLottieReact = (_props: any) => null;
 export default function NotFoundAnimation() {
   return (
     <div className="flex items-center justify-center">

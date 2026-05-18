@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+const DotLottieReact = (_props: any) => null;
 import { ArrowLeft } from "lucide-react";
 import { Background } from "@/components/background";
 import { Button } from "@/components/ui/button";

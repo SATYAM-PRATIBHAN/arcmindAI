@@ -306,7 +306,16 @@ export default function GenerationPage() {
               {generatedData.summary || "No summary available."}
             </p>
           </div>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <span className="text-sm text-muted-foreground">
+              Rate this generation:
+            </span>
 
+            <GenerationRating
+              generationId={id as string}
+              initialRating={(generatedData as any)?.rating}
+            />
+          </div>
           <div className="flex flex-wrap justify-center gap-4">
             <Button
               variant="outline"
