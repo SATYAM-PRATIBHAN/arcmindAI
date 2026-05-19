@@ -1,42 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { ArrowLeft } from "lucide-react";
 import { Background } from "@/components/background";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/blocks/navbar";
 import { Footer } from "@/components/blocks/footer";
 import { DOC_ROUTES } from "@/lib/routes";
-import NotFoundAnimation from "@/components/NotFoundAnimation";
+import { motion } from "framer-motion";
 
-export default function NotFound() {
+export default function Error() {
   return (
     <div>
       <Background variant="top" className="from-muted/80 via-muted to-muted/80">
         <div className="flex flex-col min-h-screen justify-center items-center">
           <Navbar />
-          <div className="container flex min-h-[70vh] flex-col items-center justify-center py-28 text-center lg:min-h-[80vh] lg:py-32">
-            {/* Lottie Animation Center */}
+
+          <div className="container flex flex-col items-center justify-center py-24 text-center lg:py-28">
+            {/* Lottie animation */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6 }}
               className="mb-8"
             >
-              <NotFoundAnimation />
+              <div className="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80">
+                <DotLottieReact
+                  src="https://lottie.host/e22a0b5a-8499-4284-a439-4fbefc3e1511/HXZheRECtt.lottie"
+                  loop
+                  autoplay
+                />
+              </div>
             </motion.div>
 
-            {/* Text */}
+            {/* Text section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="relative z-10 max-w-2xl"
+              className="max-w-2xl"
             >
-              <p className="font-serif italic text-muted-foreground mb-10 text-xl">
-                Sorry, we couldn&apos;t find the page you&apos;re looking for.
-                The page might have been removed or the URL might be incorrect.
+              <p className="font-serif italic text-muted-foreground mt-6 mb-10 text-xl">
+                Something broke inside the system. Our AI services are currently
+                recovering from an unexpected failure.
               </p>
 
               {/* Buttons */}

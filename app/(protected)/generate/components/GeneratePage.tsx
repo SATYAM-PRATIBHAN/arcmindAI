@@ -3,18 +3,23 @@
 import { useGenerateSystem } from "../hooks/useGenerateSystem";
 import { useHistory } from "@/lib/contexts/HistoryContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { useState, useRef, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import MermaidDiagram from "./mermaidDiagram";
+import CopyDiagramButton from "./CopyDiagramButton";
 import { ArchitectureData } from "../utils/types";
+import { cleanMermaidString } from "../utils/cleanMermaidString";
 import MicroservicesSection from "./MicroservicesSection";
 import EntitiesSection from "./EntitiesSection";
 import ApiRoutesSection from "./ApiRoutesSection";
 import DatabaseSchemaSection from "./DatabaseSchemaSection";
 import InfrastructureSection from "./InfrastructureSection";
+import { StarterTemplates } from "@/components/prompt";
 import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
+import { Sparkles, Send, AlertCircle } from "lucide-react";
 
 export default function GeneratePage() {
   const { refetch } = useHistory();
@@ -23,31 +28,48 @@ export default function GeneratePage() {
     isLoading,
     error: generateError,
   } = useGenerateSystem(refetch);
-  const [userInput, setUserInput] = useState("");
+  const { register, watch, setValue } = useForm();
   const [error, setError] = useState<string | null>(null);
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
   const [streamingProgress, setStreamingProgress] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  function cleanMermaidString(input: string | undefined | null): string {
-    if (!input || typeof input !== "string") return "";
+  const userInput = watch("userInput", "");
 
-    return ( 
-      input
-        // Remove code block markers if present (for backward compatibility)
-        .replace(/^```mermaid\n?/g, "")
-        .replace(/\n?```$/g, "")
-        .replace(/```/g, "")
-        // Convert escaped newlines to actual newlines
-        .replace(/\\n/g, "\n")
-        // Handle any other escaped characters
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .trim()
-    );
-  }
+  // Auto-expand textarea height
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 400);
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [userInput]);
+
+  const registerField = register("userInput");
+
+  const handleRef = (el: HTMLTextAreaElement | null) => {
+    textareaRef.current = el;
+    if (registerField.ref) {
+      if (typeof registerField.ref === "function") {
+        registerField.ref(el);
+      } else if ("current" in registerField.ref) {
+        (
+          registerField.ref as React.MutableRefObject<HTMLTextAreaElement | null>
+        ).current = el;
+      }
+    }
+  };
+
+  const { ref, ...restRegisterField } = registerField;
+
+  const MAX_INPUT_LENGTH = 2000;
+
+  const handleSelectTemplate = (templateBody: string) => {
+    setValue("userInput", templateBody.substring(0, MAX_INPUT_LENGTH));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -68,30 +90,21 @@ export default function GeneratePage() {
     if (result && result.success) {
       setIsStreaming(false); 
       try {
-        // More robust parsing: find JSON content between ```json and ```
         let cleanedOutput = result.output;
-
-        // Find the start of JSON code block
         const jsonStartMarker = "```json";
         const jsonStart = cleanedOutput.indexOf(jsonStartMarker);
 
         if (jsonStart !== -1) {
-          // Extract from after the ```json marker
           cleanedOutput = cleanedOutput.slice(
             jsonStart + jsonStartMarker.length,
           );
-
-          // Find the first closing ``` after the JSON start (not the last one in the entire string)
           const jsonEnd = cleanedOutput.indexOf("```");
           if (jsonEnd !== -1) {
             cleanedOutput = cleanedOutput.slice(0, jsonEnd);
           }
         } else {
-          // If no ```json marker, try to find JSON object directly
-          // Look for first { and matching closing } to extract JSON
           const firstBrace = cleanedOutput.indexOf("{");
           if (firstBrace !== -1) {
-            // Find matching closing brace
             let braceCount = 0;
             let lastBrace = -1;
             for (let i = firstBrace; i < cleanedOutput.length; i++) {
@@ -110,7 +123,6 @@ export default function GeneratePage() {
           }
         }
 
-        // Trim whitespace
         cleanedOutput = cleanedOutput.trim();
 
         if (!cleanedOutput) {
@@ -123,16 +135,29 @@ export default function GeneratePage() {
 
         const parsedData: ArchitectureData = JSON.parse(cleanedOutput);
 
-        console.log("PARSED DATA:", parsedData);
+        const mermaidStartMarker = "```mermaid";
+        const mermaidStart = result.output.indexOf(mermaidStartMarker);
 
-        setGeneratedData(parsedData); 
+        if (mermaidStart !== -1) {
+          let mermaidText = result.output.slice(
+            mermaidStart + mermaidStartMarker.length,
+          );
+          const mermaidEnd = mermaidText.indexOf("```");
+          if (mermaidEnd !== -1) {
+            mermaidText = mermaidText.slice(0, mermaidEnd);
+          }
+          mermaidText = mermaidText
+            .replace(/```mermaid/g, "")
+            .replace(/```/g, "")
+            .trim();
+          if (mermaidText) {
+            parsedData["Architecture Diagram"] = mermaidText;
+          }
+        }
+
+        setGeneratedData(parsedData);
       } catch (parseError) {
         console.error("Failed to parse generated data:", parseError);
-        console.error("Raw output length:", result.output.length);
-        console.error(
-          "Raw output preview:",
-          result.output.substring(0, 500) + "...",
-        );
         setGeneratedData(null);
       }
     } else {
@@ -141,27 +166,84 @@ export default function GeneratePage() {
     }
   };
 
+  const counterColor =
+    userInput.length === MAX_INPUT_LENGTH
+      ? "text-destructive font-bold"
+      : userInput.length >= 1800
+        ? "text-amber-500 font-medium"
+        : "text-muted-foreground/60";
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex gap-4 items-center">
-        <Input
-          placeholder="Enter your system architecture prompt..."
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          className="flex-1"
-        />
-        <Button
-          onClick={handleGenerate}
-          disabled={isLoading || !userInput.trim()}
-        >
-          {isLoading ? "Generating..." : "Generate System"}
-        </Button>
-      </div>
+    <div className="container max-w-5xl mx-auto p-8 space-y-12">
+      {!generatedData && (
+        <div className="space-y-4">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-border/50 to-border/50 rounded-2xl blur opacity-25 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"></div>
+            <Card className="relative border-border/60 shadow-lg bg-card/50 backdrop-blur-xl rounded-2xl overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4 flex flex-col space-y-3">
+                  <Textarea
+                    ref={handleRef}
+                    placeholder="Describe the system architecture you want to generate..."
+                    {...restRegisterField}
+                    maxLength={MAX_INPUT_LENGTH}
+                    className="min-h-[120px] w-full bg-transparent border-none shadow-none focus-visible:ring-0 text-lg resize-none placeholder:text-muted-foreground/50 p-2"
+                  />
+
+                  <div className="flex items-center justify-between border-t border-border/40 pt-4 px-2">
+                    <div className="flex items-center gap-4">
+                      <p
+                        className={`text-xs transition-opacity duration-300 ${userInput.length > 0 ? "opacity-100" : "opacity-0"} ${counterColor}`}
+                      >
+                        {userInput.length} / {MAX_INPUT_LENGTH}
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={isLoading || !userInput.trim()}
+                      size="lg"
+                      className="rounded-xl px-6 transition-all duration-300 active:scale-95"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                          Processing
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Generate
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {!isLoading && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <StarterTemplates
+                onSelectTemplate={handleSelectTemplate}
+                isVisible={true}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4">
-            <p className="text-red-800">Error: {error}</p>
+        <Card className="border-destructive/20 bg-destructive/5 rounded-2xl">
+          <CardContent className="p-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-destructive">
+                Generation Failed
+              </p>
+              <p className="text-sm text-destructive/80">{error}</p>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -186,73 +268,137 @@ export default function GeneratePage() {
       )}
 
       {isLoading && (
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Lottie
-            animationData={animationData}
-            loop={true}
-            style={{ width: 400, height: 400 }}
-          />
+        <div className="flex flex-col justify-center items-center min-h-[400px] space-y-8 animate-in fade-in duration-500">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-150 animate-pulse"></div>
+            <Lottie
+              animationData={animationData}
+              loop={true}
+              style={{ width: 300, height: 300 }}
+              className="relative grayscale opacity-80"
+            />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-medium tracking-tight">
+              Architecting your system
+            </h3>
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+              Our AI is designing the components, routes, and infrastructure for
+              your project.
+            </p>
+          </div>
         </div>
       )}
 
       {generatedData && !isLoading && (
-        <div className="space-y-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-2xl">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-px flex-1 bg-border/60"></div>
+              <Sparkles className="w-4 h-4 text-muted-foreground/60" />
+              <div className="h-px flex-1 bg-border/60"></div>
+            </div>
+
+            <div className="text-center space-y-3">
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
                 {generatedData.systemName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">{generatedData.summary}</p>
-            </CardContent>
-          </Card>
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                {generatedData.summary}
+              </p>
+            </div>
+          </div>
 
-          {/* Sections */}
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Microservices</h2>
-            <MicroservicesSection microservices={generatedData.microservices || []} />
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Entities</h2>
-            <EntitiesSection entities={generatedData.entities || []} />
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4">API Routes</h2>
-            <ApiRoutesSection apiRoutes={generatedData.apiRoutes || []} />
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Database Schema</h2>
-            <DatabaseSchemaSection schema={generatedData.databaseSchema || {
-              type: "",
-      collections: [], 
-            }} />
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Infrastructure</h2>
-            <InfrastructureSection infra={generatedData.infrastructure || {
-               hosting: "",
-      database: "",
-      auth: "",
-      cdn: "",
-      scaling: "", 
-            }} />
-          </section>
-
-          {generatedData["Architecture Diagram"] && (
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Architecture Diagram</h2>
-              <MermaidDiagram
-                chart={cleanMermaidString(
-                  generatedData["Architecture Diagram"],
-                )}
+          <div className="grid grid-cols-1 gap-16 pt-8">
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                  01
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Microservices
+                </h2>
+              </div>
+              <MicroservicesSection
+                microservices={generatedData.microservices}
               />
             </section>
-          )}
+
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                  02
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Core Entities
+                </h2>
+              </div>
+              <EntitiesSection entities={generatedData.entities} />
+            </section>
+
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                  03
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  API Infrastructure
+                </h2>
+              </div>
+              <ApiRoutesSection apiRoutes={generatedData.apiRoutes} />
+            </section>
+
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                  04
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Database Architecture
+                </h2>
+              </div>
+              <DatabaseSchemaSection schema={generatedData.databaseSchema} />
+            </section>
+
+            <section className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-foreground text-background px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                  05
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Deployment & Infra
+                </h2>
+              </div>
+              <InfrastructureSection infra={generatedData.infrastructure} />
+            </section>
+
+            {generatedData["Architecture Diagram"] && (
+              <section className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-foreground text-background px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                      06
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight">
+                      Architecture Visual
+                    </h2>
+                  </div>
+                  <CopyDiagramButton
+                    code={cleanMermaidString(
+                      generatedData["Architecture Diagram"],
+                    )}
+                  />
+                </div>
+                <div className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner">
+                  <MermaidDiagram
+                    chart={cleanMermaidString(
+                      generatedData["Architecture Diagram"],
+                    )}
+                  />
+                </div>
+              </section>
+            )}
+          </div>
         </div>
       )}
     </div>

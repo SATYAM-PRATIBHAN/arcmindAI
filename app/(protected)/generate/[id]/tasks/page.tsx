@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ListTodo } from "lucide-react";
+import { ArrowLeft, ListTodo, Download } from "lucide-react";
 import Lottie from "lottie-react";
 import animationData from "@/components/loaderLottie.json";
 
@@ -32,6 +32,7 @@ export default function TasksPage() {
 
   const [tasksData, setTasksData] = useState<TasksData | null>(null);
   const [fromCache, setFromCache] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const hasFetched = useRef(false);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function TasksPage() {
           loop
           style={{ width: 400, height: 400 }}
         />
-        <p className="text-lg text-gray-600 mt-4">
+        <p className="text-lg text-muted-foreground mt-4">
           {fromCache ? "Loading tasks..." : "Generating task breakdown..."}
         </p>
       </div>
@@ -66,9 +67,9 @@ export default function TasksPage() {
   if (error || !tasksData) {
     return (
       <div className="container mx-auto p-6">
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-destructive/20 bg-destructive/5">
           <CardContent className="pt-4">
-            <p className="text-red-800">
+            <p className="text-destructive">
               {error || "Failed to load tasks. Please try again."}
             </p>
           </CardContent>
@@ -99,6 +100,19 @@ export default function TasksPage() {
     (task) => task.priority === "high",
   ).length;
 
+  const handleDownloadCSV = async () => {
+    if (!tasksData) return;
+    setIsExporting(true);
+    try {
+      // Dynamic import keeps the CSV utility out of the initial bundle
+      const { exportTasksToCSV } = await import("./utils/exportTasksToCSV");
+      const filename = typeof id === "string" ? `tasks-${id}` : "tasks";
+      exportTasksToCSV(tasksData.tasks, filename);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       {/* Header */}
@@ -108,18 +122,41 @@ export default function TasksPage() {
           variant="outline"
           size="icon"
           onClick={() => router.push(`/generate/${id}`)}
+          id="back-to-generation-btn"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
+
         <div className="flex-1">
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <ListTodo className="h-8 w-8" />
             Task Breakdown
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Comprehensive task list for your system architecture
           </p>
         </div>
+
+        {/* Download CSV button – resolves Issue #158 */}
+        <Button
+          variant="outline"
+          onClick={handleDownloadCSV}
+          disabled={!tasksData || isExporting}
+          className="h-10 px-5 rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300 shadow-sm cursor-pointer shrink-0"
+          id="download-csv-btn"
+        >
+          {isExporting ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+              Exporting...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Statistics Card */}
@@ -130,22 +167,26 @@ export default function TasksPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-blue-600">
+              <span className="text-3xl font-bold text-primary">
                 {totalTasks}
               </span>
-              <span className="text-sm text-gray-600">Total Tasks</span>
+              <span className="text-sm text-muted-foreground">Total Tasks</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-purple-600">
+              <span className="text-3xl font-bold text-primary">
                 {totalHours}h
               </span>
-              <span className="text-sm text-gray-600">Estimated Hours</span>
+              <span className="text-sm text-muted-foreground">
+                Estimated Hours
+              </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-3xl font-bold text-red-600">
+              <span className="text-3xl font-bold text-destructive">
                 {highPriorityCount}
               </span>
-              <span className="text-sm text-gray-600">High Priority</span>
+              <span className="text-sm text-muted-foreground">
+                High Priority
+              </span>
             </div>
           </div>
         </CardContent>

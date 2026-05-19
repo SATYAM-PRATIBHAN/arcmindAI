@@ -27,7 +27,7 @@ export default function TasksSection({
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">{category}</h2>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           {tasks.length} task{tasks.length !== 1 ? "s" : ""} • {totalHours}{" "}
           hours
         </div>

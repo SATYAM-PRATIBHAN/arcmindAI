@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/prisma";
 import { decryptToken } from "@/lib/encryption";
+import { getCacheKey, withCache } from "@/lib/cache";
 import axios from "axios";
+
+const CACHE_TTL_SECONDS = 60 * 60;
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,37 +56,48 @@ export async function GET(request: NextRequest) {
     // Check if file is an image
     const isImage = /\.(png|jpg|jpeg|gif|svg|webp|bmp|ico)$/i.test(path);
 
-    // Fetch file content from GitHub
-    const response = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-      {
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: isImage
-            ? "application/vnd.github.raw"
-            : "application/vnd.github.raw",
-        },
-        responseType: isImage ? "arraybuffer" : "text",
+    // @ts-expect-error id is added in jwt callback
+    const userId = session.user.id as string;
+
+    const cacheData = await withCache(
+      getCacheKey("github:file-content", userId, owner, repo, path),
+      CACHE_TTL_SECONDS,
+      async () => {
+        // Fetch file content from GitHub
+        const response = await axios.get(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+          {
+            headers: {
+              Authorization: `Bearer ${githubToken}`,
+              Accept: "application/vnd.github.raw",
+            },
+            responseType: isImage ? "arraybuffer" : "text",
+          },
+        );
+
+        if (isImage) {
+          // Return binary data as base64 for images
+          const base64 = Buffer.from(response.data).toString("base64");
+          const mimeType = getMimeType(path);
+          return {
+            content: `data:${mimeType};base64,${base64}`,
+            isImage: true,
+          };
+        } else {
+          // Return text content
+          return {
+            content: response.data,
+            isImage: false,
+          };
+        }
       },
     );
 
-    if (isImage) {
-      // Return binary data as base64 for images
-      const base64 = Buffer.from(response.data).toString("base64");
-      const mimeType = getMimeType(path);
-      return NextResponse.json({
-        success: true,
-        data: `data:${mimeType};base64,${base64}`,
-        isImage: true,
-      });
-    } else {
-      // Return text content
-      return NextResponse.json({
-        success: true,
-        data: response.data,
-        isImage: false,
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      data: cacheData.content,
+      isImage: cacheData.isImage,
+    });
   } catch (err) {
     console.error("Error fetching file content:", err);
     return NextResponse.json(
