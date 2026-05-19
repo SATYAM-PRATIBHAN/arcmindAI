@@ -1,23 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
-import { SystemPrompt } from "@/lib/prompts/promptTemplate";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { db } from "@/lib/prisma";
-import { generationRateLimit } from "@/lib/rateLimit";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
+  aiGenerationDurationSeconds,
+  aiGenerationFailureTotal,
+  aiGenerationOutputSizeBytes,
   aiGenerationRequestsTotal,
   aiGenerationSuccessTotal,
-  aiGenerationFailureTotal,
-  aiGenerationDurationSeconds,
-  aiGenerationOutputSizeBytes,
-  userGenerationsTotal,
-  userLastActivityTimestamp,
-  httpRequestsTotal,
-  httpRequestDurationSeconds,
   apiGatewayErrorsTotal,
   databaseQueryDurationSeconds,
+  httpRequestDurationSeconds,
+  httpRequestsTotal,
+  userGenerationsTotal,
+  userLastActivityTimestamp,
 } from "@/lib/metrics";
+import { db } from "@/lib/prisma";
+import { SystemPrompt } from "@/lib/prompts/promptTemplate";
+import { generationRateLimit } from "@/lib/rateLimit";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -58,7 +58,10 @@ export async function POST(req: NextRequest) {
         { route },
         (Date.now() - startTime) / 1000,
       );
-      NextResponse.json({ status: 404, message: "User not Found" });
+      return NextResponse.json(
+        { status: 404, message: "User not Found" },
+        { status: 404 },
+      );
     }
 
     if (user?.isVerified === false) {
