@@ -1,10 +1,10 @@
-import { useState } from "react";
-import axios from "axios";
 import { DOC_ROUTES } from "@/lib/routes";
 import { RepositoryAnalysis } from "@/types/repository-analysis";
+import axios from "axios";
+import { useState } from "react";
 
 interface UseRepositoryAnalyzerResult {
-  analyze: (owner: string, repo: string) => Promise<void>;
+  analyze: (owner: string, repo: string, branch?: string) => Promise<void>;
   analysis: RepositoryAnalysis | null;
   loading: boolean;
   error: string | null;
@@ -15,7 +15,7 @@ export function useRepositoryAnalyzer(): UseRepositoryAnalyzerResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const analyze = async (owner: string, repo: string) => {
+  const analyze = async (owner: string, repo: string, branch?: string) => {
     setLoading(true);
     setError(null);
     setAnalysis(null);
@@ -26,6 +26,7 @@ export function useRepositoryAnalyzer(): UseRepositoryAnalyzerResult {
         {
           owner,
           repo,
+          ...(branch ? { branch } : {}),
           // Note: githubToken is no longer sent from frontend
           // It's retrieved server-side for security
         },

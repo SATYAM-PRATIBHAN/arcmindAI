@@ -1,25 +1,25 @@
 "use client";
 
-import { useGenerateSystem } from "../hooks/useGenerateSystem";
-import { useHistory } from "@/lib/contexts/HistoryContext";
+import animationData from "@/components/loaderLottie.json";
+import { StarterTemplates } from "@/components/prompt";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useRef, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import MermaidDiagram from "./mermaidDiagram";
-import CopyDiagramButton from "./CopyDiagramButton";
-import { ArchitectureData } from "../utils/types";
-import { cleanMermaidString } from "../utils/cleanMermaidString";
-import MicroservicesSection from "./MicroservicesSection";
-import EntitiesSection from "./EntitiesSection";
-import ApiRoutesSection from "./ApiRoutesSection";
-import DatabaseSchemaSection from "./DatabaseSchemaSection";
-import InfrastructureSection from "./InfrastructureSection";
-import { StarterTemplates } from "@/components/prompt";
+import { useHistory } from "@/lib/contexts/HistoryContext";
 import Lottie from "lottie-react";
-import animationData from "@/components/loaderLottie.json";
-import { Sparkles, Send, AlertCircle } from "lucide-react";
+import { AlertCircle, RotateCw, Send, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useGenerateSystem } from "../hooks/useGenerateSystem";
+import { cleanMermaidString } from "../utils/cleanMermaidString";
+import { ArchitectureData } from "../utils/types";
+import ApiRoutesSection from "./ApiRoutesSection";
+import CopyDiagramButton from "./CopyDiagramButton";
+import DatabaseSchemaSection from "./DatabaseSchemaSection";
+import EntitiesSection from "./EntitiesSection";
+import InfrastructureSection from "./InfrastructureSection";
+import MermaidDiagram from "./mermaidDiagram";
+import MicroservicesSection from "./MicroservicesSection";
 
 export default function GeneratePage() {
   const { refetch } = useHistory();
@@ -29,11 +29,11 @@ export default function GeneratePage() {
     error: generateError,
   } = useGenerateSystem(refetch);
   const { register, watch, setValue } = useForm();
-  const [error, setError] = useState<string | null>(null);
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const submittedTextRef = useRef<string>("");
 
   const userInput = watch("userInput", "");
 
@@ -45,6 +45,8 @@ export default function GeneratePage() {
       textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [userInput]);
+
+  const showError = !!generateError && userInput === submittedTextRef.current;
 
   const registerField = register("userInput");
 
@@ -70,6 +72,7 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
+    submittedTextRef.current = userInput;
     const result = await generate(userInput);
     if (result && result.success) {
       try {
@@ -140,7 +143,6 @@ export default function GeneratePage() {
         setGeneratedData(null);
       }
     } else {
-      setError(generateError);
       setGeneratedData(null);
     }
   };
@@ -179,7 +181,7 @@ export default function GeneratePage() {
                     </div>
 
                     <Button
-                      onClick={handleGenerate}
+                      onClick={() => handleGenerate()}
                       disabled={isLoading || !userInput.trim()}
                       size="lg"
                       className="rounded-xl px-6 transition-all duration-300 active:scale-95"
@@ -188,6 +190,11 @@ export default function GeneratePage() {
                         <>
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
                           Processing
+                        </>
+                      ) : showError ? (
+                        <>
+                          <RotateCw className="w-4 h-4 mr-2" />
+                          Retry
                         </>
                       ) : (
                         <>
@@ -213,7 +220,7 @@ export default function GeneratePage() {
         </div>
       )}
 
-      {error && (
+      {showError && (
         <Card className="border-destructive/20 bg-destructive/5 rounded-2xl">
           <CardContent className="p-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
@@ -221,7 +228,7 @@ export default function GeneratePage() {
               <p className="font-semibold text-destructive">
                 Generation Failed
               </p>
-              <p className="text-sm text-destructive/80">{error}</p>
+              <p className="text-sm text-destructive/80">{generateError}</p>
             </div>
           </CardContent>
         </Card>

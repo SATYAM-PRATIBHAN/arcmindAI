@@ -281,6 +281,14 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Contributors ✨
+
+Thanks goes to these wonderful people for contributing to this project ❤️
+
+<a href="https://github.com/SATYAM-PRATIBHAN/arcmindAI/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SATYAM-PRATIBHAN/arcmindAI" />
+</a>
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

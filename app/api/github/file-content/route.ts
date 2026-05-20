@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { db } from "@/lib/prisma";
-import { decryptToken } from "@/lib/encryption";
 import { getCacheKey, withCache } from "@/lib/cache";
+import { decryptToken } from "@/lib/encryption";
+import { db } from "@/lib/prisma";
 import axios from "axios";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 const CACHE_TTL_SECONDS = 60 * 60;
 
@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     const owner = searchParams.get("owner");
     const repo = searchParams.get("repo");
     const path = searchParams.get("path");
+    const branch = searchParams.get("branch");
 
     if (!owner || !repo || !path) {
       return NextResponse.json(
@@ -60,7 +61,14 @@ export async function GET(request: NextRequest) {
     const userId = session.user.id as string;
 
     const cacheData = await withCache(
-      getCacheKey("github:file-content", userId, owner, repo, path),
+      getCacheKey(
+        "github:file-content",
+        userId,
+        owner,
+        repo,
+        path,
+        branch || "",
+      ),
       CACHE_TTL_SECONDS,
       async () => {
         // Fetch file content from GitHub
@@ -71,6 +79,7 @@ export async function GET(request: NextRequest) {
               Authorization: `Bearer ${githubToken}`,
               Accept: "application/vnd.github.raw",
             },
+            params: branch ? { ref: branch } : undefined,
             responseType: isImage ? "arraybuffer" : "text",
           },
         );

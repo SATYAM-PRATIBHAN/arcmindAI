@@ -17,23 +17,32 @@ export class RepositoryAnalyzer {
   private userId: string;
   private owner: string;
   private repo: string;
+  private branch?: string;
   private token: string;
   private tree: GitHubTreeNode[] = [];
   private fileContents: Map<string, string> = new Map();
 
-  constructor(userId: string, owner: string, repo: string, token: string) {
+  constructor(
+    userId: string,
+    owner: string,
+    repo: string,
+    token: string,
+    branch?: string,
+  ) {
     this.userId = userId;
     this.owner = owner;
     this.repo = repo;
     this.token = token;
+    this.branch = branch;
   }
 
   async analyze(): Promise<RepositoryAnalysis> {
     // Fetch repository metadata
     const metadata = await this.fetchMetadata();
 
-    // Fetch repository tree
-    await this.fetchTree(metadata.defaultBranch);
+    // Fetch repository tree on the selected branch (fallback to default)
+    const targetBranch = this.branch || metadata.defaultBranch;
+    await this.fetchTree(targetBranch);
 
     // Fetch important file contents
     await this.fetchImportantFiles();
@@ -186,12 +195,14 @@ export class RepositoryAnalyzer {
 
   private async fetchFileContent(path: string): Promise<void> {
     try {
+      const ref = this.branch;
       const data = await withCache<string>(
         getCacheKey(
           "github:file-content",
           this.userId,
           this.owner,
           this.repo,
+          ref || "",
           path,
         ),
         CACHE_TTL_SECONDS,
@@ -203,6 +214,7 @@ export class RepositoryAnalyzer {
                 Authorization: `Bearer ${this.token}`,
                 Accept: "application/vnd.github.raw",
               },
+              params: ref ? { ref } : undefined,
               responseType: "text",
             },
           );

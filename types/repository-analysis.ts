@@ -156,6 +156,7 @@ export interface RepositoryAnalysis {
 export interface AnalyzeRepositoryRequest {
   owner: string;
   repo: string;
+  branch?: string;
   // Note: githubToken is no longer sent from frontend
   // It's retrieved server-side for security
 }

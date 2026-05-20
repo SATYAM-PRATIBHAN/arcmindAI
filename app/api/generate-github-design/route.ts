@@ -1,26 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { GithubRepoSystemPrompt } from "@/lib/prompts/githubRepoPrompt";
-import { formatRepositoryAnalysisForAI } from "@/app/(protected)/generate/utils/formatRepoAnalysis";
-import { RepositoryAnalysis } from "@/types/repository-analysis";
-import { db } from "@/lib/prisma";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
+import { formatRepositoryAnalysisForAI } from "@/app/(protected)/generate/utils/formatRepoAnalysis";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import {
+  aiGenerationDurationSeconds,
+  aiGenerationFailureTotal,
   aiGenerationRequestsTotal,
   aiGenerationSuccessTotal,
-  aiGenerationFailureTotal,
-  aiGenerationDurationSeconds,
-  httpRequestsTotal,
   databaseQueryDurationSeconds,
+  httpRequestsTotal,
 } from "@/lib/metrics";
+import { db } from "@/lib/prisma";
+import { GithubRepoSystemPrompt } from "@/lib/prompts/githubRepoPrompt";
+import { RepositoryAnalysis } from "@/types/repository-analysis";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 interface GenerateGithubDesignRequest {
   owner: string;
   repo: string;
   analysisData: RepositoryAnalysis;
+  branch?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: GenerateGithubDesignRequest = await request.json();
-    const { owner, repo, analysisData } = body;
+    const { owner, repo, branch, analysisData } = body;
 
     if (!owner || !repo || !analysisData) {
       httpRequestsTotal.inc({ route, method, status_code: "400" });
@@ -58,7 +59,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if a design already exists for this repository
-    const repoIdentifier = `${repo}`;
+    const repoIdentifier = branch
+      ? `${owner}/${repo}:${branch}`
+      : `${owner}/${repo}`;
     const dbFindStart = Date.now();
     const existingGeneration = await db.generation.findFirst({
       where: {

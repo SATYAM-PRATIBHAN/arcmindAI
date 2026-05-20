@@ -1,21 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import axios from "axios";
-import { buildFileTree, FileTreeNode } from "./file-browser-utils";
-import { FileBrowserHeader } from "./file-browser-header";
-import { FileBreadcrumb } from "./file-breadcrumb";
-import { FileSidebar } from "./file-sidebar";
-import { FileContentViewer } from "./file-content-viewer";
 import { DOC_ROUTES } from "@/lib/routes";
+import axios from "axios";
+import { Loader2 } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { useGithubBranches } from "../hooks/useGithubBranches";
+import { FileBreadcrumb } from "./file-breadcrumb";
+import { FileBrowserHeader } from "./file-browser-header";
+import { buildFileTree, FileTreeNode } from "./file-browser-utils";
+import { FileContentViewer } from "./file-content-viewer";
+import { FileSidebar } from "./file-sidebar";
+import { GitBranchSelect } from "./github-branch-select";
 
 export function FileBrowser() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const owner = params.owner as string;
   const repo = params.repo as string;
+
+  const branchParam = searchParams.get("branch");
 
   const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,26 +32,39 @@ export function FileBrowser() {
   const [fileContent, setFileContent] = useState<string>("");
   const [loadingContent, setLoadingContent] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [defaultBranch, setDefaultBranch] = useState<string | null>(null);
+
+  const activeBranch = branchParam || defaultBranch;
+
+  const { branches, loading: branchesLoading } = useGithubBranches(owner, repo);
 
   // Fetch repository tree
   useEffect(() => {
     const fetchTree = async () => {
       setLoading(true);
       try {
+        let branch = branchParam;
+
         // First get the default branch via proxy
-        const repoRes = await axios.get(DOC_ROUTES.API.GITHUB.REPO_INFO, {
-          params: { owner, repo },
-        });
+        if (!branch || !defaultBranch) {
+          const repoRes = await axios.get(DOC_ROUTES.API.GITHUB.REPO_INFO, {
+            params: { owner, repo },
+          });
 
-        if (!repoRes.data.success) {
-          throw new Error(repoRes.data.message || "Failed to fetch repo info");
+          if (!repoRes.data.success) {
+            throw new Error(
+              repoRes.data.message || "Failed to fetch repo info",
+            );
+          }
+
+          const defaultBranch = repoRes.data.data.default_branch;
+          setDefaultBranch(defaultBranch);
+          if (!branch) branch = defaultBranch;
         }
-
-        const defaultBranch = repoRes.data.data.default_branch;
 
         // Get the tree recursively via proxy
         const treeRes = await axios.get(DOC_ROUTES.API.GITHUB.REPO_TREE, {
-          params: { owner, repo, branch: defaultBranch },
+          params: { owner, repo, branch },
         });
 
         if (!treeRes.data.success) {
@@ -63,7 +82,16 @@ export function FileBrowser() {
     };
 
     fetchTree();
-  }, [owner, repo]);
+  }, [owner, repo, branchParam]);
+
+  const handleBranchChange = (branch: string) => {
+    if (branch === activeBranch) return;
+    setSelectedFile(null);
+    setFileContent("");
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("branch", branch);
+    router.replace(`?${next.toString()}`, { scroll: false });
+  };
 
   const handleToggleFolder = (path: string) => {
     setExpandedFolders((prev) => {
@@ -89,7 +117,12 @@ export function FileBrowser() {
     try {
       // Fetch file content via proxy endpoint
       const res = await axios.get(DOC_ROUTES.API.GITHUB.FILE_CONTENT, {
-        params: { owner, repo, path },
+        params: {
+          owner,
+          repo,
+          path,
+          ...(activeBranch ? { branch: activeBranch } : {}),
+        },
       });
 
       if (!res.data.success) {
@@ -126,6 +159,22 @@ export function FileBrowser() {
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
+
+      {/* Git repo branch select layout */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <GitBranchSelect
+          branches={branches}
+          selectedBranch={activeBranch || ""}
+          defaultBranch={defaultBranch || undefined}
+          loading={branchesLoading}
+          onSelect={handleBranchChange}
+        />
+        <span className="text-sm">
+          {branches.length > 0
+            ? `${branches.length} ${branches.length === 1 ? "branch" : "branches"}`
+            : null}
+        </span>
+      </div>
 
       {selectedFile && (
         <FileBreadcrumb

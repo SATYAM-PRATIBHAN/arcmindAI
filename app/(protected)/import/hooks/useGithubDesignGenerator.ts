@@ -1,13 +1,14 @@
-import { useState, useCallback } from "react";
-import axios from "axios";
 import { DOC_ROUTES } from "@/lib/routes";
 import { RepositoryAnalysis } from "@/types/repository-analysis";
+import axios from "axios";
+import { useCallback, useState } from "react";
 
 interface UseGithubDesignGeneratorResult {
   generateDesign: (
     owner: string,
     repo: string,
     analysisData: RepositoryAnalysis,
+    branch?: string,
   ) => Promise<void>;
   mermaidDiagram: string | null;
   generationId: string | null;
@@ -22,7 +23,12 @@ export function useGithubDesignGenerator(): UseGithubDesignGeneratorResult {
   const [error, setError] = useState<string | null>(null);
 
   const generateDesign = useCallback(
-    async (owner: string, repo: string, analysisData: RepositoryAnalysis) => {
+    async (
+      owner: string,
+      repo: string,
+      analysisData: RepositoryAnalysis,
+      branch?: string,
+    ) => {
       setLoading(true);
       setError(null);
       setMermaidDiagram(null);
@@ -35,6 +41,7 @@ export function useGithubDesignGenerator(): UseGithubDesignGeneratorResult {
             owner,
             repo,
             analysisData,
+            ...(branch ? { branch } : {}),
           },
         );
 

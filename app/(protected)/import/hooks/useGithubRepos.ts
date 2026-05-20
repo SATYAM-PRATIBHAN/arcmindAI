@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import axios from "axios";
 import { DOC_ROUTES } from "@/lib/routes";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Repository {
   id: number;
@@ -11,6 +11,7 @@ interface Repository {
   full_name: string;
   private: boolean;
   html_url: string;
+  default_branch: string;
   description: string | null;
   updated_at: string;
 }

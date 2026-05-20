@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { db } from "@/lib/prisma";
-import { decryptToken } from "@/lib/encryption";
-import { RepositoryAnalyzer } from "@/lib/repository-analyzer";
 import { getCacheKey, withCache } from "@/lib/cache";
+import { decryptToken } from "@/lib/encryption";
+import { db } from "@/lib/prisma";
+import { RepositoryAnalyzer } from "@/lib/repository-analyzer";
 import {
   AnalyzeRepositoryRequest,
   AnalyzeRepositoryResponse,
 } from "@/types/repository-analysis";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 const CACHE_TTL_SECONDS = 60 * 60;
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: AnalyzeRepositoryRequest = await request.json();
-    const { owner, repo } = body;
+    const { owner, repo, branch } = body;
 
     if (!owner || !repo) {
       return NextResponse.json(
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Create analyzer and run analysis with caching
     const analysis = await withCache(
-      getCacheKey("repository-analysis", userId, owner, repo),
+      getCacheKey("repository-analysis", userId, owner, repo, branch || ""),
       CACHE_TTL_SECONDS,
       async () => {
         const analyzer = new RepositoryAnalyzer(
@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
           owner,
           repo,
           githubToken,
+          branch,
         );
         return await analyzer.analyze();
       },

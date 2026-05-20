@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  Search,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   Download,
+  Loader2,
+  Search,
 } from "lucide-react";
-import { useGithubRepos } from "../hooks/useGithubRepos";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useGithubRepos } from "../hooks/useGithubRepos";
 
 interface Repository {
   id: number;
@@ -20,6 +20,7 @@ interface Repository {
   full_name: string;
   private: boolean;
   html_url: string;
+  default_branch: string;
   description: string | null;
   updated_at: string;
 }
@@ -49,7 +50,7 @@ export function RepoList() {
   };
 
   const handleImport = (repo: Repository) => {
-    router.push(`/import/${repo.full_name}`);
+    router.push(`/import/${repo.full_name}?branch=${repo.default_branch}`);
   };
 
   if (loading) {

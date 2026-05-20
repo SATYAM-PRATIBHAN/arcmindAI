@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useSession } from "next-auth/react";
-import axios from "axios";
 import { DOC_ROUTES } from "@/lib/routes";
+import axios from "axios";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 interface GenerateResponse {
   success: boolean;
@@ -44,8 +44,14 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
 
       return data;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
+      let errorMessage = "An error occurred";
+      if (axios.isAxiosError(err)) {
+        const error = err.response?.data?.error || err.response?.data?.message;
+        errorMessage =
+          error || `HTTP error! status: ${err.response?.status} (${err.code})`;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
       return null;
     } finally {

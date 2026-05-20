@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -442,6 +443,90 @@ User feedback/input for update: ${userInput}`),
     );
     return NextResponse.json(
       { success: false, message: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const startTime = Date.now();
+  const route = "/api/generate/[id]";
+  const method = "PATCH";
+  httpRequestsTotal.inc({ route, method });
+
+  try {
+    const session = await getServerSession(authOptions);
+
+    // @ts-expect-error id is added to the session in the session callback
+    if (!session?.user?.id) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const { id: generationId } = await params;
+
+    // Check if generation exists and belongs to the user
+    const generation = await db.generation.findFirst({
+      where: {
+        id: generationId,
+        // @ts-expect-error id is added to the session in the session callback
+        userId: session.user.id,
+      },
+    });
+
+    if (!generation) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Generation not found" },
+        { status: 404 },
+      );
+    }
+
+    // Generate shareId if it doesn't exist
+    const shareId = generation.shareId || nanoid(10);
+
+    const updatedGeneration = await db.generation.update({
+      where: {
+        id: generationId,
+      },
+
+      data: {
+        isPublic: true,
+        shareId: shareId,
+      },
+    });
+
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
+
+    return NextResponse.json({
+      success: true,
+      shareId: updatedGeneration.shareId,
+    });
+  } catch (error) {
+    console.error("Error sharing generation:", error);
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    httpRequestDurationSeconds.observe(
+      { route },
+      (Date.now() - startTime) / 1000,
+    );
+    return NextResponse.json(
+      { success: false, message: "Failed to share generation" },
       { status: 500 },
     );
   }

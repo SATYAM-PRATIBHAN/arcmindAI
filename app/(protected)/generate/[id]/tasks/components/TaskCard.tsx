@@ -21,27 +21,33 @@ export default function TaskCard({ task, allTasks }: TaskCardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-destructive/10 text-destructive border-destructive/20";
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      Backend: "bg-blue-100 text-blue-800",
-      Frontend: "bg-purple-100 text-purple-800",
-      Database: "bg-indigo-100 text-indigo-800",
-      DevOps: "bg-orange-100 text-orange-800",
-      Testing: "bg-pink-100 text-pink-800",
-      Documentation: "bg-teal-100 text-teal-800",
-      Security: "bg-red-100 text-red-800",
+      Backend:
+        "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
+      Frontend:
+        "bg-purple-500/10 text-purple-700 border-purple-500/20 dark:text-purple-400",
+      Database:
+        "bg-indigo-500/10 text-indigo-700 border-indigo-500/20 dark:text-indigo-400",
+      DevOps:
+        "bg-orange-500/10 text-orange-700 border-orange-500/20 dark:text-orange-400",
+      Testing:
+        "bg-pink-500/10 text-pink-700 border-pink-500/20 dark:text-pink-400",
+      Documentation:
+        "bg-teal-500/10 text-teal-700 border-teal-500/20 dark:text-teal-400",
+      Security: "bg-destructive/10 text-destructive border-destructive/20",
     };
-    return colors[category] || "bg-gray-100 text-gray-800";
+    return colors[category] || "bg-muted text-muted-foreground border-border";
   };
 
   const getDependencyTitles = () => {
@@ -74,21 +80,25 @@ export default function TaskCard({ task, allTasks }: TaskCardProps) {
             </div>
             <CardTitle className="text-lg">{task.title}</CardTitle>
           </div>
-          <div className="flex items-center gap-1 text-sm text-gray-600">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground shrink-0">
             <Clock className="h-4 w-4" />
             <span>{task.estimatedHours}h</span>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-700 mb-3">{task.description}</p>
+        <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
+          {task.description}
+        </p>
 
         {task.dependencies.length > 0 && (
           <div className="flex items-start gap-2 text-sm">
-            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
             <div>
-              <span className="font-medium text-amber-900">Dependencies:</span>
-              <span className="text-gray-600 ml-1">
+              <span className="font-medium text-foreground">
+                Dependencies:{" "}
+              </span>
+              <span className="text-muted-foreground">
                 {getDependencyTitles()}
               </span>
             </div>
