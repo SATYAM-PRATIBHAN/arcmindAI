@@ -1,15 +1,16 @@
 "use client";
+import ExportPDFButton from "./ExportPDFButton";
 
 import animationData from "@/components/loaderLottie.json";
 import { StarterTemplates } from "@/components/prompt";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useState, useRef, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { useHistory } from "@/lib/contexts/HistoryContext";
 import Lottie from "lottie-react";
 import { AlertCircle, RotateCw, Send, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { useGenerateSystem } from "../hooks/useGenerateSystem";
 import { cleanMermaidString } from "../utils/cleanMermaidString";
 import { ArchitectureData } from "../utils/types";
@@ -32,7 +33,9 @@ export default function GeneratePage() {
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mermaidContainerRef = useRef<HTMLDivElement>(null);
   const submittedTextRef = useRef<string>("");
 
   const userInput = watch("userInput", "");
@@ -52,18 +55,18 @@ export default function GeneratePage() {
 
   const handleRef = (el: HTMLTextAreaElement | null) => {
     textareaRef.current = el;
-    if (registerField.ref) {
-      if (typeof registerField.ref === "function") {
-        registerField.ref(el);
-      } else if ("current" in registerField.ref) {
+    if (registerRef) {
+      if (typeof registerRef === "function") {
+        registerRef(el);
+      } else if ("current" in registerRef) {
         (
-          registerField.ref as React.MutableRefObject<HTMLTextAreaElement | null>
+          registerRef as React.MutableRefObject<HTMLTextAreaElement | null>
         ).current = el;
       }
     }
   };
 
-  const { ref, ...restRegisterField } = registerField;
+  const { ref: registerRef, ...restRegisterField } = registerField;
 
   const MAX_INPUT_LENGTH = 2000;
 
@@ -274,6 +277,16 @@ export default function GeneratePage() {
                 {generatedData.summary}
               </p>
             </div>
+            {/* Primary actions: Export PDF visible immediately after generation */}
+            <div className="flex justify-center items-center gap-3 mt-4">
+              <ExportPDFButton
+                data={generatedData}
+                diagramRef={mermaidContainerRef}
+                variant="default"
+                size="lg"
+                className="rounded-2xl px-8"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-16 pt-8">
@@ -350,13 +363,25 @@ export default function GeneratePage() {
                       Architecture Visual
                     </h2>
                   </div>
-                  <CopyDiagramButton
-                    code={cleanMermaidString(
-                      generatedData["Architecture Diagram"],
-                    )}
-                  />
+                  <div className="flex items-center gap-3">
+                    <CopyDiagramButton
+                      code={cleanMermaidString(
+                        generatedData["Architecture Diagram"],
+                      )}
+                    />
+                    <ExportPDFButton
+                      data={generatedData}
+                      diagramRef={mermaidContainerRef}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl"
+                    />
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner">
+                <div
+                  ref={mermaidContainerRef}
+                  className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
+                >
                   <MermaidDiagram
                     chart={cleanMermaidString(
                       generatedData["Architecture Diagram"],

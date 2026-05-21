@@ -3,6 +3,7 @@ import { db } from "@/lib/prisma";
 import crypto from "crypto";
 import { sendMail } from "@/lib/mailer";
 import { forgotPasswordEmailTemplate } from "@/components/email-template/forgotPasswordEmailTemplate";
+import { loginRateLimitIP } from "@/lib/rateLimit";
 import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
@@ -28,6 +29,20 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: "Email is required" },
         { status: 400 },
+      );
+    }
+
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    const { success } = await loginRateLimitIP.limit(`forgot:${ip}`);
+    if (!success) {
+      apiGatewayErrorsTotal.inc({ status_code: "429" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429 },
       );
     }
 

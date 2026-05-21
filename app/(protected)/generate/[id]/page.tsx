@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
 import {
   MermaidDiagram,
   CopyDiagramButton,
+  ExportPDFButton,
   MicroservicesSection,
   EntitiesSection,
   ApiRoutesSection,
@@ -79,36 +80,40 @@ export default function GenerationPage() {
 
   const [responseText, setResponseText] = useState("");
   const [doubtText, setDoubtText] = useState("");
+  const mermaidContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchGeneration = async () => {
-      if (id && typeof id === "string") {
-        const result = await getGenerationById(id);
-        if (result && result.success) {
-          setSystemName(result.output.userInput || "");
-          if (result.output.githubGeneration) {
-            setGithubGeneration(result.output.githubGeneration);
-            setIsGithubRepo(true);
-            setGeneratedData(null);
-          } else {
-            try {
-              const data = result.output.generatedOutput as ArchitectureData;
-              setGeneratedData(data);
-              setIsGithubRepo(false);
-              setGithubGeneration(null);
-            } catch (error) {
-              console.error("Error processing generation data:", error);
+    const timeoutId = window.setTimeout(() => {
+      void (async () => {
+        if (id && typeof id === "string") {
+          const result = await getGenerationById(id);
+          if (result && result.success) {
+            setSystemName(result.output.userInput || "");
+            if (result.output.githubGeneration) {
+              setGithubGeneration(result.output.githubGeneration);
+              setIsGithubRepo(true);
               setGeneratedData(null);
+            } else {
+              try {
+                const data = result.output.generatedOutput as ArchitectureData;
+                setGeneratedData(data);
+                setIsGithubRepo(false);
+                setGithubGeneration(null);
+              } catch (error) {
+                console.error("Error processing generation data:", error);
+                setGeneratedData(null);
+              }
             }
+          } else {
+            setGeneratedData(null);
+            setGithubGeneration(null);
           }
-        } else {
-          setGeneratedData(null);
-          setGithubGeneration(null);
         }
-      }
-    };
-    fetchGeneration();
-  }, [id]);
+      })();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [getGenerationById, id]);
 
   const handleUpdate = async () => {
     if (!id || typeof id !== "string" || !responseText.trim()) return;
@@ -210,6 +215,24 @@ export default function GenerationPage() {
   if (isGithubRepo && githubGeneration) {
     const cleanedGithubDiagram = cleanMermaidString(githubGeneration);
 
+    // Create a minimal ArchitectureData object for components that expect it (like ExportPDFButton)
+    const githubData: ArchitectureData = {
+      systemName: systemName || "GitHub Repository Design",
+      summary: "System architecture generated from GitHub repository analysis",
+      microservices: [],
+      entities: [],
+      apiRoutes: [],
+      databaseSchema: { type: "N/A", collections: [] },
+      infrastructure: {
+        hosting: "N/A",
+        database: "N/A",
+        auth: "N/A",
+        cdn: "N/A",
+        scaling: "N/A",
+      },
+      "Architecture Diagram": githubGeneration,
+    };
+
     return (
       <div className="flex flex-1 flex-col gap-4 p-4">
         <ActionDialog
@@ -240,15 +263,48 @@ export default function GenerationPage() {
 
         <ActionButton onClick={() => setIsActionDialogOpen(true)} />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl">GitHub Repository Design</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              System architecture generated from GitHub repository analysis
-            </p>
-            <div className="flex flex-wrap gap-4">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-px flex-1 bg-border/60"></div>
+              <Sparkles className="w-4 h-4 text-muted-foreground/60" />
+              <div className="h-px flex-1 bg-border/60"></div>
+            </div>
+
+            <div className="text-center space-y-4">
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                {systemName || "GitHub Repository Design"}
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                System architecture generated from GitHub repository analysis
+              </p>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-4">
+              <ExportPDFButton
+                data={githubData}
+                diagramRef={mermaidContainerRef}
+                variant="default"
+                size="lg"
+                className="rounded-2xl px-8"
+              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-10 px-6 cursor-pointer rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300"
+                      onClick={handleShare}
+                    >
+                      <Info className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Share
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy public share link to clipboard</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button
                 variant="outline"
                 className="h-10 px-6 rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300 shadow-sm"
@@ -266,17 +322,32 @@ export default function GenerationPage() {
                 isDeleting={isDeleting}
               />
             </div>
-          </CardContent>
-        </Card>
-
-        <section>
-          {/* Section header with copy button */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Architecture Diagram</h2>
-            <CopyDiagramButton code={cleanedGithubDiagram} />
           </div>
-          <MermaidDiagram chart={cleanedGithubDiagram} />
-        </section>
+
+          <div className="grid grid-cols-1 gap-20 pt-12">
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-foreground text-background px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    01
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    Architecture Visual
+                  </h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CopyDiagramButton code={cleanedGithubDiagram} />
+                </div>
+              </div>
+              <div
+                ref={mermaidContainerRef}
+                className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
+              >
+                <MermaidDiagram chart={cleanedGithubDiagram} />
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     );
   }
@@ -358,6 +429,13 @@ export default function GenerationPage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-4">
+            <ExportPDFButton
+              data={generatedData}
+              diagramRef={mermaidContainerRef}
+              variant="default"
+              size="lg"
+              className="rounded-2xl px-8"
+            />
             <Button
               variant="outline"
               className="h-10 px-6 rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300 shadow-sm"
@@ -391,7 +469,6 @@ export default function GenerationPage() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
             <Button
               variant="outline"
               className="h-10 px-6 rounded-xl border-border/60 hover:border-border bg-card/50 transition-all duration-300 shadow-sm"
@@ -494,9 +571,14 @@ export default function GenerationPage() {
                     Architecture Visual
                   </h2>
                 </div>
-                <CopyDiagramButton code={cleanedDiagram} />
+                <div className="flex items-center gap-3">
+                  <CopyDiagramButton code={cleanedDiagram} />
+                </div>
               </div>
-              <div className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner">
+              <div
+                ref={mermaidContainerRef}
+                className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
+              >
                 <MermaidDiagram chart={cleanedDiagram} />
               </div>
             </section>

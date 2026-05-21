@@ -77,10 +77,10 @@ export async function POST(req: Request) {
         { route },
         (Date.now() - startTime) / 1000,
       );
-      return NextResponse.json({
-        status: 400,
-        message: "Token and password are required",
-      });
+      return NextResponse.json(
+        { message: "Token and password are required" },
+        { status: 400 },
+      );
     }
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
@@ -103,10 +103,10 @@ export async function POST(req: Request) {
         { route },
         (Date.now() - startTime) / 1000,
       );
-      return NextResponse.json({
-        status: 400,
-        message: "Invalid or Expired token",
-      });
+      return NextResponse.json(
+        { message: "Invalid or Expired token" },
+        { status: 400 },
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
