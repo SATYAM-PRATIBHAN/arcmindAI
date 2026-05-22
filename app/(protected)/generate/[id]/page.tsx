@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import {
-  MermaidDiagram,
+  SystemGraph,
   CopyDiagramButton,
   ExportPDFButton,
   MicroservicesSection,
@@ -343,7 +343,10 @@ export default function GenerationPage() {
                 ref={mermaidContainerRef}
                 className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
               >
-                <MermaidDiagram chart={cleanedGithubDiagram} />
+                <SystemGraph
+                  chart={cleanedGithubDiagram}
+                  generatedData={githubData}
+                />
               </div>
             </section>
           </div>
@@ -579,7 +582,10 @@ export default function GenerationPage() {
                 ref={mermaidContainerRef}
                 className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
               >
-                <MermaidDiagram chart={cleanedDiagram} />
+                <SystemGraph
+                  chart={cleanedDiagram}
+                  generatedData={generatedData}
+                />
               </div>
             </section>
           )}

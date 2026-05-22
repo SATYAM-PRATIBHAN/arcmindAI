@@ -13,3 +13,4 @@ export { default as ActionButton } from "./ActionButton";
 export { default as DeleteDialog } from "./DeleteDialog";
 export { default as FrontendStructureDialog } from "./FrontendStructureDialog";
 export { default as TaskGenerationDialog } from "./TaskGenerationDialog";
+export { default as SystemGraph } from "./SystemGraph";
