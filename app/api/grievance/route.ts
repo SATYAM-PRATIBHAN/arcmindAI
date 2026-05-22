@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       httpRequestsTotal.inc({ route, method, status_code: "401" });
       apiGatewayErrorsTotal.inc({ status_code: "401" });
       return NextResponse.json(
-        { success: false, error: "User not Verfied" },
+        { success: false, error: "User not Verified" },
         { status: 401 },
       );
     }
