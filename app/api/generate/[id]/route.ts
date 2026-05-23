@@ -65,7 +65,10 @@ export async function GET(
         { route },
         (Date.now() - startTime) / 1000,
       );
-      NextResponse.json({ status: 404, message: "User not Found" });
+      return NextResponse.json(
+        { status: 404, message: "User not Found" },
+        { status: 404 },
+      );
     }
 
     if (user?.isVerified === false) {
