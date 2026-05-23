@@ -8,10 +8,15 @@ interface GenerateResponse {
   output: string;
 }
 
+interface GenerateError {
+  error: string;
+  retryAfter?: string;
+}
 export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
 
   const generate = async (
     userInput: string,
@@ -46,9 +51,17 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
     } catch (err) {
       let errorMessage = "An error occurred";
       if (axios.isAxiosError(err)) {
-        const error = err.response?.data?.error || err.response?.data?.message;
+        const data: GenerateError = err.response?.data || {};
         errorMessage =
-          error || `HTTP error! status: ${err.response?.status} (${err.code})`;
+          data.error ||
+          `HTTP error! status: ${err.response?.status} (${err.code})`;
+
+        if (err.response?.status === 429 && data.retryAfter) {
+          const secondsLeft = Math.ceil(
+            (new Date(data.retryAfter).getTime() - Date.now()) / 1000,
+          );
+          setRetryAfter(Math.max(secondsLeft, 1));
+        }
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
@@ -63,5 +76,6 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
     generate,
     isLoading,
     error,
+    retryAfter,
   };
 }

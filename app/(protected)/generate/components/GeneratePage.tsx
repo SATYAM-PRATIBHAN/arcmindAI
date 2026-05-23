@@ -12,6 +12,8 @@ import { useHistory } from "@/lib/contexts/HistoryContext";
 import Lottie from "lottie-react";
 import { AlertCircle, RotateCw, Send, Sparkles } from "lucide-react";
 import { useGenerateSystem } from "../hooks/useGenerateSystem";
+import { useRateLimitCountdown } from "@/hooks/use-rate-limit-countdown";
+import { RateLimitBanner } from "@/components/rate-limit-banner";
 import { cleanMermaidString } from "../utils/cleanMermaidString";
 import { ArchitectureData } from "../utils/types";
 import ApiRoutesSection from "./ApiRoutesSection";
@@ -28,7 +30,11 @@ export default function GeneratePage() {
     generate,
     isLoading,
     error: generateError,
+    retryAfter,
   } = useGenerateSystem(refetch);
+
+  const { secondsLeft, totalSeconds, isRateLimited, startCountdown } =
+    useRateLimitCountdown();
   const { register, watch, setValue } = useForm();
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
@@ -75,8 +81,13 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
+    if (isRateLimited) return;
     submittedTextRef.current = userInput;
     const result = await generate(userInput);
+
+    if (retryAfter !== null) {
+      startCountdown(retryAfter);
+    }
     if (result && result.success) {
       try {
         let cleanedOutput = result.output;
@@ -185,7 +196,7 @@ export default function GeneratePage() {
 
                     <Button
                       onClick={() => handleGenerate()}
-                      disabled={isLoading || !userInput.trim()}
+                      disabled={isLoading || !userInput.trim() || isRateLimited}
                       size="lg"
                       className="rounded-xl px-6 transition-all duration-300 active:scale-95"
                     >
@@ -223,7 +234,14 @@ export default function GeneratePage() {
         </div>
       )}
 
-      {showError && (
+      {isRateLimited && (
+        <RateLimitBanner
+          secondsLeft={secondsLeft!}
+          totalSeconds={totalSeconds!}
+        />
+      )}
+
+      {showError && !isRateLimited && (
         <Card className="border-destructive/20 bg-destructive/5 rounded-2xl">
           <CardContent className="p-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />

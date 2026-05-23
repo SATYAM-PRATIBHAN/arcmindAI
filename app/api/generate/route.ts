@@ -3,8 +3,10 @@ import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiCli
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { db } from "@/lib/prisma";
-import { generationRateLimit } from "@/lib/rateLimit";
+import { generationRateLimits } from "@/lib/rateLimit";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import {
   aiGenerationRequestsTotal,
   aiGenerationSuccessTotal,
@@ -23,30 +25,56 @@ export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const route = "/api/generate";
   const method = "POST";
+
   httpRequestsTotal.inc({ route, method });
 
   try {
+    // SECURE AUTH — get userId from server session
+    const session = await getServerSession(authOptions);
+
+    // @ts-expect-error id is added to session in session callback
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json().catch(() => null);
+
     if (!body || !body.userInput) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
+
       httpRequestDurationSeconds.observe(
         { route },
         (Date.now() - startTime) / 1000,
       );
+
       return NextResponse.json(
         { error: "Invalid request body. Missing 'userInput' field." },
         { status: 400 },
       );
     }
 
-    const { userInput, userId } = body;
+    const { userInput } = body;
 
+    if (!userInput || userInput.trim().length === 0) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+
+      return NextResponse.json(
+        { error: "Invalid input. Please provide a valid project idea." },
+        { status: 400 },
+      );
+    }
+
+    // Fetch authenticated user
     const dbStart = Date.now();
+
     const user = await db.user.findFirst({
-      where: {
-        id: userId,
-      },
+      where: { id: userId },
     });
+
     databaseQueryDurationSeconds.observe(
       { operation: "findFirst" },
       (Date.now() - dbStart) / 1000,
@@ -54,88 +82,79 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       apiGatewayErrorsTotal.inc({ status_code: "404" });
+
       httpRequestDurationSeconds.observe(
         { route },
         (Date.now() - startTime) / 1000,
       );
-      NextResponse.json({ status: 404, message: "User not Found" });
+
+      return NextResponse.json(
+        { status: 404, message: "User not Found" },
+        { status: 404 },
+      );
     }
 
-    if (user?.isVerified === false) {
+    if (user.isVerified === false) {
       apiGatewayErrorsTotal.inc({ status_code: "401" });
+
       httpRequestDurationSeconds.observe(
         { route },
         (Date.now() - startTime) / 1000,
       );
-      return NextResponse.json({
-        status: 401,
-        message: "Email is not verified",
-      });
-    }
 
-    const generationCount = await db.generation.count({
-      where: { userId },
-    });
-
-    // 2. Get user limit based on plan
-    const planLimits = {
-      free: 10,
-      pro: 200,
-      enterprise: 9999, // or unlimited
-    };
-
-    const plan = user?.plan as keyof typeof planLimits | undefined;
-    const userLimit = plan ? planLimits[plan] : undefined;
-
-    // 3. Enforce plan limits
-    if (userLimit !== undefined && generationCount >= userLimit) {
       return NextResponse.json(
-        {
-          error: `You have reached your limit of ${userLimit} generations for the ${user?.plan} plan.`,
-          upgrade: user?.plan === "free" ? true : false,
-        },
-        { status: 403 },
+        { status: 401, message: "Email is not verified" },
+        { status: 401 },
       );
     }
 
-    if (!userInput || userInput.trim().length === 0) {
-      apiGatewayErrorsTotal.inc({ status_code: "400" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      return NextResponse.json(
-        { error: "Invalid input. Please provide a valid project idea." },
-        { status: 400 },
-      );
+    // RATE LIMITING — skip only if user has their own Gemini API key
+    const userApiKeys = await getUserApiKeys(userId);
+
+    const hasOwnApiKey = !!userApiKeys.geminiApiKey;
+
+    let limit: number | null = null;
+    let remaining: number | null = null;
+    let reset: number | null = null;
+
+    if (!hasOwnApiKey) {
+      const rateLimiter =
+        user.plan === "enterprise"
+          ? generationRateLimits.enterprise
+          : user.plan === "pro"
+            ? generationRateLimits.pro
+            : generationRateLimits.free;
+
+      const result = await rateLimiter.limit(userId);
+
+      const { success } = result;
+
+      limit = result.limit;
+      remaining = result.remaining;
+      reset = result.reset;
+
+      if (!success) {
+        apiGatewayErrorsTotal.inc({ status_code: "429" });
+
+        httpRequestDurationSeconds.observe(
+          { route },
+          (Date.now() - startTime) / 1000,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              user.plan === "free"
+                ? "Free users can generate 5 architectures per hour."
+                : "Rate limit exceeded. Please try again later.",
+            retryAfter: new Date(reset).toISOString(),
+          },
+          { status: 429 },
+        );
+      }
     }
 
-    if (!userId) {
-      httpRequestsTotal.inc({ route, method, status_code: "400" });
-      apiGatewayErrorsTotal.inc({ status_code: "400" });
-      return NextResponse.json(
-        { error: "Missing userId. You must be logged in to generate." },
-        { status: 400 },
-      );
-    }
-
-    // Rate limiting: 1 request every 2 minutes per user
-    const { success, limit, remaining, reset } =
-      await generationRateLimit.limit(userId);
-    if (!success) {
-      apiGatewayErrorsTotal.inc({ status_code: "429" });
-      httpRequestDurationSeconds.observe(
-        { route },
-        (Date.now() - startTime) / 1000,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Rate limit exceeded. Please wait 2 minutes before making another request.",
-        },
-        { status: 429 },
-      );
-    }
+    // Keep the rest of your existing AI generation logic BELOW this point
 
     // Increment AI generation request counter
     aiGenerationRequestsTotal.inc();
@@ -148,9 +167,6 @@ export async function POST(req: NextRequest) {
       new SystemMessage(SystemPrompt),
       new HumanMessage(userInput),
     ];
-
-    // 🔑 Fetch user's API keys
-    const userApiKeys = await getUserApiKeys(userId);
 
     // 🧠 Call Gemini model with timing and automatic fallback
     const aiStart = Date.now();
@@ -290,9 +306,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         output: finalAIresponse,
-        limit: limit,
-        remaining: remaining,
-        reset: reset,
+        limit,
+        remaining,
+        reset,
       });
     } catch (jsonError: unknown) {
       aiGenerationFailureTotal.inc();
