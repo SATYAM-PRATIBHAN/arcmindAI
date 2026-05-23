@@ -19,6 +19,8 @@ export interface GraphNode {
   fx?: number | null;
   fy?: number | null;
   index?: number;
+  targetX?: number;
+  targetY?: number;
 }
 
 export interface GraphLink {
