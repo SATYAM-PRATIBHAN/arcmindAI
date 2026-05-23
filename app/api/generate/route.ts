@@ -3,6 +3,7 @@ import { invokeGeminiWithFallback } from "@/app/(protected)/generate/utils/aiCli
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { db } from "@/lib/prisma";
+import { nanoid } from "nanoid";
 import { generationRateLimits } from "@/lib/rateLimit";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 import { getServerSession } from "next-auth";
@@ -280,6 +281,7 @@ export async function POST(req: NextRequest) {
           userInput,
           generatedOutput: parsedData,
           userId,
+          shareId: nanoid(10),
         },
       });
       databaseQueryDurationSeconds.observe(

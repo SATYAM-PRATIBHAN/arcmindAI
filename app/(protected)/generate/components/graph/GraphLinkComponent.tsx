@@ -19,6 +19,7 @@ interface GraphLinkComponentProps {
   source: GraphNode;
   target: GraphNode;
   selectedNodeId: string | null;
+  hoveredNodeId: string | null;
   traceDirection: "none" | "upstream" | "downstream" | "full";
   tracePaths: { upstream: Set<string>; downstream: Set<string> } | null;
   storyActiveInfo: {
@@ -36,12 +37,15 @@ const GraphLinkComponentInner: React.FC<GraphLinkComponentProps> = ({
   source,
   target,
   selectedNodeId,
+  hoveredNodeId,
   traceDirection,
   tracePaths,
   storyActiveInfo,
   selectedInsight,
   isStoryMode,
 }) => {
+  const [isLinkHovered, setIsLinkHovered] = React.useState(false);
+
   if (
     source.x === undefined ||
     source.y === undefined ||
@@ -90,10 +94,9 @@ const GraphLinkComponentInner: React.FC<GraphLinkComponentProps> = ({
       ? !isInsightLink
       : selectedNodeId && !isTraceConnection;
 
-  // Bezier curve calculations
-  const dy = target.y - source.y;
-  const cy = source.y + dy / 2;
-  const pathData = `M ${source.x} ${source.y} C ${source.x} ${cy}, ${target.x} ${cy}, ${target.x} ${target.y}`;
+  // Right-angle (orthogonal) routing calculations (vertical-first flow)
+  const midY = source.y + (target.y - source.y) / 2;
+  const pathData = `M ${source.x} ${source.y} V ${midY} H ${target.x} V ${target.y}`;
 
   // Link styling based on trace / active state
   let strokeColor = "#475569";
@@ -125,19 +128,28 @@ const GraphLinkComponentInner: React.FC<GraphLinkComponentProps> = ({
     }
   }
 
+  // Hover states: display labels if link is hovered or either connected node is hovered/selected
+  const isNodeHovered =
+    hoveredNodeId === source.id || hoveredNodeId === target.id;
+  const isNodeSelected =
+    selectedNodeId === source.id || selectedNodeId === target.id;
+  const shouldShowLabel = isLinkHovered || isNodeHovered || isNodeSelected;
+
   return (
     <g
       className={`transition-opacity duration-300 ${
         isUnrelatedLink ? "opacity-10" : "opacity-100"
       }`}
     >
-      {/* Invisible thicker interaction path for easier mouse hover selection if needed */}
+      {/* Invisible thicker interaction path for easier mouse hover selection */}
       <path
         d={pathData}
         fill="none"
         stroke="transparent"
         strokeWidth={15}
         className="cursor-pointer"
+        onMouseEnter={() => setIsLinkHovered(true)}
+        onMouseLeave={() => setIsLinkHovered(false)}
       />
 
       {/* Main visible connection line */}
@@ -207,28 +219,24 @@ const GraphLinkComponentInner: React.FC<GraphLinkComponentProps> = ({
         </circle>
       )}
 
-      {/* Link labels */}
-      {link.label && (
-        <g
-          transform={`translate(${
-            (source.x + target.x) / 2
-          }, ${(source.y + target.y) / 2 - 4})`}
-        >
+      {/* Hover-only glassmorphic link labels */}
+      {link.label && shouldShowLabel && (
+        <g transform={`translate(${(source.x + target.x) / 2}, ${midY})`}>
           <rect
-            x={-35}
-            y={-8}
-            width={70}
-            height={16}
-            rx={4}
-            className="fill-slate-900/90 stroke-slate-800/50 stroke-[0.5px]"
+            x={-42}
+            y={-9}
+            width={84}
+            height={18}
+            rx={5}
+            className="fill-slate-950/85 stroke-indigo-500/25 stroke-[1px] backdrop-blur-md"
           />
           <text
             textAnchor="middle"
             alignmentBaseline="middle"
-            className="fill-slate-400 font-medium text-[8px]"
+            className="fill-slate-300 font-semibold text-[8.5px] select-none pointer-events-none"
           >
-            {link.label.length > 12
-              ? `${link.label.slice(0, 10)}...`
+            {link.label.length > 15
+              ? `${link.label.slice(0, 13)}...`
               : link.label}
           </text>
         </g>
@@ -247,6 +255,7 @@ export const GraphLinkComponent = React.memo(
       prevProps.target.x === nextProps.target.x &&
       prevProps.target.y === nextProps.target.y &&
       prevProps.selectedNodeId === nextProps.selectedNodeId &&
+      prevProps.hoveredNodeId === nextProps.hoveredNodeId &&
       prevProps.traceDirection === nextProps.traceDirection &&
       prevProps.isStoryMode === nextProps.isStoryMode &&
       prevProps.tracePaths?.upstream === nextProps.tracePaths?.upstream &&

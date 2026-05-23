@@ -280,7 +280,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
             return (
               <g key={sub.id} className="transition-all duration-500">
-                {/* Backdrop */}
+                {/* Premium Glassmorphic Backdrop */}
                 <rect
                   x={minX}
                   y={minY}
@@ -288,13 +288,21 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                   height={subHeight}
                   rx={16}
                   ry={16}
-                  className="fill-indigo-950/5 stroke-slate-800/35 stroke-[1.5px] border border-white/5 transition-all duration-300"
+                  className="fill-slate-900/5 stroke-slate-800/40 stroke-[2px] backdrop-blur-[2px] transition-all duration-300"
                 />
-                {/* Label */}
-                <text
-                  x={minX + 16}
+                {/* Subgraph Pill Header */}
+                <rect
+                  x={minX + 12}
                   y={minY - 10}
-                  className="fill-slate-500 font-bold uppercase tracking-wider text-[10px]"
+                  width={sub.label.length * 6 + 24}
+                  height={20}
+                  rx={10}
+                  className="fill-slate-950/90 stroke-slate-800/70 stroke-[1px] backdrop-blur-md"
+                />
+                <text
+                  x={minX + 24}
+                  y={minY + 3}
+                  className="fill-slate-400 font-bold uppercase tracking-widest text-[8px] pointer-events-none select-none"
                 >
                   {sub.label}
                 </text>
@@ -323,6 +331,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
                   source={sourceNode}
                   target={targetNode}
                   selectedNodeId={selectedNodeId}
+                  hoveredNodeId={hoveredNodeId}
                   traceDirection={traceDirection}
                   tracePaths={tracePaths}
                   storyActiveInfo={storyActiveInfo}

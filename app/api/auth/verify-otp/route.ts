@@ -131,11 +131,18 @@ export async function POST(req: NextRequest) {
     // Increment active users (assuming verification activates the user)
     activeUsersTotal.inc();
 
-    await sendMail({
-      to: user.email,
-      subject: "Welcome to arcmindAI",
-      html: welcomeEmailTemplate(user.username),
-    });
+    try {
+      await sendMail({
+        to: user.email,
+        subject: "Welcome to arcmindAI",
+        html: welcomeEmailTemplate(user.username),
+      });
+    } catch (emailError) {
+      console.error(
+        `Failed to send welcome email to ${user.email}:`,
+        emailError,
+      );
+    }
 
     // Track total HTTP duration
     httpRequestDurationSeconds.observe(

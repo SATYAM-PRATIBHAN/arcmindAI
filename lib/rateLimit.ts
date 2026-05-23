@@ -43,10 +43,12 @@ function makeRatelimit(
   return new Ratelimit({ redis, limiter, analytics: true });
 }
 
-// Create rate limiter: 2 requests per 2 minutes (120 seconds)
-export const generationRateLimit = makeRatelimit(
-  Ratelimit.slidingWindow(2, "120 s"),
-);
+// Plan-aware generation rate limiters
+export const generationRateLimits = {
+  free: makeRatelimit(Ratelimit.slidingWindow(5, "1 h")),
+  pro: makeRatelimit(Ratelimit.slidingWindow(50, "1 h")),
+  enterprise: makeRatelimit(Ratelimit.slidingWindow(200, "1 h")),
+};
 
 export const otpRateLimit = makeRatelimit(Ratelimit.slidingWindow(1, "60 s"));
 

@@ -762,7 +762,7 @@ export default function SystemGraph({
           }
         }
         .animate-flow-line {
-          animation: dashflow 1s linear infinite;
+          animation: dashflow 2.5s linear infinite;
         }
         @keyframes pulse-ring {
           0% {

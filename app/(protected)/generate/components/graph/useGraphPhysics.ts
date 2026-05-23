@@ -96,22 +96,47 @@ export function useGraphPhysics({
     // Create D3 Force Simulation with cooling parameters to prevent shaking/vibrating
     const sim = d3
       .forceSimulation<GraphNode>(simulatedNodes)
-      .alphaDecay(0.022) // Stable cooling parameters
+      .alphaDecay(0.025) // Stable cooling parameters
       .force(
         "link",
         d3
           .forceLink<GraphNode, GraphLink>(simulatedLinks)
           .id((d) => d.id)
-          .distance(140),
+          .distance(120), // More compact service distance
       )
-      .force("charge", d3.forceManyBody().strength(-360))
-      .force("collide", d3.forceCollide().radius(78).iterations(2)) // Fix overlaps
+      .force("charge", d3.forceManyBody().strength(-300)) // Reduced repulsion for closer grouping
+      .force("collide", d3.forceCollide().radius(70).iterations(3)) // Robust overlap prevention
       .force(
         "center",
         d3.forceCenter(dimensions.width / 2, dimensions.height / 2),
       )
-      .force("x", d3.forceX(dimensions.width / 2).strength(0.06))
-      .force("y", d3.forceY(dimensions.height / 2).strength(0.06));
+      .force("x", d3.forceX(dimensions.width / 2).strength(0.08)) // Stronger horizontal centering to prevent stretching
+      .force(
+        "y",
+        d3
+          .forceY<GraphNode>((d) => {
+            const type = d.type;
+            if (type === "client") return dimensions.height * 0.16;
+            if (type === "gateway") return dimensions.height * 0.35;
+            if (type === "service") return dimensions.height * 0.54;
+            if (type === "database") return dimensions.height * 0.78;
+
+            // Align logging, monitoring, and infrastructure support systems at the bottom
+            const label = d.label.toLowerCase();
+            if (
+              label.includes("monitoring") ||
+              label.includes("logger") ||
+              label.includes("prometheus") ||
+              label.includes("sentry") ||
+              label.includes("telemetry") ||
+              label.includes("notification")
+            ) {
+              return dimensions.height * 0.82;
+            }
+            return dimensions.height * 0.54;
+          })
+          .strength(0.22), // High strength to enforce stable vertical layers
+      );
 
     simulationRef.current = sim;
     setSimulation(sim);
