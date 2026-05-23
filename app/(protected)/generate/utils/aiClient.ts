@@ -5,15 +5,17 @@ import { BaseMessage } from "@langchain/core/messages";
 
 // ✅ Core Gemini LLM setup (LangChain compatible)
 const geminiLLM = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash-lite",
+  model: "gemini-2.5-flash",
   temperature: 0.7,
   apiKey: process.env.GEMINI_API_KEY,
+  maxOutputTokens: 8192,
 });
 
 const geminiLLM_2 = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash-lite",
+  model: "gemini-2.5-flash",
   temperature: 0.7,
   apiKey: process.env.GEMINI_API_KEY_UNSECURED,
+  maxOutputTokens: 8192,
 });
 
 /**
@@ -21,9 +23,10 @@ const geminiLLM_2 = new ChatGoogleGenerativeAI({
  */
 function createGeminiClient(apiKey: string): ChatGoogleGenerativeAI {
   return new ChatGoogleGenerativeAI({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
     apiKey,
+    maxOutputTokens: 8192,
   });
 }
 
