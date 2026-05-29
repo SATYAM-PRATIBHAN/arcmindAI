@@ -50,9 +50,9 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
           setRetryAfter(Math.max(secondsLeft, 1));
         }
 
-        throw new Error(
-          errorBody.error || `HTTP error! status: ${response.status}`,
-        );
+throw new Error(
+  errorBody.error || errorBody.message || `HTTP error! status: ${response.status}`,
+);
       }
 
       const reader = response.body?.getReader();

@@ -20,6 +20,7 @@ import { useHistory } from "@/lib/contexts/HistoryContext";
 import Lottie from "lottie-react";
 import { AlertCircle, RotateCw, Send, Sparkles } from "lucide-react";
 import { useRateLimitCountdown } from "@/hooks/use-rate-limit-countdown";
+import { toast } from "sonner";
 import { RateLimitBanner } from "@/components/rate-limit-banner";
 import { cleanMermaidString } from "../utils/cleanMermaidString";
 
@@ -207,131 +208,13 @@ export default function GeneratePage() {
 
     submittedTextRef.current = userInput;
 
-    try {
-      const result = await generate(userInput, (chunk: string) => {
-        setStreamingProgress((prev) => prev + chunk);
-      });
-
-      if (retryAfter !== null) {
-        startCountdown(retryAfter);
-      } else if (result?.remaining === 0 && result?.reset) {
-        const secondsUntilReset = Math.ceil(
-          (new Date(result.reset).getTime() - Date.now()) / 1000,
-        );
-        startCountdown(Math.max(secondsUntilReset, 1));
-      }
-
-      console.log("FULL RESULT:", result);
-
-      if (result && result.success) {
-        let finalParsedData: ArchitectureData | null = null;
-        if (result.parsedData) {
-          finalParsedData = result.parsedData;
-        } else {
-          // Fallback to manual parsing if backend didn't provide parsedData
-          try {
-            let cleanedOutput = result.output;
-
-            const jsonStartMarker = "```json";
-            const jsonStart = cleanedOutput.indexOf(jsonStartMarker);
-
-            if (jsonStart !== -1) {
-              cleanedOutput = cleanedOutput.slice(
-                jsonStart + jsonStartMarker.length,
-              );
-
-              const jsonEnd = cleanedOutput.indexOf("```");
-
-              if (jsonEnd !== -1) {
-                cleanedOutput = cleanedOutput.slice(0, jsonEnd);
-              }
-            } else {
-              const firstBrace = cleanedOutput.indexOf("{");
-
-              if (firstBrace !== -1) {
-                let braceCount = 0;
-                let lastBrace = -1;
-
-                for (let i = firstBrace; i < cleanedOutput.length; i++) {
-                  if (cleanedOutput[i] === "{") braceCount++;
-
-                  if (cleanedOutput[i] === "}") {
-                    braceCount--;
-
-                    if (braceCount === 0) {
-                      lastBrace = i;
-                      break;
-                    }
-                  }
-                }
-
-                if (lastBrace !== -1) {
-                  cleanedOutput = cleanedOutput.slice(
-                    firstBrace,
-                    lastBrace + 1,
-                  );
-                }
-              }
-            }
-
-            cleanedOutput = cleanedOutput.trim();
-
-            if (!cleanedOutput) {
-              throw new Error("No JSON content found in AI response.");
-            }
-
-            const parsedData: ArchitectureData = JSON.parse(cleanedOutput);
-
-            const mermaidStartMarker = "```mermaid";
-            const mermaidStart = result.output.indexOf(mermaidStartMarker);
-
-            if (mermaidStart !== -1) {
-              let mermaidText = result.output.slice(
-                mermaidStart + mermaidStartMarker.length,
-              );
-
-              const mermaidEnd = mermaidText.indexOf("```");
-
-              if (mermaidEnd !== -1) {
-                mermaidText = mermaidText.slice(0, mermaidEnd);
-              }
-
-              mermaidText = mermaidText
-                .replace(/```mermaid/g, "")
-                .replace(/```/g, "")
-                .trim();
-
-              if (mermaidText) {
-                parsedData["Architecture Diagram"] = mermaidText;
-              }
-            }
-
-            finalParsedData = parsedData;
-          } catch (parseError) {
-            console.error("Failed to parse generated data:", parseError);
-            setGeneratedData(null);
-          }
-        }
-
-        if (finalParsedData) {
-          setGeneratedData(finalParsedData);
-          if (isGuestReady) {
-            const updatedCount = guestGenerationsUsed + 1;
-            setGuestGenerationsUsed(updatedCount);
-            persistGuestUsage(updatedCount);
-
-            localStorage.setItem(
-              GUEST_UNSAVED_GENERATION_KEY,
-              JSON.stringify({ userInput, generatedData: finalParsedData }),
-            );
-          }
-        }
-      } else {
-        setGeneratedData(null);
-      }
-    } catch (error) {
+    try {} catch (error) {
       console.error("Generation failed:", error);
       setGeneratedData(null);
+      const msg = error instanceof Error ? error.message : "";
+      if (msg.toLowerCase().includes("email is not verified")) {
+        toast.error("Email not verified. Please verify your email before generating architectures.");
+      }
     }
   };
 
