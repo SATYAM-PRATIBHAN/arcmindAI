@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2, Download, Info, Sparkles } from "lucide-react";
+import { Code2, Download, Info, Sparkles, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
@@ -82,6 +82,10 @@ export default function GenerationPage() {
   const [doubtText, setDoubtText] = useState("");
   const mermaidContainerRef = useRef<HTMLDivElement>(null);
 
+  // Safeguard Warning States
+  const [isTruncated, setIsTruncated] = useState(false);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       void (async () => {
@@ -89,6 +93,19 @@ export default function GenerationPage() {
           const result = await getGenerationById(id);
           if (result && result.success) {
             setSystemName(result.output.userInput || "");
+
+            // Extract safeguard info if available from response
+            if (result.truncated) {
+              setIsTruncated(true);
+              setWarningMessage(
+                result.message ||
+                  "Repository analysis limits exceeded. Some files were skipped.",
+              );
+            } else {
+              setIsTruncated(false);
+              setWarningMessage(null);
+            }
+
             if (result.output.githubGeneration) {
               setGithubGeneration(result.output.githubGeneration);
               setIsGithubRepo(true);
@@ -107,6 +124,8 @@ export default function GenerationPage() {
           } else {
             setGeneratedData(null);
             setGithubGeneration(null);
+            setIsTruncated(false);
+            setWarningMessage(null);
           }
         }
       })();
@@ -264,6 +283,19 @@ export default function GenerationPage() {
         <ActionButton onClick={() => setIsActionDialogOpen(true)} />
 
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          {/* --- User-Visible Safeguard Warning Banner --- */}
+          {isTruncated && warningMessage && (
+            <div className="mx-auto max-w-4xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3 shadow-sm backdrop-blur-sm">
+              <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-500" />
+              <div className="text-sm">
+                <span className="font-semibold block mb-0.5">
+                  Analysis Safeguards Applied
+                </span>
+                <p className="opacity-90">{warningMessage}</p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="h-px flex-1 bg-border/60"></div>
