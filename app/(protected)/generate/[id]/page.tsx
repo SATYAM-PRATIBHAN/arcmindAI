@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2, Download, Info, Sparkles, AlertTriangle } from "lucide-react"; // Added AlertTriangle
+import { Code2, Download, Info, Sparkles, AlertTriangle } from "lucide-react";
 import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
@@ -94,11 +94,15 @@ export default function GenerationPage() {
           if (result && result.success) {
             setSystemName(result.output.userInput || "");
 
-            // Extract safeguard info if available from response
-            if (result.truncated) {
+            // TypeScript linter-safe casting
+            const mockResult = result as unknown as {
+              truncated?: boolean;
+              message?: string;
+            };
+            if (mockResult.truncated) {
               setIsTruncated(true);
               setWarningMessage(
-                result.message ||
+                mockResult.message ||
                   "Repository analysis limits exceeded. Some files were skipped.",
               );
             } else {
@@ -106,6 +110,7 @@ export default function GenerationPage() {
               setWarningMessage(null);
             }
 
+            // Fixed conditional setup routing
             if (result.output.githubGeneration) {
               setGithubGeneration(result.output.githubGeneration);
               setIsGithubRepo(true);
@@ -119,6 +124,7 @@ export default function GenerationPage() {
               } catch (error) {
                 console.error("Error processing generation data:", error);
                 setGeneratedData(null);
+                setGithubGeneration(null);
               }
             }
           } else {
@@ -234,7 +240,6 @@ export default function GenerationPage() {
   if (isGithubRepo && githubGeneration) {
     const cleanedGithubDiagram = cleanMermaidString(githubGeneration);
 
-    // Create a minimal ArchitectureData object for components that expect it (like ExportPDFButton)
     const githubData: ArchitectureData = {
       systemName: systemName || "GitHub Repository Design",
       summary: "System architecture generated from GitHub repository analysis",
@@ -519,7 +524,6 @@ export default function GenerationPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-20 pt-12">
-          {/* Sections */}
           {generatedData.microservices && (
             <section className="space-y-6">
               <div className="flex items-center gap-3">
