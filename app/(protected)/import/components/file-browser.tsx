@@ -2,7 +2,8 @@
 
 import { DOC_ROUTES } from "@/lib/routes";
 import axios from "axios";
-import { Loader2 } from "lucide-react";
+// Added AlertTriangle to render safeguard boundary warnings
+import { Loader2, AlertTriangle } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -14,7 +15,16 @@ import { FileContentViewer } from "./file-content-viewer";
 import { FileSidebar } from "./file-sidebar";
 import { GitBranchSelect } from "./github-branch-select";
 
-export function FileBrowser() {
+// 4. UI ENHANCEMENT: Expose warning message and skipped file counts as optional props
+interface FileBrowserProps {
+  warningMessage?: string | null;
+  skippedCount?: number;
+}
+
+export function FileBrowser({
+  warningMessage,
+  skippedCount = 0,
+}: FileBrowserProps) {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,8 +50,13 @@ export function FileBrowser() {
 
   // Fetch repository tree
   useEffect(() => {
+    let isMounted = true; // FIX: Prevents race conditions on rapid state adjustments
+
     const fetchTree = async () => {
       setLoading(true);
+      // FIX: Flush out stale data structure arrays before caching/fetching the new data
+      setFileTree([]);
+
       try {
         let branch = branchParam;
 
@@ -57,9 +72,9 @@ export function FileBrowser() {
             );
           }
 
-          const defaultBranch = repoRes.data.data.default_branch;
-          setDefaultBranch(defaultBranch);
-          if (!branch) branch = defaultBranch;
+          const resolvedDefaultBranch = repoRes.data.data.default_branch;
+          if (isMounted) setDefaultBranch(resolvedDefaultBranch);
+          if (!branch) branch = resolvedDefaultBranch;
         }
 
         // Get the tree recursively via proxy
@@ -71,23 +86,32 @@ export function FileBrowser() {
           throw new Error(treeRes.data.message || "Failed to fetch repo tree");
         }
 
-        const tree = buildFileTree(treeRes.data.data.tree);
-        setFileTree(tree);
+        if (isMounted) {
+          const tree = buildFileTree(treeRes.data.data.tree);
+          setFileTree(tree);
+        }
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load repository structure");
+        if (isMounted) toast.error("Failed to load repository structure");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchTree();
-  }, [owner, repo, branchParam]);
+
+    return () => {
+      isMounted = false; // Cleanup execution loop tracking on dependencies change
+    };
+  }, [owner, repo, branchParam, defaultBranch]);
 
   const handleBranchChange = (branch: string) => {
     if (branch === activeBranch) return;
+
+    // FIX: Completely isolate and purge active viewer buffers prior to pushing route state mutations
     setSelectedFile(null);
     setFileContent("");
+
     const next = new URLSearchParams(searchParams.toString());
     next.set("branch", branch);
     router.replace(`?${next.toString()}`, { scroll: false });
@@ -109,8 +133,8 @@ export function FileBrowser() {
     setSelectedFile(path);
     setLoadingContent(true);
 
-    // Close sidebar on mobile when file is selected
-    if (window.innerWidth < 1024) {
+    // Close sidebar on mobile devices layout natively
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
 
@@ -160,6 +184,28 @@ export function FileBrowser() {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
 
+      {/* RENDER ACTIVE LIMIT WARNING BANNER DIRECTLY INSIDE FILE BROWSER DASHBOARD */}
+      {warningMessage && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-300 p-4 rounded-xl flex gap-3 text-xs leading-relaxed animate-in fade-in duration-200">
+          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5 animate-pulse" />
+          <div className="space-y-1">
+            <span className="font-semibold text-amber-200 block">
+              Active Repository Scanning Optimizations
+            </span>
+            <p className="text-amber-300/80">
+              {warningMessage}{" "}
+              {skippedCount > 0
+                ? `(Bypassed ${skippedCount} non-critical entries)`
+                : ""}
+            </p>
+            <div className="text-[10px] text-slate-400/50 font-mono italic">
+              * Safety thresholds and parsing depth filters are strictly
+              enforced to preserve AI memory boundaries.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Git repo branch select layout */}
       <div className="flex items-center gap-4 flex-wrap">
         <GitBranchSelect
@@ -169,7 +215,7 @@ export function FileBrowser() {
           loading={branchesLoading}
           onSelect={handleBranchChange}
         />
-        <span className="text-sm">
+        <span className="text-sm text-muted-foreground">
           {branches.length > 0
             ? `${branches.length} ${branches.length === 1 ? "branch" : "branches"}`
             : null}
@@ -195,7 +241,7 @@ export function FileBrowser() {
         />
 
         {/* Main Content Panel */}
-        <div className="flex-1 border rounded-lg overflow-hidden h-full flex flex-col">
+        <div className="flex-1 border rounded-lg overflow-hidden h-full flex flex-col bg-background">
           <FileContentViewer
             selectedFile={selectedFile}
             fileContent={fileContent}

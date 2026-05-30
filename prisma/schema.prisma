@@ -18,28 +18,28 @@ enum Plan {
   enterprise
 }
 
-
 model User {
-  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
   username            String
-  email               String                @unique
-  password            String                // hashed password
-  avatar              String?               // optional profile picture
-  isVerified          Boolean               @default(false)
-  otp                 String?               // optional OTP code
-  otpExpiry           DateTime?             // optional OTP expiry
-  role                Role                  @default(USER)
-  plan                Plan                  @default(free) // free, pro, enterprise
-  subscriptionId      String?               // Dodo subscription ID
-  subscriptionStatus  String?               // active, canceled, expired, null
-  currentPeriodEnd    DateTime?             // end of current billing period
-  githubAccessToken   String?               // GitHub OAuth access token
-  geminiApiKey        String?               // Encrypted Gemini API key
-  openaiApiKey        String?               // Encrypted OpenAI API key
-  encryptionKey       String?               // User-specific encryption key for API keys
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
+  email               String               @unique
+  password            String               // hashed password
+  avatar              String?              // optional profile picture
+  isVerified          Boolean              @default(false)
+  otp                 String?              // optional OTP code
+  otpExpiry           DateTime?            // optional OTP expiry
+  role                Role                 @default(USER)
+  plan                Plan                 @default(free) // free, pro, enterprise
+  subscriptionId      String?              // Dodo subscription ID
+  subscriptionStatus  String?              // active, canceled, expired, null
+  currentPeriodEnd    DateTime?            // end of current billing period
+  githubAccessToken   String?              // GitHub OAuth access token
+  geminiApiKey        String?              // Encrypted Gemini API key
+  openaiApiKey        String?              // Encrypted OpenAI API key
+  encryptionKey       String?              // User-specific encryption key for API keys
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
+  // Cascading deletes handled cleanly at the relation side
   generations         Generation[]
   resetPasswordTokens ResetPasswordToken[]
   webhooks            Webhook[]
@@ -55,14 +55,13 @@ model Webhook {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   userId      String            @db.ObjectId
-  user        User              @relation(fields: [userId], references: [id])
+  
+  // FIX: Added Cascade delete so clearing users wipes connected webhooks smoothly
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   deliveries  WebhookDelivery[]
 
   @@index([userId])
-
-  // Prevent duplicate webhook URLs per user
   @@unique([userId, url])
-
   @@map("webhooks")
 }
 
@@ -78,6 +77,7 @@ model WebhookDelivery {
   responseBody   String?
   retryCount     Int      @default(0)
   createdAt      DateTime @default(now())
+  
   @@index([webhookId])
   @@map("webhook_deliveries")
 }
@@ -87,24 +87,41 @@ model Generation {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   userInput        String
-  generatedOutput  Json?     // stores structured system design JSON
+  generatedOutput  Json?    // stores structured system design JSON
   frontendData     Json?
   githubGeneration String?  // stores Mermaid diagram for GitHub repos
-  tasksData        Json?     // stores AI-generated task breakdown
+  tasksData        Json?    // stores AI-generated task breakdown
   doubtChatCount   Int      @default(0) // tracks number of doubt questions for free tier limit
-  isPublic         Boolean @default(false)
+  isPublic         Boolean  @default(false)
   shareId          String?  @unique
   userId           String   @db.ObjectId
-  user             User     @relation(fields: [userId], references: [id])
+  
+  // FIX: Account deletion safety cascade
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Added persistence fields to capture safeguard warning metrics in MongoDB
+  warningMessage   String?  // User-facing warning text if files are truncated
+  skippedCount     Int      @default(0) // Total skipped elements
+  
+  /**
+   * ADVANCED FIX: Store granular safeguard breakdowns directly to keep history runs predictable.
+   * Storing as simple Int fields makes reporting, analytics, and debugging incredibly fast.
+   */
+  skippedByLimitCount Int   @default(0)
+  skippedByDepthCount Int   @default(0)
+  skippedBySizeCount  Int   @default(0)
 
   @@index([userId])
+  @@map("generations")
 }
 
 model ResetPasswordToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   tokenHash String   // hashed reset token
   userId    String   @db.ObjectId
-  user      User     @relation(fields: [userId], references: [id])
+  
+  // FIX: Cleanup expired or pending tokens on user purge
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime // token expiry time
 
   @@index([tokenHash])

@@ -140,6 +140,17 @@ export interface MessagingAnalysis {
   files: string[];
 }
 
+// Highly organized metrics for debugging and rigorous frontend rendering
+export interface SafeguardMetrics {
+  totalSkipped: number;
+  maxDepthLimit: number;
+  maxFilesLimit: number;
+  maxFileSizeLimitKb: number;
+  skippedByLimitCount: number;
+  skippedByDepthCount: number;
+  skippedBySizeCount: number;
+}
+
 export interface RepositoryAnalysis {
   metadata: RepoMetadata;
   architecture: ArchitectureAnalysis;
@@ -151,18 +162,26 @@ export interface RepositoryAnalysis {
   tests: TestAnalysis;
   messaging: MessagingAnalysis;
   analyzedAt: string;
+
+  // Safeguards optimization alert variables
+  warningMessage: string | null;
+  safeguardMetrics?: SafeguardMetrics; // Optional structured block for precise tracking
 }
 
 export interface AnalyzeRepositoryRequest {
   owner: string;
   repo: string;
   branch?: string;
-  // Note: githubToken is no longer sent from frontend
-  // It's retrieved server-side for security
 }
 
 export interface AnalyzeRepositoryResponse {
   success: boolean;
   data?: RepositoryAnalysis;
   error?: string;
+
+  /**
+   * CRITICAL FIX: Add an optional warning block at the top-level response level
+   * so UI components can easily read toast message alerts without digging into the data payload
+   */
+  warning?: string | null;
 }
