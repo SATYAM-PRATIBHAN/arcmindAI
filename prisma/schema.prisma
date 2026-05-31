@@ -96,6 +96,9 @@ model Generation {
   shareId          String?  @unique
   userId           String   @db.ObjectId
   
+  // FIX: Added missing rating field for API routes matching typescript expectations
+  rating           Int?
+
   // FIX: Account deletion safety cascade
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -112,6 +115,7 @@ model Generation {
   skippedBySizeCount  Int   @default(0)
 
   @@index([userId])
+  @@index([shareId]) // Performance fix for lookups on shared designs
   @@map("generations")
 }
 
