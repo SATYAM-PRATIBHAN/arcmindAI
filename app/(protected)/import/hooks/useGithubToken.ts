@@ -7,15 +7,17 @@ import { DOC_ROUTES } from "@/lib/routes";
 export function useGithubToken() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkGithubStatus = async () => {
       try {
         const res = await axios.get(DOC_ROUTES.API.GITHUB.STATUS);
         setIsConnected(res.data.connected);
-      } catch (error) {
-        console.error("Error checking GitHub status:", error);
+      } catch (err) {
+        console.error("Error checking GitHub status:", err);
         setIsConnected(false);
+        setError("Failed to verify GitHub connection.");
       } finally {
         setLoading(false);
       }
@@ -24,5 +26,5 @@ export function useGithubToken() {
     checkGithubStatus();
   }, []);
 
-  return { isConnected, loading };
+  return { isConnected, loading, error };
 }

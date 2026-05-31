@@ -224,6 +224,7 @@ export async function POST(req: NextRequest) {
   httpRequestsTotal.inc({ route, method });
 
   let userId: string | undefined;
+  let savedGeneration: { id: string } | null = null; // to capture the generation ID for rating use
 
   try {
     const session = await getServerSession(authOptions);
@@ -432,7 +433,7 @@ export async function POST(req: NextRequest) {
           if (!isGuest) {
             const createStart = Date.now();
 
-            await db.generation.create({
+            savedGeneration = await db.generation.create({
               data: {
                 userInput,
                 generatedOutput: parsedData as Prisma.InputJsonValue,
@@ -484,6 +485,7 @@ export async function POST(req: NextRequest) {
               `data: ${JSON.stringify({
                 done: true,
                 parsedData,
+                generationId: savedGeneration?.id,
                 limit,
                 remaining,
                 reset,

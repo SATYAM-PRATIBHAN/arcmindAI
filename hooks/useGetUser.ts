@@ -50,6 +50,12 @@ export function useGetUser() {
       const data: UserResponse = response.data;
       return data;
     } catch (err) {
+      if (axios.isAxiosError(err) && !err.response) {
+        setError(
+          "Network error. Please check your internet connection and try again.",
+        );
+        return null;
+      }
       const errorMessage =
         err instanceof Error ? err.message : "An error occurred";
       setError(errorMessage);
