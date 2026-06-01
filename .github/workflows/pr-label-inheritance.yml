@@ -1,0 +1,144 @@
+name: PR Label Inheritance
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened]
+
+permissions:
+  issues: read
+  pull-requests: write
+
+jobs:
+  inherit-labels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Inherit Labels from Linked Issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || "";
+            const prNumber = pr.number;
+
+            console.log(`Processing PR #${prNumber}`);
+
+            // Labels managed by dedicated workflows
+            // These will NOT be inherited from issues
+            const MANAGED_PREFIXES = [
+              'level:',
+              'type:',
+              'quality:',
+              'gssoc:',
+              'mentor:',
+            ];
+
+            function isManagedLabel(name) {
+              return MANAGED_PREFIXES.some(prefix =>
+                name.startsWith(prefix)
+              );
+            }
+
+            // Extract linked issue numbers from PR body
+            // Supports:
+            // Fix #1
+            // Fixes #1
+            // Closes #1
+            // Resolves #1
+            const regex =
+              /(?:fix|fixes|close|closes|resolve|resolves|fixed|closed|resolved)\s+#(\d+)/gi;
+
+            const matches = [...body.matchAll(regex)];
+
+            const linkedIssues = [
+              ...new Set(
+                matches.map(match => parseInt(match[1]))
+              )
+            ];
+
+            console.log(
+              `Linked issues found: ${
+                linkedIssues.join(', ') || 'None'
+              }`
+            );
+
+            const labelsToAdd = new Set();
+
+            // Fetch labels from linked issues
+            for (const issueNumber of linkedIssues) {
+              try {
+                const { data: issue } =
+                  await github.rest.issues.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber
+                  });
+
+                if (issue.labels?.length) {
+                  for (const label of issue.labels) {
+                    const labelName =
+                      typeof label === 'string'
+                        ? label
+                        : label.name;
+
+                    if (isManagedLabel(labelName)) {
+                      console.log(
+                        `Skipping managed label "${labelName}"`
+                      );
+                      continue;
+                    }
+
+                    labelsToAdd.add(labelName);
+
+                    console.log(
+                      `Inheriting "${labelName}" from issue #${issueNumber}`
+                    );
+                  }
+                }
+              } catch (error) {
+                console.warn(
+                  `Could not fetch issue #${issueNumber}: ${error.message}`
+                );
+              }
+            }
+
+            // Apply only new labels
+            if (labelsToAdd.size > 0) {
+              const { data: currentIssue } =
+                await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber
+                });
+
+              const currentLabels = new Set(
+                currentIssue.labels.map(label =>
+                  typeof label === 'string'
+                    ? label
+                    : label.name
+                )
+              );
+
+              const newLabels = [...labelsToAdd].filter(
+                label => !currentLabels.has(label)
+              );
+
+              if (newLabels.length > 0) {
+                console.log(
+                  `Applying labels: ${newLabels.join(', ')}`
+                );
+
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  labels: newLabels
+                });
+              } else {
+                console.log(
+                  'All inherited labels already exist on PR.'
+                );
+              }
+            } else {
+              console.log('No labels to inherit.');
+            }

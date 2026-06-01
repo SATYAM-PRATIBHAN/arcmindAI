@@ -1,0 +1,202 @@
+name: PR Quality Labeler
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  assign-quality-label:
+    name: Assign quality label
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Detect and apply quality label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            const prTitle = (pr.title || '').toLowerCase();
+            const prBody  = (pr.body  || '').toLowerCase();
+            const repo = {
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            };
+
+            // ── Label definitions ──────────────────────────────────────────
+            const qualityLabels = ['quality:clean', 'quality:exceptional'];
+
+            const labelMeta = {
+              'quality:clean': {
+                color: '0E8A16',
+                description: 'Well-structured, readable, and maintainable change'
+              },
+              'quality:exceptional': {
+                color: '006B75',
+                description: 'Outstanding quality — thorough, well-tested, exemplary contribution'
+              }
+            };
+
+            // ── Scoring heuristics ─────────────────────────────────────────
+            // A PR earns quality:clean if score >= 2
+            // A PR earns quality:exceptional if score >= 5
+            function scoreQuality(files, prTitle, prBody) {
+              let score = 0;
+              const reasons = [];
+
+              const additions = files.reduce((s, f) => s + f.additions, 0);
+              const deletions = files.reduce((s, f) => s + f.deletions, 0);
+              const linesChanged = additions + deletions;
+              const fileNames = files.map(f => f.filename);
+
+              // 1. Detailed description
+              if (prBody.length > 200) {
+                score++;
+                reasons.push('+1 Detailed description (>200 chars)');
+              }
+
+              // 2. Has a checklist
+              if (/- \[[ x]\]/.test(prBody)) {
+                score++;
+                reasons.push('+1 Checklist present');
+              }
+
+              // 3. Linked issue
+              if (/(?:closes|fixes|resolves)\s+#\d+/i.test(prBody)) {
+                score++;
+                reasons.push('+1 Linked issue reference');
+              }
+
+              // 4. Test files in diff
+              const hasTests = fileNames.some(f =>
+                /\.(test|spec)\.(js|jsx|ts|tsx)$/i.test(f) ||
+                /\/__tests__\//i.test(f) ||
+                /\/tests?\//i.test(f)
+              );
+              if (hasTests) {
+                score++;
+                reasons.push('+1 Test files included');
+              }
+
+              // 5. Documentation alongside code
+              const hasDocs = fileNames.some(f => /\.md$/i.test(f) || /\.mdx$/i.test(f));
+              const hasCode = fileNames.some(f => /\.(js|jsx|ts|tsx|py|go|java|cs|rb|rs|c|cpp|h)$/i.test(f));
+              if (hasDocs && hasCode) {
+                score++;
+                reasons.push('+1 Documentation alongside code changes');
+              }
+
+              // 6. Screenshots / Before-After section
+              if (/screenshot|before.?after|demo|preview|video/i.test(prBody)) {
+                score++;
+                reasons.push('+1 Visual demonstration (screenshots/demo)');
+              }
+
+              // 7. Testing instructions
+              if (/how to test|testing instructions|steps to test|to reproduce|manual test/i.test(prBody)) {
+                score++;
+                reasons.push('+1 Testing instructions provided');
+              }
+
+              // 8. Mentions quality improvements
+              if (/performance|accessibility|a11y|security|optimiz|refactor|clean/i.test(prBody)) {
+                score++;
+                reasons.push('+1 Mentions quality improvements (perf/a11y/security)');
+              }
+
+              // 9. Small, focused diff
+              if (files.length <= 10 && linesChanged <= 300) {
+                score++;
+                reasons.push('+1 Small, focused diff (<=10 files, <=300 lines)');
+              }
+
+              // 10. Meaningful clean-up (deletions >= 20% of additions)
+              if (additions > 0 && deletions >= additions * 0.2) {
+                score++;
+                reasons.push('+1 Contains meaningful code clean-up');
+              }
+
+              return { score, reasons };
+            }
+
+            async function getChangedFiles() {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                ...repo,
+                pull_number: prNumber,
+                per_page: 100
+              });
+              return files;
+            }
+
+            async function ensureQualityLabelsExist() {
+              for (const [name, meta] of Object.entries(labelMeta)) {
+                try {
+                  await github.rest.issues.getLabel({ ...repo, name });
+                } catch (err) {
+                  if (err.status !== 404) throw err;
+                  await github.rest.issues.createLabel({
+                    ...repo,
+                    name,
+                    color: meta.color,
+                    description: meta.description
+                  });
+                  console.log(`Created missing label: ${name}`);
+                }
+              }
+            }
+
+            async function getCurrentLabels() {
+              const { data: issue } = await github.rest.issues.get({
+                ...repo,
+                issue_number: prNumber
+              });
+              return issue.labels.map(l => (typeof l === 'string' ? l : l.name));
+            }
+
+            // ── Main ───────────────────────────────────────────────────────
+            const files = await getChangedFiles();
+            const { score, reasons } = scoreQuality(files, prTitle, prBody);
+
+            let targetLabel = null;
+            if (score >= 5) {
+              targetLabel = 'quality:exceptional';
+            } else if (score >= 2) {
+              targetLabel = 'quality:clean';
+            }
+
+            console.log(`PR #${prNumber} quality score: ${score}/10`);
+            reasons.forEach(r => console.log(` ${r}`));
+            console.log(`Target quality label: ${targetLabel || 'none (score too low)'}`);
+
+            await ensureQualityLabelsExist();
+
+            const currentLabels = await getCurrentLabels();
+
+            const staleQualityLabels = currentLabels.filter(
+              l => qualityLabels.includes(l) && l !== targetLabel
+            );
+            for (const label of staleQualityLabels) {
+              await github.rest.issues.removeLabel({
+                ...repo,
+                issue_number: prNumber,
+                name: label
+              });
+              console.log(`Removed stale quality label: ${label}`);
+            }
+
+            if (targetLabel && !currentLabels.includes(targetLabel)) {
+              await github.rest.issues.addLabels({
+                ...repo,
+                issue_number: prNumber,
+                labels: [targetLabel]
+              });
+              console.log(`Applied quality label: ${targetLabel}`);
+            } else if (!targetLabel) {
+              console.log('PR quality score is below threshold — no quality label applied.');
+            } else {
+              console.log(`Quality label already correct: ${targetLabel} — skipping.`);
+            }

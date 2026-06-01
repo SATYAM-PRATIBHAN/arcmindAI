@@ -1,0 +1,131 @@
+name: PR Difficulty Labeler
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  detect-difficulty:
+    name: Assign difficulty label
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Analyze PR and assign difficulty label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr      = context.payload.pull_request;
+            const prNum   = pr.number;
+            const repo    = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // ── Label catalogue ────────────────────────────────────────────
+            const DIFFICULTY_LABELS = ['level:beginner', 'level:intermediate', 'level:advanced', 'level:critical'];
+
+            const LABEL_META = {
+              'level:beginner':     { color: '0E8A16', description: 'Small, low-risk change (≤3 files, ≤50 lines)' },
+              'level:intermediate': { color: 'FBCA04', description: 'Medium-sized feature or fix (≤10 files, ≤250 lines)' },
+              'level:advanced':     { color: 'D93F0B', description: 'Large feature or broad change (≤25 files, ≤800 lines)' },
+              'level:critical':     { color: 'B60205', description: 'Major / core-repository change' },
+            };
+
+            const CORE_PATTERNS = [
+              /^\.github\/workflows\//,
+              /package(-lock)?\.json$/,
+              /^src\/App\.(js|jsx|ts|tsx)$/,
+              /^src\/main\.(js|jsx|ts|tsx)$/,
+              /^src\/config\//,
+              /^server\/server\.js$/,
+              /^server\/routes\//,
+              /^server\/middleware\//,
+            ];
+
+            const ALWAYS_CRITICAL_PATTERNS = [
+              /^src\/main\.(js|jsx|ts|tsx)$/,
+              /^server\/server\.js$/,
+              /^server\/routes\//,
+            ];
+
+            // ── Helpers ────────────────────────────────────────────────────
+            async function ensureLabels() {
+              await Promise.all(
+                Object.entries(LABEL_META).map(async ([name, { color, description }]) => {
+                  try {
+                     await github.rest.issues.getLabel({ ...repo, name });
+                  } catch (err) {
+                    if (err.status !== 404) throw err;
+                    await github.rest.issues.createLabel({ ...repo, name, color, description });
+                    console.log(`✅ Created label: ${name}`);
+                  }
+                })
+              );
+            }
+
+            async function getFiles() {
+              return github.paginate(github.rest.pulls.listFiles, {
+                ...repo,
+                pull_number: prNum,
+                per_page: 100,
+              });
+            }
+
+            async function getCurrentLabels() {
+              const { data } = await github.rest.issues.get({ ...repo, issue_number: prNum });
+              return data.labels.map(l => (typeof l === 'string' ? l : l.name));
+            }
+
+            function classify({ filesChanged, linesChanged, hasCoreChanges, hasAlwaysCritical }) {
+              if (hasAlwaysCritical)                              return 'level:critical';
+              if (filesChanged > 25 || linesChanged > 800)       return 'level:critical';
+              if (hasCoreChanges && (filesChanged > 10 || linesChanged > 300))
+                                                                  return 'level:critical';
+              if (filesChanged <=  3 && linesChanged <=  50)    return 'level:beginner';
+              if (filesChanged <= 10 && linesChanged <= 250)    return 'level:intermediate';
+              return 'level:advanced';
+            }
+
+            async function applyLabel(targetLabel) {
+              const current = await getCurrentLabels();
+
+              const staleLabels = current.filter(l => DIFFICULTY_LABELS.includes(l) && l !== targetLabel);
+
+              await Promise.all(
+                staleLabels.map(name =>
+                  github.rest.issues.removeLabel({ ...repo, issue_number: prNum, name })
+                    .then(() => console.log(`🗑 Removed stale difficulty label: ${name}`))
+                )
+              );
+
+              if (current.includes(targetLabel) && staleLabels.length === 0) {
+                console.log(`✔ Difficulty label already correct: ${targetLabel} — skipping.`);
+                return;
+              }
+
+              if (!current.includes(targetLabel)) {
+                await github.rest.issues.addLabels({ ...repo, issue_number: prNum, labels: [targetLabel] });
+                console.log(`🏷 Applied difficulty label: ${targetLabel}`);
+              }
+            }
+
+            // ── Main ───────────────────────────────────────────────────────
+            const files = await getFiles();
+
+            const additions    = files.reduce((s, f) => s + f.additions, 0);
+            const deletions    = files.reduce((s, f) => s + f.deletions, 0);
+            const linesChanged = additions + deletions;
+            const filesChanged = files.length;
+            const hasCoreChanges     = files.some(f => CORE_PATTERNS.some(p => p.test(f.filename)));
+            const hasAlwaysCritical  = files.some(f => ALWAYS_CRITICAL_PATTERNS.some(p => p.test(f.filename)));
+
+            const targetLabel = classify({ filesChanged, linesChanged, hasCoreChanges, hasAlwaysCritical });
+
+            console.log(`PR #${prNum} — "${pr.title}"`);
+            console.log(`  Files : ${filesChanged}  |  Lines: +${additions} -${deletions} = ${linesChanged}`);
+            console.log(`  Core changes: ${hasCoreChanges}  |  Always-critical paths: ${hasAlwaysCritical}`);
+            console.log(`  → Difficulty: ${targetLabel}`);
+
+            await ensureLabels();
+            await applyLabel(targetLabel);

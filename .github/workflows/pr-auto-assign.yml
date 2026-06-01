@@ -1,0 +1,80 @@
+name: PR Auto Assign & GSSoC Label
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  assign-and-label:
+    name: Assign PR to author & add GSSoC label
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign PR, add label, and post welcome comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr     = context.payload.pull_request;
+            const prNum  = pr.number;
+            const author = pr.user.login;
+            const repo   = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // ── 1. Ensure gssoc:approved label exists ───────────────────────
+            const LABEL_NAME  = 'gssoc:approved';
+            const LABEL_COLOR = '7B2D8B';   // deep purple — GSSoC brand
+            const LABEL_DESC  = 'Approved contribution for GSSoC';
+
+            try {
+              await github.rest.issues.getLabel({ ...repo, name: LABEL_NAME });
+            } catch (err) {
+              if (err.status !== 404) throw err;
+              await github.rest.issues.createLabel({
+                ...repo,
+                name:        LABEL_NAME,
+                color:       LABEL_COLOR,
+                description: LABEL_DESC,
+              });
+              console.log(`✅ Created label: ${LABEL_NAME}`);
+            }
+
+            // ── 2. Assign PR to its author ──────────────────────────────────
+            try {
+              await github.rest.issues.addAssignees({
+                ...repo,
+                issue_number: prNum,
+                assignees:    [author],
+              });
+              console.log(`👤 Assigned PR #${prNum} to @${author}`);
+            } catch (err) {
+              console.error(`❌ Failed to assign PR #${prNum}: ${err.message}`);
+            }
+
+            // ── 3. Add gssoc:approved label ─────────────────────────────────
+            try {
+              await github.rest.issues.addLabels({
+                ...repo,
+                issue_number: prNum,
+                labels:       [LABEL_NAME],
+              });
+              console.log(`🏷  Applied label "${LABEL_NAME}" to PR #${prNum}`);
+            } catch (err) {
+              console.error(`❌ Failed to add label to PR #${prNum}: ${err.message}`);
+            }
+
+            // ── 4. Post Welcome Comment ─────────────────────────────────────
+            try {
+              const commentBody = `Hi @${author}, thanks for contributing to **InternHack**! 🎉\n\nI have automatically:\n- 👤 Assigned this PR to you.\n- 🏷️ Applied the \`gssoc:approved\` label.\n\nOur workflows will now analyze your changes to classify:\n- 📈 **PR Difficulty:** \`level:*\`\n- 🧩 **PR Type:** \`type:*\`\n- 🌟 **PR Quality:** \`quality:*\`\n\n> [!TIP]\n> Ensure your PR description references the issue it resolves (e.g. \`Closes #123\`). This allows the bot to inherit any additional labels from that issue!\n\nHappy coding! 🚀`;
+
+              await github.rest.issues.createComment({
+                ...repo,
+                issue_number: prNum,
+                body:         commentBody,
+              });
+              console.log(`💬 Posted welcome comment on PR #${prNum}`);
+            } catch (err) {
+              console.error(`❌ Failed to post welcome comment on PR #${prNum}: ${err.message}`);
+            }

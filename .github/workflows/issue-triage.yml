@@ -1,0 +1,48 @@
+name: Auto Label Issues
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto Label Issue based on Content
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.issue.title.toLowerCase();
+            const body = (context.payload.issue.body || "").toLowerCase();
+            const labelsToAdd = ['gssoc']; // Always tag with core gssoc
+
+            // Dynamic classification rules matching the GSSoC label styles
+            const rules = {
+              'type:bug': ['bug', 'error', 'fail', 'broken', 'crash', 'issue', 'not working', 'prevent', 'fix cors', 'cors'],
+              'type:feature': ['feature', 'add', 'implement', 'create', 'new functional', 'enhance'],
+              'type:docs': ['doc', 'readme', 'guide', 'documentation', 'comment', 'instruction'],
+              'type:design': ['design', 'css', 'ui', 'ux', 'visual', 'color', 'style', 'layout', 'responsive', 'align'],
+              'type:testing': ['test', 'coverage', 'jest', 'vitest', 'cypress', 'unit test', 'integration'],
+              'type:refactor': ['refactor', 'clean', 'structure', 'modular', 'cleanup'],
+              'type:performance': ['perf', 'speed', 'optimization', 'slow', 'latency', 'fast'],
+              'type:security': ['security', 'auth', 'leak', 'trivy', 'gitleaks', 'vulnerability']
+            };
+
+            for (const [label, keywords] of Object.entries(rules)) {
+              const matches = keywords.some(kw => title.includes(kw) || body.includes(kw));
+              if (matches) {
+                labelsToAdd.push(label);
+              }
+            }
+
+            console.log(`Adding labels to issue #${context.payload.issue.number}:`, labelsToAdd);
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              labels: labelsToAdd
+            });
