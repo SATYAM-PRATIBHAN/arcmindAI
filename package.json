@@ -62,7 +62,7 @@
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.1",
     "lottie-react": "^2.4.1",
-    "lucide-react": "^0.575.0",
+    "lucide-react": "^1.17.0",
     "mermaid": "^11.14.0",
     "nanoid": "^5.1.11",
     "next": "16.2.6",
