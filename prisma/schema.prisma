@@ -115,7 +115,7 @@ model Generation {
   skippedBySizeCount  Int   @default(0)
 
   @@index([userId])
-  @@index([shareId]) // Performance fix for lookups on shared designs
+  // REMOVED: @@index([shareId]) because MongoDB automatically indexes fields marked with @unique.
   @@map("generations")
 }
 
