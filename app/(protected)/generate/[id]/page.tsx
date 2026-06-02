@@ -9,7 +9,7 @@ import { useGetGenerationById } from "../hooks/useGetGenerationById";
 import { useDeleteGenerationById } from "../hooks/useDeleteGenerationById";
 import { useUpdateGeneration } from "@/hooks/useUpdateGeneration";
 import { useHistory } from "@/lib/contexts/HistoryContext";
-import { DiagramProvider } from "@/lib/contexts/DiagramContext";
+import { DiagramProvider, useDiagram } from "@/lib/contexts/DiagramContext";
 import { downloadMarkdownFile } from "../utils/generate-markdown";
 import { toast } from "sonner";
 import {
@@ -21,6 +21,7 @@ import {
 
 import {
   MermaidDiagram,
+  D3Canvas,
   CopyDiagramButton,
   ExportPDFButton,
   MicroservicesSection,
@@ -51,6 +52,7 @@ function GenerationPageContent() {
   const { id } = useParams();
   const router = useRouter();
   const { getGenerationById, isLoading, error } = useGetGenerationById();
+  const { isD3Enabled, setIsD3Enabled } = useDiagram();
   const {
     deleteGeneration,
     isLoading: isDeleting,
@@ -338,15 +340,37 @@ function GenerationPageContent() {
                   </h2>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 bg-muted/30 p-1 rounded-xl border border-border/30">
+                    <Button
+                      variant={isD3Enabled ? "default" : "ghost"}
+                      size="sm"
+                      className="rounded-lg h-8 text-[11px] font-medium cursor-pointer"
+                      onClick={() => setIsD3Enabled(true)}
+                    >
+                      Interactive (D3)
+                    </Button>
+                    <Button
+                      variant={!isD3Enabled ? "default" : "ghost"}
+                      size="sm"
+                      className="rounded-lg h-8 text-[11px] font-medium cursor-pointer"
+                      onClick={() => setIsD3Enabled(false)}
+                    >
+                      Static (Mermaid)
+                    </Button>
+                  </div>
                   <CopyDiagramButton code={cleanedGithubDiagram} />
                 </div>
               </div>
-              <div
-                ref={mermaidContainerRef}
-                className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
-              >
-                <MermaidDiagram chart={cleanedGithubDiagram} />
-              </div>
+              {isD3Enabled ? (
+                <D3Canvas chart={cleanedGithubDiagram} />
+              ) : (
+                <div
+                  ref={mermaidContainerRef}
+                  className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
+                >
+                  <MermaidDiagram chart={cleanedGithubDiagram} />
+                </div>
+              )}
             </section>
           </div>
         </div>
@@ -574,15 +598,37 @@ function GenerationPageContent() {
                   </h2>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 bg-muted/30 p-1 rounded-xl border border-border/30">
+                    <Button
+                      variant={isD3Enabled ? "default" : "ghost"}
+                      size="sm"
+                      className="rounded-lg h-8 text-[11px] font-medium cursor-pointer"
+                      onClick={() => setIsD3Enabled(true)}
+                    >
+                      Interactive (D3)
+                    </Button>
+                    <Button
+                      variant={!isD3Enabled ? "default" : "ghost"}
+                      size="sm"
+                      className="rounded-lg h-8 text-[11px] font-medium cursor-pointer"
+                      onClick={() => setIsD3Enabled(false)}
+                    >
+                      Static (Mermaid)
+                    </Button>
+                  </div>
                   <CopyDiagramButton code={cleanedDiagram} />
                 </div>
               </div>
-              <div
-                ref={mermaidContainerRef}
-                className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
-              >
-                <MermaidDiagram chart={cleanedDiagram} />
-              </div>
+              {isD3Enabled ? (
+                <D3Canvas chart={cleanedDiagram} />
+              ) : (
+                <div
+                  ref={mermaidContainerRef}
+                  className="rounded-2xl border border-border/40 bg-card/30 p-8 overflow-hidden backdrop-blur-sm shadow-inner"
+                >
+                  <MermaidDiagram chart={cleanedDiagram} />
+                </div>
+              )}
             </section>
           )}
         </div>

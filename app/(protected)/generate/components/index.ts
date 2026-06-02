@@ -14,3 +14,4 @@ export { default as DeleteDialog } from "./DeleteDialog";
 export { default as FrontendStructureDialog } from "./FrontendStructureDialog";
 export { default as TaskGenerationDialog } from "./TaskGenerationDialog";
 export { default as GuestSignupPrompt } from "./GuestSignupPrompt";
+export { default as D3Canvas } from "./D3Canvas";

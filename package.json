@@ -52,6 +52,7 @@
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
+    "d3": "^7.9.0",
     "dodopayments": "^2.32.1",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.40.0",
@@ -87,6 +88,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
+    "@types/d3": "^7.4.3",
     "@types/node": "^25",
     "@types/nodemailer": "^7.0.5",
     "@types/prismjs": "^1.26.5",
