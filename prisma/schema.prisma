@@ -96,9 +96,6 @@ model Generation {
   shareId          String?  @unique
   userId           String   @db.ObjectId
   
-  // FIX: Added missing rating field for API routes matching typescript expectations
-  rating           Int?
-
   // FIX: Account deletion safety cascade
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -113,7 +110,9 @@ model Generation {
   skippedByLimitCount Int   @default(0)
   skippedByDepthCount Int   @default(0)
   skippedBySizeCount  Int   @default(0)
-  rating           Int?     
+  
+  // FIX: Kept exactly one declaration of rating field to resolve P1012 duplication error
+  rating              Int?     
 
   @@index([userId])
   // REMOVED: @@index([shareId]) because MongoDB automatically indexes fields marked with @unique.
