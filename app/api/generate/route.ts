@@ -1,3 +1,5 @@
+"use client";
+
 import { NextRequest, NextResponse } from "next/server";
 import { streamGeminiWithFallback } from "@/app/(protected)/generate/utils/aiClient";
 import { SystemPrompt } from "@/lib/prompts/promptTemplate";
@@ -170,6 +172,9 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
       }
 
       parsedData = JSON.parse(healedJson);
+      // Inject fallback warnings into properties if recovered from malformed state
+      parsedData.truncated = true;
+      parsedData.warningMessage = "AI text payload structure truncated. Executed fallback buffer string closing.";
     } catch (healingError) {
       console.error(
         "🚨 Auto-healing parser phase failed to salvage malformed schema token space:",
@@ -179,6 +184,8 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
       // Attempt Self-Healing 2: Fallback to structured object wrapper matching the expected shape
       parsedData = {
         success: false,
+        truncated: true,
+        warningMessage: "Structural recovery layout mapping forced due to complete parsing timeout.",
         error: "AI Generation returned malformed structural layout.",
         rawOutputText:
           jsonText.slice(0, 1000) + (jsonText.length > 1000 ? "..." : ""),
@@ -224,7 +231,6 @@ export async function POST(req: NextRequest) {
   httpRequestsTotal.inc({ route, method });
 
   let userId: string | undefined;
-  let savedGeneration: { id: string } | null = null; // to capture the generation ID for rating use
 
   try {
     const session = await getServerSession(authOptions);
@@ -372,8 +378,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Keep the rest of your existing AI generation logic BELOW this point
-
     aiGenerationRequestsTotal.inc();
 
     if (!isGuest) {
@@ -433,11 +437,17 @@ export async function POST(req: NextRequest) {
           if (!isGuest) {
             const createStart = Date.now();
 
-            savedGeneration = await db.generation.create({
+            // Direct mapping of safe parameters to handle potential parsing warning states
+            const responseWarning = (parsedData.warningMessage as string) || null;
+            const isPayloadTruncated = !!parsedData.truncated;
+
+            await db.generation.create({
               data: {
                 userInput,
                 generatedOutput: parsedData as Prisma.InputJsonValue,
                 userId: userId as string,
+                warningMessage: responseWarning,
+                skippedCount: isPayloadTruncated ? 1 : 0,
               },
             });
 
@@ -485,7 +495,6 @@ export async function POST(req: NextRequest) {
               `data: ${JSON.stringify({
                 done: true,
                 parsedData,
-                generationId: savedGeneration?.id,
                 limit,
                 remaining,
                 reset,
@@ -504,7 +513,7 @@ export async function POST(req: NextRequest) {
               `data: ${JSON.stringify({
                 error:
                   error instanceof Error ? error.message : "Streaming failed",
-              })}\n\n`,
+              )}\n\n`,
             ),
           );
 
