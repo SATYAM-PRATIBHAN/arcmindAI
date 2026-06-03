@@ -98,6 +98,7 @@ export default function ForgotPasswordPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
+                aria-label="Send Reset Link"
                 className="cursor-pointer w-full bg-black text-white font-medium py-3 rounded-full hover:bg-gray-800 transition mt-4"
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
