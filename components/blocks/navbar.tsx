@@ -232,6 +232,7 @@ export const Navbar = () => {
           )}
           <Link
             href={DOC_ROUTES.SOCIAL.GITHUB}
+            aria-label="GitHub Repository"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <Github className="size-4" />
@@ -242,6 +243,7 @@ export const Navbar = () => {
           <button
             className="text-muted-foreground relative flex size-8 lg:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle mobile menu"
           >
             <span className="sr-only">Open main menu</span>
             <div className="absolute top-1/2 left-1/2 block w-[18px] -translate-x-1/2 -translate-y-1/2">
@@ -282,6 +284,8 @@ export const Navbar = () => {
                     )
                   }
                   className="text-primary flex w-full items-center justify-between text-base font-medium"
+                  aria-expanded={openDropdown === link.label}
+                  aria-label={`Toggle ${link.label} menu`}
                 >
                   {link.label}
                   <ChevronRight

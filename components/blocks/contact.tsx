@@ -27,18 +27,21 @@ const contactInfo = [
         <Link
           href={DOC_ROUTES.SOCIAL.GITHUB}
           className="text-muted-foreground hover:text-foreground"
+          aria-label="Visit our GitHub page"
         >
           <GithubIcon className="size-5" />
         </Link>
         <Link
           href={DOC_ROUTES.SOCIAL.X}
           className="text-muted-foreground hover:text-foreground"
+          aria-label="Visit our X (Twitter) page"
         >
           <Twitter className="size-5" />
         </Link>
         <Link
           href={DOC_ROUTES.SOCIAL.LINKEDIN}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-primary hover:text-primary/80 transition-colors"
+          aria-label="Visit our LinkedIn page"
         >
           <Linkedin className="size-5" />
         </Link>

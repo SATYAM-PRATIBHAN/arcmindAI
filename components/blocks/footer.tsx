@@ -95,6 +95,7 @@ export function Footer() {
             >
               <Link
                 href={item.href}
+                aria-label={`Visit our ${item.name} page`}
                 className="flex items-center gap-0.5 font-medium transition-opacity hover:opacity-75"
               >
                 {item.name} <ArrowUpRight className="size-4" />
