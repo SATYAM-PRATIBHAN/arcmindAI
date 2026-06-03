@@ -30,6 +30,7 @@ export const DOC_ROUTES = {
       REPO_TREE: "/api/github/repo-tree",
       REPO_BRANCH: "/api/github/repo-branch",
       FILE_CONTENT: "/api/github/file-content",
+      ISSUES_EXPORT: "/api/github/issues/export",
       GENERATION: (id: string) => `/api/github-generation/${id}`,
       IMPROVE_DIAGRAM: (id: string) =>
         `/api/github-generation/${id}/improve-diagram`,

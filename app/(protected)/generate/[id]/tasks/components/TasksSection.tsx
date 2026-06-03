@@ -15,6 +15,11 @@ interface TasksSectionProps {
   tasks: Task[];
   allTasks: Task[];
   sectionIndex: number;
+  selectedTaskIds: Set<string>;
+  onToggleSelected: (taskId: string, selected: boolean) => void;
+  onCreateGithubIssue: (task: Task) => void;
+  isGithubExporting: boolean;
+  isGithubAvailable: boolean;
 }
 
 export default function TasksSection({
@@ -22,6 +27,11 @@ export default function TasksSection({
   tasks,
   allTasks,
   sectionIndex,
+  selectedTaskIds,
+  onToggleSelected,
+  onCreateGithubIssue,
+  isGithubExporting,
+  isGithubAvailable,
 }: TasksSectionProps) {
   const totalHours = tasks.reduce((sum, task) => sum + task.estimatedHours, 0);
 
@@ -41,7 +51,16 @@ export default function TasksSection({
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} allTasks={allTasks} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            allTasks={allTasks}
+            isSelected={selectedTaskIds.has(task.id)}
+            onToggleSelected={onToggleSelected}
+            onCreateGithubIssue={onCreateGithubIssue}
+            isGithubExporting={isGithubExporting}
+            isGithubAvailable={isGithubAvailable}
+          />
         ))}
       </div>
     </section>

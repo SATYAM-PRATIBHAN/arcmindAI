@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, AlertCircle, Copy, Check } from "lucide-react";
+import { Clock, AlertCircle, Copy, Check, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Task {
   id: string;
@@ -17,9 +18,22 @@ interface Task {
 interface TaskCardProps {
   task: Task;
   allTasks: Task[];
+  isSelected: boolean;
+  onToggleSelected: (taskId: string, selected: boolean) => void;
+  onCreateGithubIssue: (task: Task) => void;
+  isGithubExporting: boolean;
+  isGithubAvailable: boolean;
 }
 
-export default function TaskCard({ task, allTasks }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  allTasks,
+  isSelected,
+  onToggleSelected,
+  onCreateGithubIssue,
+  isGithubExporting,
+  isGithubAvailable,
+}: TaskCardProps) {
   const [copied, setCopied] = useState(false);
 
   const getPriorityColor = (priority: string) => {
@@ -62,38 +76,50 @@ export default function TaskCard({ task, allTasks }: TaskCardProps) {
     <Card className="border-border/60 hover:border-border/100 transition-all duration-300 shadow-none bg-card/30 backdrop-blur-sm group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
-              <Badge
-                variant="outline"
-                className={`${getPriorityColor(task.priority)} text-[10px] font-bold uppercase tracking-widest py-0 px-2`}
-              >
-                {task.priority}
-              </Badge>
-              <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{task.estimatedHours}h</span>
+          <div className="flex items-start gap-3 flex-1">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={(checked) =>
+                onToggleSelected(task.id, checked === true)
+              }
+              aria-label={`Select task ${task.title}`}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge
+                  variant="outline"
+                  className={`${getPriorityColor(task.priority)} text-[10px] font-bold uppercase tracking-widest py-0 px-2`}
+                >
+                  {task.priority}
+                </Badge>
+                <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{task.estimatedHours}h</span>
+                </div>
               </div>
+              <CardTitle className="text-lg font-bold tracking-tight">
+                {task.title}
+              </CardTitle>
             </div>
-            <CardTitle className="text-lg font-bold tracking-tight">
-              {task.title}
-            </CardTitle>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopyTask}
-            aria-label={copied ? "Task copied" : `Copy task ${task.title}`}
-            title={copied ? "Copied" : "Copy task"}
-            className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-500" />
-            ) : (
-              <Copy className="h-4 w-4 text-muted-foreground" />
-            )}
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopyTask}
+              aria-label={copied ? "Task copied" : `Copy task ${task.title}`}
+              title={copied ? "Copied" : "Copy task"}
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-500" />
+              ) : (
+                <Copy className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -112,6 +138,17 @@ export default function TaskCard({ task, allTasks }: TaskCardProps) {
             </p>
           </div>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onCreateGithubIssue(task)}
+          disabled={isGithubExporting || !isGithubAvailable}
+          className="w-full border-border/60 bg-card/50"
+        >
+          <Github className="h-4 w-4 mr-2" />
+          Create GitHub Issue
+        </Button>
       </CardContent>
     </Card>
   );
