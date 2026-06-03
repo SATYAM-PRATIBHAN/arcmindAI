@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
+import { SectionCard } from "./SectionCard";
 
 interface EntitiesSectionProps {
   entities: ArchitectureData["entities"];
@@ -9,13 +9,8 @@ export default function EntitiesSection({ entities }: EntitiesSectionProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {entities.map((entity, index) => (
-        <Card key={index} className="border-border/60 shadow-none bg-card/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold tracking-tight">
-              {entity.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <SectionCard key={index} title={entity.name}>
+          <div className="space-y-6">
             <div className="space-y-3">
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Fields
@@ -53,8 +48,8 @@ export default function EntitiesSection({ entities }: EntitiesSectionProps) {
                 ))}
               </ul>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
       ))}
     </div>
   );

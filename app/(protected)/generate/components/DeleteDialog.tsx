@@ -1,16 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Trash2, AlertTriangle, X } from "lucide-react";
+import { BaseDialog } from "./BaseDialog";
 
 interface DeleteDialogProps {
   open: boolean;
@@ -26,8 +18,13 @@ export default function DeleteDialog({
   isDeleting,
 }: DeleteDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Confirm Deletion"
+      description="Are you sure you want to delete this generation? This action cannot be undone."
+      icon={<AlertTriangle className="w-6 h-6" />}
+      trigger={
         <Button
           className="cursor-pointer h-10 px-6 rounded-xl transition-all duration-300 active:scale-95 shadow-md shadow-destructive/10"
           variant="destructive"
@@ -35,21 +32,9 @@ export default function DeleteDialog({
           <Trash2 className="w-4 h-4 mr-2" />
           Delete Generation
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md border-border/60 rounded-2xl bg-card/95 backdrop-blur-xl">
-        <DialogHeader className="space-y-3">
-          <div className="mx-auto w-12 h-12 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mb-2">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <DialogTitle className="text-xl font-bold tracking-tight text-center">
-            Confirm Deletion
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground text-center">
-            Are you sure you want to delete this generation? This action cannot
-            be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:gap-3 mt-4">
+      }
+      footer={
+        <>
           <Button
             variant="outline"
             disabled={isDeleting}
@@ -72,8 +57,9 @@ export default function DeleteDialog({
             )}
             {isDeleting ? "Deleting..." : "Confirm Delete"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+    </BaseDialog>
   );
 }

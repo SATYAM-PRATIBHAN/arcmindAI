@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 import { Badge } from "@/components/ui/badge";
+import { SectionCard } from "./SectionCard";
 
 interface MicroservicesSectionProps {
   microservices: ArchitectureData["microservices"];
@@ -34,16 +34,12 @@ export default function MicroservicesSection({
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {microservices.map((service, index) => (
-        <Card
+        <SectionCard
           key={index}
-          className="border-border/60 hover:border-border/100 transition-colors duration-300 shadow-none bg-card/30"
+          title={service.name}
+          className="hover:border-border/100 transition-colors duration-300"
         >
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-bold tracking-tight">
-              {service.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
               {service.responsibility}
             </p>
@@ -77,8 +73,8 @@ export default function MicroservicesSection({
               )}
               {renderList("Data Storage", service.details?.dataStorage ?? [])}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
       ))}
     </div>
   );

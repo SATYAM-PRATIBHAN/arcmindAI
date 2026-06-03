@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { ArchitectureData } from "../utils/types";
 import { Badge } from "@/components/ui/badge";
+import { SectionCard } from "./SectionCard";
 
 interface ApiRoutesSectionProps {
   apiRoutes?: ArchitectureData["apiRoutes"];
@@ -22,12 +22,12 @@ export default function ApiRoutesSection({
 
           <div className="grid gap-4">
             {serviceRoutes.routes.map((route, idx) => (
-              <Card
+              <SectionCard
                 key={idx}
-                className="border-border/60 shadow-none bg-card/30 overflow-hidden"
+                title=""
+                className="overflow-hidden"
               >
-                <CardContent className="p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 mt-[-1rem]">
                     <div className="flex items-center gap-3 shrink-0">
                       <Badge
                         variant="outline"
@@ -76,8 +76,7 @@ export default function ApiRoutesSection({
                       </details>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+              </SectionCard>
             ))}
           </div>
         </div>

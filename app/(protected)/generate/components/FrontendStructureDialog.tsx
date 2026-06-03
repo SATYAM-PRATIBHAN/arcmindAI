@@ -1,16 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { Layout, Check, X } from "lucide-react";
+import { BaseDialog } from "./BaseDialog";
 
 interface FrontendStructureDialogProps {
   open: boolean;
@@ -31,21 +24,14 @@ export default function FrontendStructureDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-border/60 rounded-2xl bg-card/95 backdrop-blur-xl">
-        <DialogHeader className="space-y-3">
-          <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-2">
-            <Layout className="w-6 h-6" />
-          </div>
-          <DialogTitle className="text-xl font-bold tracking-tight text-center">
-            Generate Frontend Structure
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground text-center">
-            This will generate the frontend structure for your system
-            architecture. Do you want to proceed?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:gap-3 mt-4">
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Generate Frontend Structure"
+      description="This will generate the frontend structure for your system architecture. Do you want to proceed?"
+      icon={<Layout className="w-6 h-6" />}
+      footer={
+        <>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -62,8 +48,8 @@ export default function FrontendStructureDialog({
             <Check className="w-4 h-4 mr-2" />
             Confirm
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    />
   );
 }
