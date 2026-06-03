@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number");
+
 export const signUpSchema = z.object({
   email: z
     .string()
@@ -12,12 +19,15 @@ export const signUpSchema = z.object({
     .min(3, "Username must be atleast 3 characters")
     .max(20, "Username too long"),
 
-  password: z
-    .string()
-    .min(6, "Password must be atleast 6 characters")
-    .regex(/[a-z]/, "Password must contain atleast one lowercase letter")
-    .regex(/[A-Z]/, "Password must contain atleast one uppercase letter")
-    .regex(/[0-9]/, "Password must contain atleast one number"),
+  password: passwordSchema,
 });
 
 export type SignUpSchema = z.infer<typeof signUpSchema>;
+
+export function validatePassword(password: string): string | null {
+  const result = passwordSchema.safeParse(password);
+  if (!result.success) {
+    return result.error.issues[0]?.message ?? "Invalid password";
+  }
+  return null;
+}

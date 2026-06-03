@@ -50,16 +50,37 @@ export async function POST(request: NextRequest) {
       },
       select: {
         githubAccessToken: true,
+        isVerified: true,
       },
     });
 
-    if (!user?.githubAccessToken) {
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        } as AnalyzeRepositoryResponse,
+        { status: 404 },
+      );
+    }
+
+    if (!user.githubAccessToken) {
       return NextResponse.json(
         {
           success: false,
           error: "GitHub not connected",
         } as AnalyzeRepositoryResponse,
         { status: 403 },
+      );
+    }
+
+    if (!user.isVerified) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Email is not verified",
+        } as AnalyzeRepositoryResponse,
+        { status: 401 },
       );
     }
 

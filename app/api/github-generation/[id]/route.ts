@@ -18,6 +18,27 @@ export async function GET(
       );
     }
 
+    const user = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session.user.id,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { success: false, message: "Email is not verified" },
+        { status: 401 },
+      );
+    }
+
     const { id: generationId } = await params;
 
     const generation = await db.generation.findFirst({
@@ -72,6 +93,27 @@ export async function PUT(
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const user = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session.user.id,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { success: false, message: "Email is not verified" },
         { status: 401 },
       );
     }

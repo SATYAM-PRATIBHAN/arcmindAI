@@ -33,12 +33,16 @@ export function useGithubDesignGenerator(): UseGithubDesignGeneratorResult {
       setMermaidDiagram("");
       setGenerationId(null);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
       try {
         const response = await fetch(DOC_ROUTES.API.GITHUB.GENERATE_DESIGN, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          signal: controller.signal,
           body: JSON.stringify({
             owner,
             repo,
@@ -103,11 +107,18 @@ export function useGithubDesignGenerator(): UseGithubDesignGeneratorResult {
 
         setMermaidDiagram(cleanedDiagram);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred";
-        setError(errorMessage);
-        console.error("Design generation error:", err);
+        if (err instanceof Error && err.name === "AbortError") {
+          setError(
+            "Request timed out. Please check your connection and try again.",
+          );
+        } else {
+          const errorMessage =
+            err instanceof Error ? err.message : "An unknown error occurred";
+          setError(errorMessage);
+          console.error("Design generation error:", err);
+        }
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     },

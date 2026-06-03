@@ -127,7 +127,9 @@ export async function POST(
 
     // Check doubt chat limit for free users
     const FREE_TIER_DOUBT_LIMIT = 5;
-    const isFreeTier = user.plan === "free";
+    const isPro =
+      user.plan !== "free" || !!user.geminiApiKey || !!user.openaiApiKey;
+    const isFreeTier = !isPro;
 
     if (isFreeTier) {
       // Check if limit has been reached

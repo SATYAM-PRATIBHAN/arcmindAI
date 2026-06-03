@@ -175,6 +175,37 @@ export async function DELETE(
       Date.now() / 1000,
     );
 
+    const user = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session.user.id,
+      },
+    });
+
+    if (!user) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (!user.isVerified) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Email is not verified" },
+        { status: 401 },
+      );
+    }
+
     const dbStart = Date.now();
     const existing = await db.generation.findFirst({
       where: {
@@ -294,8 +325,10 @@ export async function PUT(
       );
     }
 
-    if (user?.plan !== "pro" && user?.plan !== "enterprise") {
-      apiGatewayErrorsTotal.inc({ status_code: "401" });
+    const isPro =
+      user?.plan !== "free" || !!user?.geminiApiKey || !!user?.openaiApiKey;
+    if (!isPro) {
+      apiGatewayErrorsTotal.inc({ status_code: "403" });
       httpRequestDurationSeconds.observe(
         { route },
         (Date.now() - startTime) / 1000,
@@ -305,7 +338,7 @@ export async function PUT(
           success: false,
           message: "Purchase the pro version to use this feature",
         },
-        { status: 401 },
+        { status: 403 },
       );
     }
 
@@ -477,6 +510,37 @@ export async function PATCH(
       );
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const user = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session.user.id,
+      },
+    });
+
+    if (!user) {
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (!user.isVerified) {
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { success: false, message: "Email is not verified" },
         { status: 401 },
       );
     }

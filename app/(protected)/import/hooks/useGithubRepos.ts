@@ -19,6 +19,7 @@ interface Repository {
 export function useGithubRepos() {
   const [repos, setRepos] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRepos = async () => {
@@ -31,10 +32,11 @@ export function useGithubRepos() {
         }
 
         setRepos(res.data.repos);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+          err instanceof Error ? err.message : "Unknown error";
+        setError(errorMessage);
         toast.error(`Failed to load repositories: ${errorMessage}`);
       } finally {
         setLoading(false);
@@ -44,5 +46,5 @@ export function useGithubRepos() {
     fetchRepos();
   }, []);
 
-  return { repos, loading };
+  return { repos, loading, error };
 }

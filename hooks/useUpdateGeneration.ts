@@ -44,6 +44,12 @@ export function useUpdateGeneration() {
         return response.data;
       }
     } catch (err) {
+      if (axios.isAxiosError(err) && !err.response) {
+        setError(
+          "Network error. Please check your internet connection and try again.",
+        );
+        return null;
+      }
       let errorMessage = "Something went wrong";
       if (axios.isAxiosError(err) && err.response) {
         errorMessage = err.response.data?.message || err.message;

@@ -38,6 +38,12 @@ export function useRepositoryAnalyzer(): UseRepositoryAnalyzerResult {
 
       setAnalysis(response.data.data);
     } catch (err) {
+      if (axios.isAxiosError(err) && !err.response) {
+        setError(
+          "Network error. Please check your internet connection and try again.",
+        );
+        return;
+      }
       const errorMessage =
         err instanceof Error ? err.message : "An unknown error occurred";
       setError(errorMessage);

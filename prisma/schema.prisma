@@ -110,6 +110,7 @@ model Generation {
   skippedByLimitCount Int   @default(0)
   skippedByDepthCount Int   @default(0)
   skippedBySizeCount  Int   @default(0)
+  rating           Int?     
 
   @@index([userId])
   @@map("generations")

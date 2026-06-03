@@ -111,6 +111,37 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    const dbCheckEnd = databaseQueryDurationSeconds.startTimer({
+      operation: "findFirst",
+    });
+    const existingUser = await db.user.findFirst({
+      where: {
+        // @ts-expect-error id is added to the session in the session callback
+        id: session?.user?.id,
+      },
+    });
+    dbCheckEnd();
+
+    if (!existingUser) {
+      httpRequestsTotal.inc({ route, method, status_code: "404" });
+      apiGatewayErrorsTotal.inc({ status_code: "404" });
+      end();
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (!existingUser.isVerified) {
+      httpRequestsTotal.inc({ route, method, status_code: "401" });
+      apiGatewayErrorsTotal.inc({ status_code: "401" });
+      end();
+      return NextResponse.json(
+        { success: false, message: "Email is not verified" },
+        { status: 401 },
+      );
+    }
+
     const formData = await req.formData();
     const username = formData.get("username") as string | null;
     const avatarFile = formData.get("avatar") as File | null;

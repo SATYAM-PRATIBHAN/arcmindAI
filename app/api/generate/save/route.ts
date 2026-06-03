@@ -15,6 +15,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const user = await db.user.findFirst({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { error: "Email is not verified" },
+        { status: 401 },
+      );
+    }
+
     const body = await req.json();
     const { userInput, generatedOutput } = body;
 

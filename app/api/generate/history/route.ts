@@ -79,6 +79,7 @@ export async function GET() {
         userInput: true,
         createdAt: true,
         generatedOutput: true,
+        rating: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -94,6 +95,7 @@ export async function GET() {
         userInput: gen.userInput,
         createdAt: gen.createdAt,
         systemName: output?.systemName || "",
+        rating: gen.rating,
       };
     });
 

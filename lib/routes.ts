@@ -39,6 +39,7 @@ export const DOC_ROUTES = {
     METRICS: "/api/metrics",
     SEND_MAIL: "/api/send-mail",
     USER: "/api/user",
+    USER_API_KEYS: "/api/user/api-keys",
   },
   IMPORT: {
     ROOT: "/import",

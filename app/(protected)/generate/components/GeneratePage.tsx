@@ -10,6 +10,7 @@ import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArchitectureData } from "../utils/types";
 import { useGenerateSystem } from "../hooks/useGenerateSystem";
+import StarRating from "@/components/ui/star-rating";
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -30,6 +31,9 @@ import EntitiesSection from "./EntitiesSection";
 import InfrastructureSection from "./InfrastructureSection";
 import MermaidDiagram from "./mermaidDiagram";
 import MicroservicesSection from "./MicroservicesSection";
+import InteractiveDiagram from "@/components/diagram/InteractiveDiagram";
+import { useDiagram } from "@/lib/contexts/DiagramContext";
+import { Switch } from "@/components/ui/switch";
 
 const GUEST_GENERATION_STORAGE_KEY = "arcmind.guest.generations.used";
 const GUEST_GENERATION_COOKIE_KEY = "arcmind_guest_generations_used";
@@ -51,14 +55,23 @@ export default function GeneratePage() {
   const [generatedData, setGeneratedData] = useState<ArchitectureData | null>(
     null,
   );
+  // Track generation ID for rating purposes after generation completes
+  const [generationId, setGenerationId] = useState<string | null>(null);
+  const [rating, setRating] = useState<number>(0);
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
+
   const [streamingProgress, setStreamingProgress] = useState<string>("");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mermaidContainerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const submittedTextRef = useRef<string>("");
+  // ref for keyboard focus shortcut
+  const promptFocusRef = textareaRef;
 
   const userInput = watch("userInput", "");
+
+  const { isD3Enabled, setIsD3Enabled } = useDiagram();
 
   const { data: session, status } = useSession();
   const [guestGenerationsUsed, setGuestGenerationsUsed] = useState(0);
@@ -224,6 +237,11 @@ export default function GeneratePage() {
       console.log("FULL RESULT:", result);
 
       if (result && result.success) {
+        // store generation ID for later rating
+        if (result.generationId) {
+          setGenerationId(result.generationId);
+        }
+
         let finalParsedData: ArchitectureData | null = null;
         if (result.parsedData) {
           finalParsedData = result.parsedData;
@@ -335,6 +353,99 @@ export default function GeneratePage() {
     }
   };
 
+  // Keep latest state in a ref for the event listener to avoid constant re-binding
+  const shortcutStateRef = useRef({
+    isLoading,
+    isRateLimited,
+    isGuestLocked,
+    userInput,
+    handleGenerate,
+  });
+
+  useEffect(() => {
+    shortcutStateRef.current = {
+      isLoading,
+      isRateLimited,
+      isGuestLocked,
+      userInput,
+      handleGenerate,
+    };
+  });
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const metaOrCtrl = e.metaKey || e.ctrlKey;
+      const state = shortcutStateRef.current;
+
+      // Cmd/Ctrl + Enter -> submit (works while typing too)
+      if (metaOrCtrl && e.key === "Enter") {
+        // Ensure we don't trigger while modifier keys are part of other OS shortcuts
+        // Allow generation even when focused inside textarea/input
+        e.preventDefault();
+        if (
+          !state.isLoading &&
+          !state.isRateLimited &&
+          !state.isGuestLocked &&
+          state.userInput.trim()
+        ) {
+          void state.handleGenerate();
+        } else if (state.isGuestLocked) {
+          setIsGuestPromptOpen(true);
+        }
+        return;
+      }
+
+      // Cmd/Ctrl + K -> focus prompt editor
+      if (metaOrCtrl && e.key.toLowerCase() === "k") {
+        // Don't steal focus if a modal or input expects a special combo
+        const el = promptFocusRef.current;
+        if (el) {
+          e.preventDefault();
+          el.focus();
+          // Move cursor to end
+          const len = el.value?.length ?? 0;
+          try {
+            el.setSelectionRange(len, len);
+          } catch (err) {
+            console.error("Failed to set selection range:", err);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [promptFocusRef]);
+
+  // Handle user rating submission
+  const handleRate = async (value: number) => {
+    if (!generationId || isRatingLoading) return;
+
+    try {
+      setIsRatingLoading(true);
+      setRating(value);
+
+      const response = await fetch(`/api/generate/${generationId}/rate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rating: value,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save rating");
+      }
+    } catch (error) {
+      console.error("Failed to save rating:", error);
+    } finally {
+      setIsRatingLoading(false);
+    }
+  };
+
   const counterColor =
     userInput.length === MAX_INPUT_LENGTH
       ? "text-destructive font-bold"
@@ -400,6 +511,35 @@ export default function GeneratePage() {
                       >
                         {userInput.length} / {MAX_INPUT_LENGTH}
                       </p>
+
+                      {/* Polished shortcut hint: minimal and subtle */}
+                      <div
+                        className="hidden sm:flex ml-3 items-center gap-4 text-[11px] text-muted-foreground/60 select-none"
+                        title="Shortcuts: Cmd/Ctrl+Enter to submit, Cmd/Ctrl+K to focus"
+                      >
+                        <div className="flex items-center gap-1.5 transition-colors hover:text-muted-foreground/90">
+                          <span className="flex items-center gap-0.5">
+                            <kbd className="font-sans bg-muted/60 border border-border/60 rounded px-1.5 text-[10px] leading-tight text-muted-foreground/80">
+                              ⌘
+                            </kbd>
+                            <kbd className="font-sans bg-muted/60 border border-border/60 rounded px-1.5 text-[10px] leading-tight text-muted-foreground/80">
+                              Enter
+                            </kbd>
+                          </span>
+                          <span>to submit</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 transition-colors hover:text-muted-foreground/90">
+                          <span className="flex items-center gap-0.5">
+                            <kbd className="font-sans bg-muted/60 border border-border/60 rounded px-1.5 text-[10px] leading-tight text-muted-foreground/80">
+                              ⌘
+                            </kbd>
+                            <kbd className="font-sans bg-muted/60 border border-border/60 rounded px-1.5 text-[10px] leading-tight text-muted-foreground/80">
+                              K
+                            </kbd>
+                          </span>
+                          <span>to focus</span>
+                        </div>
+                      </div>
                     </div>
 
                     <Button
@@ -458,11 +598,13 @@ export default function GeneratePage() {
         <Card className="border-destructive/20 bg-destructive/5 rounded-2xl">
           <CardContent className="p-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <p className="font-semibold text-destructive">
                 Generation Failed
               </p>
-              <p className="text-sm text-destructive/80">{generateError}</p>
+              <p className="text-sm text-destructive/80 break-words whitespace-pre-wrap max-h-32 overflow-auto">
+                {generateError}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -740,6 +882,18 @@ export default function GeneratePage() {
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 {generatedData.summary}
               </p>
+              {/* Added Rating Component */}
+              <div className="flex flex-col items-center gap-2 pt-2">
+                <p className="text-sm text-muted-foreground">
+                  Rate this architecture generation
+                </p>
+                <StarRating
+                  rating={rating}
+                  onRate={handleRate}
+                  disabled={isRatingLoading}
+                  size={24}
+                />
+              </div>
             </div>
             {/* Primary actions: Export PDF visible immediately after generation */}
             <div className="flex justify-center items-center gap-3 mt-4">
@@ -828,6 +982,16 @@ export default function GeneratePage() {
                     </h2>
                   </div>
                   <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-xl border border-border/40 transition-all hover:bg-muted">
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-tight">
+                        D3 Alpha
+                      </span>
+                      <Switch
+                        checked={isD3Enabled}
+                        onCheckedChange={setIsD3Enabled}
+                        className="scale-75"
+                      />
+                    </div>
                     <CopyDiagramButton
                       code={cleanMermaidString(
                         generatedData["Architecture Diagram"],
@@ -852,6 +1016,21 @@ export default function GeneratePage() {
                     )}
                   />
                 </div>
+              </section>
+            )}
+
+            {/* Interactive D3 Diagram (Stream 2) */}
+            {isD3Enabled && (
+              <section className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-primary/20">
+                    BETA
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    Interactive Canvas
+                  </h2>
+                </div>
+                <InteractiveDiagram />
               </section>
             )}
           </div>

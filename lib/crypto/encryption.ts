@@ -5,6 +5,8 @@ const IV_LENGTH = 16;
 const SALT_LENGTH = 64;
 const KEY_LENGTH = 32;
 
+export type APIKeyProvider = "gemini" | "openai";
+
 /**
  * Generates a random encryption key for a user
  * @returns A hex-encoded encryption key
@@ -108,7 +110,7 @@ export function decryptApiKey(
  */
 export function validateApiKeyFormat(
   apiKey: string,
-  provider: "gemini" | "openai",
+  provider: APIKeyProvider,
 ): boolean {
   if (!apiKey || typeof apiKey !== "string") {
     return false;

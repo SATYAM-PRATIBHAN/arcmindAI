@@ -2,11 +2,14 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { DOC_ROUTES } from "@/lib/routes";
 import { ArchitectureData } from "../utils/types";
+import { parseMermaidToJSON } from "@/lib/utils/diagram-parser";
+import { SystemGraph } from "@/types/diagram";
 
 interface GenerateResponse {
   success: boolean;
   output: string;
   parsedData?: ArchitectureData;
+  generationId?: string;
   limit?: number;
   remaining?: number;
   reset?: string;
@@ -17,6 +20,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [d3GraphData, setD3GraphData] = useState<SystemGraph | null>(null);
 
   const generate = async (
     userInput: string,
@@ -26,6 +30,9 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
     setError(null);
     setRetryAfter(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const response = await fetch(DOC_ROUTES.API.GENERATE.ROOT, {
         method: "POST",
@@ -33,6 +40,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
         headers: {
           "Content-Type": "application/json",
         },
+        signal: controller.signal,
         body: JSON.stringify({
           userInput,
           // @ts-expect-error id is added to session in NextAuth callbacks
@@ -65,6 +73,7 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
       let output = "";
       let buffer = "";
       let parsedData = null;
+      let generationId: string | undefined = undefined;
       let limitInfo = {
         limit: undefined,
         remaining: undefined,
@@ -101,6 +110,8 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
 
               if (parsed.done) {
                 if (parsed.parsedData) parsedData = parsed.parsedData;
+                if (parsed.generationId) generationId = parsed.generationId;
+
                 limitInfo = {
                   limit: parsed.limit,
                   remaining: parsed.remaining,
@@ -128,8 +139,20 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
         success: true,
         output,
         parsedData,
+        generationId,
         ...limitInfo,
       };
+
+      // DIAG-03: Parse Mermaid output into D3-compatible JSON
+      // Existing mermaid string state is preserved — d3GraphData coexists
+      if (output?.trim()) {
+        try {
+          const parsed = parseMermaidToJSON(output);
+          setD3GraphData(parsed);
+        } catch (parseErr) {
+          console.warn("[DIAG-03] Mermaid parse failed:", parseErr);
+        }
+      }
 
       // Refetch history only for logged-in users after successful generation
       // @ts-expect-error id is added to session in NextAuth callbacks
@@ -139,11 +162,18 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
 
       return data;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
+      if (err instanceof Error && err.name === "AbortError") {
+        setError(
+          "Request timed out. Please check your connection and try again.",
+        );
+      } else {
+        const errorMessage =
+          err instanceof Error ? err.message : "An error occurred";
+        setError(errorMessage);
+      }
       return null;
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
@@ -153,5 +183,6 @@ export function useGenerateSystem(refetchHistory?: () => Promise<void>) {
     isLoading,
     error,
     retryAfter,
+    d3GraphData,
   };
 }

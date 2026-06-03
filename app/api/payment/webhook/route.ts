@@ -123,6 +123,13 @@ export async function POST(req: NextRequest) {
     dbEnd();
   } catch (error) {
     console.error("❌ Failed to update DB:", error);
+    httpRequestsTotal.inc({ route, method, status_code: "500" });
+    apiGatewayErrorsTotal.inc({ status_code: "500" });
+    end();
+    return NextResponse.json(
+      { success: false, message: "Failed to update user" },
+      { status: 500 },
+    );
   }
 
   httpRequestsTotal.inc({ route, method, status_code: "200" });

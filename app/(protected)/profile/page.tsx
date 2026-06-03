@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { useGetUser } from "@/hooks/useGetUser";
-import { useHistory } from "@/lib/contexts/HistoryContext";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UserDetailsCard } from "./components/UserDetailsCard";
-import { GenerationHistoryCard } from "./components/GenerationHistoryCard";
 import { Background } from "@/components/background";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetUser } from "@/hooks/useGetUser";
 import { useUpdatePassword } from "@/hooks/useUpdatePassword";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
+import { useHistory } from "@/lib/contexts/HistoryContext";
+import { useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
+import { ApiKeysCard } from "./components/ApiKeysCard";
+import { GenerationHistoryCard } from "./components/GenerationHistoryCard";
+import { UserDetailsCard } from "./components/UserDetailsCard";
 
 interface User {
   id: string;
@@ -164,7 +165,7 @@ export default function ProfilePage() {
 
           {updateProfileError && (
             <Alert className="mb-6" variant="destructive">
-              <AlertDescription>{updatePasswordError}</AlertDescription>
+              <AlertDescription>{updateProfileError}</AlertDescription>
             </Alert>
           )}
 
@@ -177,6 +178,7 @@ export default function ProfilePage() {
             isLoadingPassword={isLoadingPassword}
           />
 
+          <ApiKeysCard />
           <GenerationHistoryCard history={history} isLoading={historyLoading} />
         </div>
       </div>

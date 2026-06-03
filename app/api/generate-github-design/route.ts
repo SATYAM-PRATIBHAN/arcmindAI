@@ -57,6 +57,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const user = await db.user.findFirst({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      httpRequestsTotal.inc({ route, method, status_code: "404" });
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    if (!user.isVerified) {
+      httpRequestsTotal.inc({ route, method, status_code: "401" });
+      return NextResponse.json(
+        { success: false, error: "Email is not verified" },
+        { status: 401 },
+      );
+    }
+
     const body: GenerateGithubDesignRequest = await request.json();
     const { owner, repo, branch, analysisData } = body;
 

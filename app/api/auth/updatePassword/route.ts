@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "../[...nextauth]/route";
 import { db } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { validatePassword } from "@/lib/validation/signUpschema";
 import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
@@ -81,11 +82,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!newPassword || newPassword.length < 8) {
+    if (!newPassword) {
       return NextResponse.json(
-        { message: "Password must be at least 8 characters" },
+        { message: "New password is required" },
         { status: 400 },
       );
+    }
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return NextResponse.json({ message: passwordError }, { status: 400 });
     }
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10);

@@ -14,6 +14,7 @@ export interface GithubBranch {
 export function useGithubBranches(owner: string, repo: string) {
   const [branches, setBranches] = useState<GithubBranch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -27,10 +28,11 @@ export function useGithubBranches(owner: string, repo: string) {
         }
 
         setBranches(res.data.branches);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        console.error(err);
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+          err instanceof Error ? err.message : "Unknown error";
+        setError(errorMessage);
         toast.error(`Failed to load branches: ${errorMessage}`);
       } finally {
         setLoading(false);
@@ -40,5 +42,5 @@ export function useGithubBranches(owner: string, repo: string) {
     fetchBranches();
   }, [owner, repo]);
 
-  return { branches, loading };
+  return { branches, loading, error };
 }
