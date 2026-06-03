@@ -22,6 +22,7 @@ import {
 } from "@/lib/metrics";
 import { sendWebhook } from "@/lib/webhooks/sendWebhook";
 import { Prisma } from "@prisma/client";
+
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
@@ -43,7 +44,6 @@ function extractTextFromChunk(chunk: unknown): string {
 
   const msgChunk = chunk as MessageChunk;
 
-  // Handle LangChain chunks which often have content as string or array
   if (msgChunk?.content !== undefined) {
     if (typeof msgChunk.content === "string") {
       return msgChunk.content;
@@ -67,10 +67,6 @@ function extractTextFromChunk(chunk: unknown): string {
   return "";
 }
 
-/**
- * Robust JSON extraction with resilient error containment and self-healing capabilities.
- * Prevents prompt injection payloads from generating unhandled SyntaxErrors during JSON parsing.
- */
 function parseAIResponse(fullResponse: string): Record<string, unknown> {
   let jsonText = fullResponse;
 
@@ -79,25 +75,20 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
 
   if (jsonStart !== -1) {
     jsonText = jsonText.slice(jsonStart + jsonStartMarker.length);
-
     const jsonEnd = jsonText.indexOf("```");
-
     if (jsonEnd !== -1) {
       jsonText = jsonText.slice(0, jsonEnd);
     }
   } else {
     const firstBrace = jsonText.indexOf("{");
-
     if (firstBrace !== -1) {
       let braceCount = 0;
       let lastBrace = -1;
 
       for (let i = firstBrace; i < jsonText.length; i++) {
         if (jsonText[i] === "{") braceCount++;
-
         if (jsonText[i] === "}") {
           braceCount--;
-
           if (braceCount === 0) {
             lastBrace = i;
             break;
@@ -132,7 +123,6 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
       initialParseError,
     );
 
-    // Attempt Self-Healing 1: Try closing outstanding brackets for truncated responses
     try {
       let openBraces = 0;
       let openBrackets = 0;
@@ -159,26 +149,25 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
       }
 
       let healedJson = jsonText;
-      if (inString) {
-        healedJson += '"'; // Close unclosed quote
-      }
-      if (openBrackets > 0) {
-        healedJson += "]".repeat(openBrackets); // Close unclosed arrays
-      }
-      if (openBraces > 0) {
-        healedJson += "}".repeat(openBraces); // Close unclosed objects
-      }
+      if (inString) healedJson += '"';
+      if (openBrackets > 0) healedJson += "]".repeat(openBrackets);
+      if (openBraces > 0) healedJson += "}".repeat(openBraces);
 
       parsedData = JSON.parse(healedJson);
+      parsedData.truncated = true;
+      parsedData.warningMessage =
+        "AI text payload structure truncated. Executed fallback buffer string closing.";
     } catch (healingError) {
       console.error(
         "🚨 Auto-healing parser phase failed to salvage malformed schema token space:",
         healingError,
       );
 
-      // Attempt Self-Healing 2: Fallback to structured object wrapper matching the expected shape
       parsedData = {
         success: false,
+        truncated: true,
+        warningMessage:
+          "Structural recovery layout mapping forced due to complete parsing timeout.",
         error: "AI Generation returned malformed structural layout.",
         rawOutputText:
           jsonText.slice(0, 1000) + (jsonText.length > 1000 ? "..." : ""),
@@ -186,27 +175,21 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
     }
   }
 
-  // Safe extraction of Mermaid visual blueprints
   const mermaidStartMarker = "```mermaid";
-
   const mermaidStart = fullResponse.indexOf(mermaidStartMarker);
 
   if (mermaidStart !== -1) {
     let mermaidText = fullResponse.slice(
       mermaidStart + mermaidStartMarker.length,
     );
-
     const mermaidEnd = mermaidText.indexOf("```");
-
     if (mermaidEnd !== -1) {
       mermaidText = mermaidText.slice(0, mermaidEnd);
     }
-
     mermaidText = mermaidText
       .replace(/```mermaid/g, "")
       .replace(/```/g, "")
       .trim();
-
     if (mermaidText) {
       parsedData["Architecture Diagram"] = mermaidText;
     }
@@ -217,14 +200,11 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
-
   const route = "/api/generate";
   const method = "POST";
 
   httpRequestsTotal.inc({ route, method });
-
   let userId: string | undefined;
-  let savedGeneration: { id: string } | null = null; // to capture the generation ID for rating use
 
   try {
     const session = await getServerSession(authOptions);
@@ -235,16 +215,12 @@ export async function POST(req: NextRequest) {
 
     if (!body || !body.userInput) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
-
       httpRequestDurationSeconds.observe(
         { route },
         (Date.now() - startTime) / 1000,
       );
-
       return NextResponse.json(
-        {
-          error: "Invalid request body. Missing 'userInput' field.",
-        },
+        { error: "Invalid request body. Missing 'userInput' field." },
         { status: 400 },
       );
     }
@@ -253,32 +229,20 @@ export async function POST(req: NextRequest) {
 
     if (!userInput || userInput.trim().length === 0) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
-
       return NextResponse.json(
         { error: "Invalid input. Please provide a valid project idea." },
         { status: 400 },
       );
     }
 
-    let user: {
-      plan: string;
-      isVerified: boolean;
-      geminiApiKey: string | null;
-      openaiApiKey: string | null;
-    } | null = null;
+    let user: { plan: string; isVerified: boolean } | null = null;
     let userPlan: "free" | "pro" | "enterprise" = "free";
 
     if (!isGuest) {
       const userFindStart = Date.now();
-
       user = await db.user.findFirst({
         where: { id: userId },
-        select: {
-          plan: true,
-          isVerified: true,
-          geminiApiKey: true,
-          openaiApiKey: true,
-        },
+        select: { plan: true, isVerified: true },
       });
 
       databaseQueryDurationSeconds.observe(
@@ -288,12 +252,10 @@ export async function POST(req: NextRequest) {
 
       if (!user) {
         apiGatewayErrorsTotal.inc({ status_code: "404" });
-
         httpRequestDurationSeconds.observe(
           { route },
           (Date.now() - startTime) / 1000,
         );
-
         return NextResponse.json(
           { status: 404, message: "User not Found" },
           { status: 404 },
@@ -302,30 +264,27 @@ export async function POST(req: NextRequest) {
 
       if (user.isVerified === false) {
         apiGatewayErrorsTotal.inc({ status_code: "401" });
-
         httpRequestDurationSeconds.observe(
           { route },
           (Date.now() - startTime) / 1000,
         );
-
         return NextResponse.json(
           { status: 401, message: "Email is not verified" },
           { status: 401 },
         );
       }
 
-      const isPro =
-        user.plan !== "free" || !!user.geminiApiKey || !!user.openaiApiKey;
-
       userPlan =
-        user.plan === "enterprise" ? "enterprise" : isPro ? "pro" : "free";
+        user.plan === "enterprise"
+          ? "enterprise"
+          : user.plan === "pro"
+            ? "pro"
+            : "free";
     }
 
-    // RATE LIMITING — skip only if user has their own Gemini API key
     const userApiKeys = isGuest
       ? { geminiApiKey: null }
       : await getUserApiKeys(userId as string);
-
     const hasOwnApiKey = !!userApiKeys.geminiApiKey;
 
     let limit: number | null = null;
@@ -345,11 +304,9 @@ export async function POST(req: NextRequest) {
       const realIp = req.headers.get("x-real-ip");
       const extractedIp =
         (forwardedFor ? forwardedFor.split(",")[0].trim() : realIp) || "guest";
-
       const limitKey = isGuest ? `guest_${extractedIp}` : (userId as string);
 
       const result = await rateLimiter.limit(limitKey);
-
       const { success } = result;
 
       limit = result.limit;
@@ -358,12 +315,10 @@ export async function POST(req: NextRequest) {
 
       if (!success) {
         apiGatewayErrorsTotal.inc({ status_code: "429" });
-
         httpRequestDurationSeconds.observe(
           { route },
           (Date.now() - startTime) / 1000,
         );
-
         return NextResponse.json(
           {
             error: isGuest
@@ -378,8 +333,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Keep the rest of your existing AI generation logic BELOW this point
-
     aiGenerationRequestsTotal.inc();
 
     if (!isGuest) {
@@ -393,16 +346,13 @@ export async function POST(req: NextRequest) {
       new SystemMessage(SystemPrompt),
       new HumanMessage(userInput),
     ];
-
     const aiStart = Date.now();
 
     const stream = await streamGeminiWithFallback(
       messages,
       userApiKeys.geminiApiKey || undefined,
     );
-
     const encoder = new TextEncoder();
-
     let fullResponse = "";
 
     const readable = new ReadableStream({
@@ -410,27 +360,19 @@ export async function POST(req: NextRequest) {
         try {
           for await (const chunk of stream) {
             const text = extractTextFromChunk(chunk);
-
             if (!text) continue;
-
             fullResponse += text;
 
             controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({
-                  chunk: text,
-                })}\n\n`,
-              ),
+              encoder.encode(`data: ${JSON.stringify({ chunk: text })}\n\n`),
             );
           }
 
           const aiDuration = (Date.now() - aiStart) / 1000;
-
           aiGenerationDurationSeconds.observe(aiDuration);
 
           if (!fullResponse.trim()) {
             aiGenerationFailureTotal.inc();
-
             throw new Error("Empty AI response received.");
           }
 
@@ -438,12 +380,17 @@ export async function POST(req: NextRequest) {
 
           if (!isGuest) {
             const createStart = Date.now();
+            const responseWarning =
+              (parsedData.warningMessage as string) || null;
+            const isPayloadTruncated = !!parsedData.truncated;
 
-            savedGeneration = await db.generation.create({
+            await db.generation.create({
               data: {
                 userInput,
                 generatedOutput: parsedData as Prisma.InputJsonValue,
                 userId: userId as string,
+                warningMessage: responseWarning,
+                skippedCount: isPayloadTruncated ? 1 : 0,
               },
             });
 
@@ -456,10 +403,7 @@ export async function POST(req: NextRequest) {
           aiGenerationSuccessTotal.inc();
 
           if (!isGuest) {
-            userGenerationsTotal.inc({
-              user_id: userId as string,
-            });
-
+            userGenerationsTotal.inc({ user_id: userId as string });
             userLastActivityTimestamp.set(
               { user_id: userId as string },
               Date.now() / 1000,
@@ -467,13 +411,11 @@ export async function POST(req: NextRequest) {
           }
 
           aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
-
           httpRequestDurationSeconds.observe(
             { route },
             (Date.now() - startTime) / 1000,
           );
 
-          // Send webhook notification for successful generation
           if (!isGuest && userId) {
             await sendWebhook({
               userId,
@@ -491,18 +433,15 @@ export async function POST(req: NextRequest) {
               `data: ${JSON.stringify({
                 done: true,
                 parsedData,
-                generationId: savedGeneration?.id,
                 limit,
                 remaining,
                 reset,
               })}\n\n`,
             ),
           );
-
           controller.close();
         } catch (error: unknown) {
           console.error("Streaming error:", error);
-
           aiGenerationFailureTotal.inc();
 
           controller.enqueue(
@@ -513,7 +452,6 @@ export async function POST(req: NextRequest) {
               })}\n\n`,
             ),
           );
-
           controller.close();
         }
       },
@@ -528,14 +466,11 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     aiGenerationFailureTotal.inc();
-
     console.error("Error in generation request:", error);
-
     let status = 500;
 
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-
     const isApiKeyError =
       errorMessage.toLowerCase().includes("api key") ||
       errorMessage.toLowerCase().includes("rate limit") ||
@@ -556,16 +491,12 @@ export async function POST(req: NextRequest) {
       status = 502;
     }
 
-    apiGatewayErrorsTotal.inc({
-      status_code: status.toString(),
-    });
-
+    apiGatewayErrorsTotal.inc({ status_code: status.toString() });
     httpRequestDurationSeconds.observe(
       { route },
       (Date.now() - startTime) / 1000,
     );
 
-    // Send webhook notification for failed generation
     if (userId) {
       await sendWebhook({
         userId,
@@ -576,12 +507,9 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
     return NextResponse.json(
-      {
-        error:
-          errorMessage ||
-          "An unexpected server error occurred while generating the response.",
-      },
+      { error: errorMessage || "An unexpected server error occurred." },
       { status },
     );
   }
