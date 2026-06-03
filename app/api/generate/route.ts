@@ -380,6 +380,7 @@ export async function POST(req: NextRequest) {
 
           if (!isGuest) {
             const createStart = Date.now();
+            // FIXED: Removed duplicate variable assignments that were throwing lint errors
             const responseWarning =
               (parsedData.warningMessage as string) || null;
             const isPayloadTruncated = !!parsedData.truncated;
@@ -482,7 +483,7 @@ export async function POST(req: NextRequest) {
       typeof error === "object" &&
       error !== null &&
       "code" in error &&
-      error.code === "P2002"
+      (error as { code: string }).code === "P2002"
     ) {
       status = 409;
     } else if (isApiKeyError) {

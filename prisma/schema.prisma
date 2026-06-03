@@ -96,6 +96,9 @@ model Generation {
   shareId          String?  @unique
   userId           String   @db.ObjectId
   
+  // FIX: Added missing rating field for API routes matching typescript expectations
+  rating           Int?
+
   // FIX: Account deletion safety cascade
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -113,6 +116,7 @@ model Generation {
   rating           Int?     
 
   @@index([userId])
+  // REMOVED: @@index([shareId]) because MongoDB automatically indexes fields marked with @unique.
   @@map("generations")
 }
 
