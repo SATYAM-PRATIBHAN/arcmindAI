@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import {
   httpRequestsTotal,
   httpRequestDurationSeconds,
@@ -22,6 +23,9 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { UpdateSystemPrompt } from "@/lib/prompts/updateSystemPrompt";
 import { getUserApiKeys } from "@/lib/api-keys/getUserApiKeys";
 
+// ---------------------------------------------------------------------------
+// GET: Fetch a specific generation by ID
+// ---------------------------------------------------------------------------
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -82,14 +86,14 @@ export async function GET(
 
     const { id: generationId } = await params;
 
-    // Update user activity
+    // Update user activity timestamp metrics
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
       Date.now() / 1000,
     );
 
-    // Increment cache hits (assuming fetching generation is a cache hit if cached)
+    // Increment total cache hits metric tracking
     cacheHitsTotal.inc();
 
     const dbStart = Date.now();
@@ -117,7 +121,7 @@ export async function GET(
       );
     }
 
-    // Track total HTTP duration
+    // Track overall HTTP duration performance metric
     httpRequestDurationSeconds.observe(
       { route },
       (Date.now() - startTime) / 1000,
@@ -141,6 +145,9 @@ export async function GET(
   }
 }
 
+// ---------------------------------------------------------------------------
+// DELETE: Remove a specific generation record
+// ---------------------------------------------------------------------------
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -168,7 +175,7 @@ export async function DELETE(
 
     const { id: generationId } = await params;
 
-    // Update user activity
+    // Track active user timestamp updates
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
@@ -240,7 +247,7 @@ export async function DELETE(
       (Date.now() - dbDelStart) / 1000,
     );
 
-    // Track total HTTP duration
+    // Record total execution duration metrics
     httpRequestDurationSeconds.observe(
       { route },
       (Date.now() - startTime) / 1000,
@@ -264,6 +271,9 @@ export async function DELETE(
   }
 }
 
+// ---------------------------------------------------------------------------
+// PUT: Update an architecture generation model with AI refinement
+// ---------------------------------------------------------------------------
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -344,14 +354,14 @@ export async function PUT(
 
     const { id: generationId } = await params;
 
-    // Update user activity
+    // Track live activity logs for user metrics
     userLastActivityTimestamp.set(
       // @ts-expect-error id is added to the session in the session callback
       { user_id: session.user.id },
       Date.now() / 1000,
     );
 
-    // Increment AI generation request counter
+    // Track active AI invocation trends
     aiGenerationRequestsTotal.inc();
 
     const { userInput } = await request.json();
@@ -388,7 +398,7 @@ export async function PUT(
 User feedback/input for update: ${userInput}`),
     ];
 
-    // 🔑 Fetch user's API keys
+    // Retrieve active developer credentials or fallback API tokens
     // @ts-expect-error id is added to the session in the session callback
     const userApiKeys = await getUserApiKeys(session.user.id);
 
@@ -407,13 +417,13 @@ User feedback/input for update: ${userInput}`),
 
     const finalAIresponse = newGeneratedOutput.content;
 
-    // Step 1: Convert response to string
+    // Step 1: Normalize AI output format into a safe execution string
     const raw =
       typeof finalAIresponse === "string"
         ? finalAIresponse
         : JSON.stringify(finalAIresponse);
 
-    // Step 2: Extract JSON block
+    // Step 2: Strip markdown JSON blocks dynamically
     let jsonText = raw;
 
     const jsonStart = jsonText.indexOf("```json");
@@ -429,18 +439,43 @@ User feedback/input for update: ${userInput}`),
     jsonText = jsonText.trim();
     if (!jsonText) throw new Error("No JSON content found in AI response");
 
-    // Step 3: Parse initial JSON
+    // Step 3: Parse extracted valid JSON block
     const parsedData = JSON.parse(jsonText);
 
-    // Step 4: Clean "Architecture Diagram" field
+    // Step 4: Sanitize visual structural diagram string values
     if (parsedData && typeof parsedData["Architecture Diagram"] === "string") {
-      let diagram = parsedData["Architecture Diagram"];
-      diagram = diagram
+      const diagram = parsedData["Architecture Diagram"];
+      const cleanedDiagram = diagram
         .replace(/```mermaid/g, "")
         .replace(/```/g, "")
         .trim();
-      parsedData["Architecture Diagram"] = diagram;
+      parsedData["Architecture Diagram"] = cleanedDiagram;
     }
+
+    // ─── DATABASE SCHEMA METRICS MAPPING ───────────────────────────────────
+    // Extraction of parsed fields tracking system layout thresholds
+    // Mapping: warningMessage (String?), skippedCount (Int), skippedBy* (Int)
+    // ───────────────────────────────────────────────────────────────────────
+    const responseWarning = (parsedData.warningMessage as string) || null;
+    const isPayloadTruncated = !!parsedData.truncated;
+
+    const limitSkipped =
+      typeof parsedData.skippedByLimitCount === "number"
+        ? parsedData.skippedByLimitCount
+        : 0;
+    const depthSkipped =
+      typeof parsedData.skippedByDepthCount === "number"
+        ? parsedData.skippedByDepthCount
+        : 0;
+    const sizeSkipped =
+      typeof parsedData.skippedBySizeCount === "number"
+        ? parsedData.skippedBySizeCount
+        : 0;
+
+    const totalSkipped =
+      (parsedData.skippedCount as number) ||
+      limitSkipped + depthSkipped + sizeSkipped ||
+      (isPayloadTruncated ? 1 : 0);
 
     const dbStart3 = Date.now();
     const generation = await db.generation.update({
@@ -449,8 +484,14 @@ User feedback/input for update: ${userInput}`),
         // @ts-expect-error id is added to the session in the session callback
         userId: session.user.id,
       },
+      // Writing specific metrics directly into your database properties fields
       data: {
-        generatedOutput: parsedData,
+        generatedOutput: parsedData as Prisma.InputJsonValue,
+        warningMessage: responseWarning, // 👈 Maps: warningMessage String?
+        skippedCount: totalSkipped, // 👈 Maps: skippedCount Int
+        skippedByLimitCount: limitSkipped, // 👈 Maps: skippedByLimitCount Int
+        skippedByDepthCount: depthSkipped, // 👈 Maps: skippedByDepthCount Int
+        skippedBySizeCount: sizeSkipped, // 👈 Maps: skippedBySizeCount Int
       },
     });
     databaseQueryDurationSeconds.observe(
@@ -458,15 +499,15 @@ User feedback/input for update: ${userInput}`),
       (Date.now() - dbStart3) / 1000,
     );
 
-    // Increment success counters
+    // Log tracking metrics counters upon successful complete workflow updates
     aiGenerationSuccessTotal.inc();
     // @ts-expect-error id is added to the session in the session callback
     userGenerationsTotal.inc({ user_id: session.user.id });
 
-    // Set output size
+    // Set output metric context size tracking
     aiGenerationOutputSizeBytes.set(JSON.stringify(parsedData).length);
 
-    // Track total HTTP duration
+    // Complete tracking total request runtime duration
     httpRequestDurationSeconds.observe(
       { route },
       (Date.now() - startTime) / 1000,
@@ -489,6 +530,10 @@ User feedback/input for update: ${userInput}`),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// PATCH: Configure and expose a public share token link structure
+// ---------------------------------------------------------------------------
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -547,7 +592,7 @@ export async function PATCH(
 
     const { id: generationId } = await params;
 
-    // Check if generation exists and belongs to the user
+    // Check configuration and validation mapping requirements
     const generation = await db.generation.findFirst({
       where: {
         id: generationId,
@@ -568,14 +613,13 @@ export async function PATCH(
       );
     }
 
-    // Generate shareId if it doesn't exist
+    // Reuse existing shareId or initialize a unique new tracking nano-token sequence
     const shareId = generation.shareId || nanoid(10);
 
     const updatedGeneration = await db.generation.update({
       where: {
         id: generationId,
       },
-
       data: {
         isPublic: true,
         shareId: shareId,

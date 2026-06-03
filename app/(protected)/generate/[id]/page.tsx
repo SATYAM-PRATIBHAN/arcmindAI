@@ -47,9 +47,8 @@ import { ArchitectureData } from "../utils/types";
 import { cleanMermaidString } from "../utils/cleanMermaidString";
 
 // ---------------------------------------------------------------------------
-// Page
+// Page Content Component
 // ---------------------------------------------------------------------------
-// wrapped around a function to better organize the code and separate the provider logic from the page content
 function GenerationPageContent() {
   const { id } = useParams();
   const router = useRouter();
@@ -88,7 +87,7 @@ function GenerationPageContent() {
   const [doubtText, setDoubtText] = useState("");
   const mermaidContainerRef = useRef<HTMLDivElement>(null);
 
-  // Safeguard Warning States
+  // Safeguard metrics and layout validation states
   const [isTruncated, setIsTruncated] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
@@ -100,35 +99,39 @@ function GenerationPageContent() {
           if (result && result.success) {
             setSystemName(result.output.userInput || "");
 
-            // TypeScript linter-safe casting
-            const mockResult = result as unknown as {
-              truncated?: boolean;
-              message?: string;
+            // ─── SAFEGUARD METRICS CASTING & DATA MAPPING ─────────────────────────
+            // CRITICAL FIX: Safe structural shape casting avoids explicit 'any' lint warning
+            // ───────────────────────────────────────────────────────────────────────
+            const rawOutput = result.output as {
+              warningMessage?: string | null;
             };
-            if (mockResult.truncated) {
+
+            // Evaluating payload validation attributes extracted from backend metrics
+            if (rawOutput && rawOutput.warningMessage) {
               setIsTruncated(true);
-              setWarningMessage(
-                mockResult.message ||
-                  "Repository analysis limits exceeded. Some files were skipped.",
-              );
+              setWarningMessage(rawOutput.warningMessage);
             } else {
               setIsTruncated(false);
               setWarningMessage(null);
             }
 
-            // Fixed conditional setup routing
+            // Direct mapping based on whether it is a GitHub repository model or standard prompt mapping
             if (result.output.githubGeneration) {
               setGithubGeneration(result.output.githubGeneration);
               setIsGithubRepo(true);
               setGeneratedData(null);
+              setGithubGeneration(null);
             } else {
               try {
                 const data = result.output.generatedOutput as ArchitectureData;
                 setGeneratedData(data);
                 setIsGithubRepo(false);
                 setGithubGeneration(null);
-              } catch (error) {
-                console.error("Error processing generation data:", error);
+              } catch (err) {
+                console.error(
+                  "Error processing generation data layer response layout mapping:",
+                  err,
+                );
                 setGeneratedData(null);
                 setGithubGeneration(null);
               }
@@ -158,7 +161,7 @@ function GenerationPageContent() {
 
     const result = await updateGeneration(id, responseText);
     if (result && result.success) {
-      // @ts-expect-error output is the updated generation object
+      // @ts-expect-error output is the updated generation data layout
       const data = result.output.generatedOutput as ArchitectureData;
       setGeneratedData(data);
       toast.success("Generation updated successfully");
@@ -166,7 +169,10 @@ function GenerationPageContent() {
       setResponseText("");
       setIsActionDialogOpen(false);
     } else {
-      console.error("Failed to update generation:", updateError);
+      console.error(
+        "Failed to update system architecture configuration mapping space:",
+        updateError,
+      );
       toast.error(updateError || "Failed to update generation");
     }
   };
@@ -202,8 +208,8 @@ function GenerationPageContent() {
       } else {
         toast.error(data.message || "Failed to share generation");
       }
-    } catch (error) {
-      console.error("Share failed:", error);
+    } catch (err) {
+      console.error("Share dispatch pipeline connection failed:", err);
       toast.error("An error occurred while sharing");
     }
   };
@@ -242,7 +248,7 @@ function GenerationPageContent() {
     );
   }
 
-  // ── GitHub generation view ──────────────────────────────────────────────
+  // ── GITHUB GENERATION INTERFACE VIEW ──────────────────────────────────────
   if (isGithubRepo && githubGeneration) {
     const cleanedGithubDiagram = cleanMermaidString(githubGeneration);
 
@@ -294,7 +300,7 @@ function GenerationPageContent() {
         <ActionButton onClick={() => setIsActionDialogOpen(true)} />
 
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          {/* --- User-Visible Safeguard Warning Banner --- */}
+          {/* ─── METRICS FEEDBACK BANNER: REPOSITORY IMPORTS ───────────────────── */}
           {isTruncated && warningMessage && (
             <div className="mx-auto max-w-4xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3 shadow-sm backdrop-blur-sm">
               <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-500" />
@@ -400,7 +406,7 @@ function GenerationPageContent() {
               </div>
             </section>
 
-            {/* Interactive D3 Diagram (Stream 2) */}
+            {/* Interactive D3 Canvas Engine */}
             {isD3Enabled && (
               <section className="space-y-6">
                 <div className="flex items-center gap-3">
@@ -420,7 +426,7 @@ function GenerationPageContent() {
     );
   }
 
-  // ── Regular generation view ─────────────────────────────────────────────
+  // ── STANDARD PROMPT GENERATION VIEW ──────────────────────────────────────
   if (!generatedData) return null;
 
   const cleanedDiagram = cleanMermaidString(
@@ -480,6 +486,19 @@ function GenerationPageContent() {
       <ActionButton onClick={() => setIsActionDialogOpen(true)} />
 
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        {/* ─── METRICS FEEDBACK BANNER: STANDARD PROMPTS ─────────────────────── */}
+        {isTruncated && warningMessage && (
+          <div className="mx-auto max-w-4xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-4 rounded-2xl flex items-start gap-3 shadow-sm backdrop-blur-sm">
+            <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-500" />
+            <div className="text-sm">
+              <span className="font-semibold block mb-0.5">
+                System Safeguards Applied
+              </span>
+              <p className="opacity-90">{warningMessage}</p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-px flex-1 bg-border/60"></div>
@@ -620,7 +639,7 @@ function GenerationPageContent() {
                   05
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight">
-                  Deployment & Infra
+                  Deployment & Infrastructure
                 </h2>
               </div>
               <InfrastructureSection infra={generatedData.infrastructure} />
@@ -661,7 +680,7 @@ function GenerationPageContent() {
             </section>
           )}
 
-          {/* Interactive D3 Diagram (Stream 2) */}
+          {/* Interactive Canvas Implementation */}
           {isD3Enabled && (
             <section className="space-y-6">
               <div className="flex items-center gap-3">
@@ -680,7 +699,8 @@ function GenerationPageContent() {
     </div>
   );
 }
-// The main page component that wraps the content with the DiagramProvider to provide context to all child components.
+
+// Global state provider context encapsulation wrapper for architecture views
 export default function GenerationPage() {
   return (
     <DiagramProvider>

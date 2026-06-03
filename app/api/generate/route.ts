@@ -37,6 +37,9 @@ interface MessageChunk {
   [key: string]: unknown;
 }
 
+// ---------------------------------------------------------------------------
+// Helper: Extract raw string content from streaming message chunks
+// ---------------------------------------------------------------------------
 function extractTextFromChunk(chunk: unknown): string {
   if (typeof chunk === "string") {
     return chunk;
@@ -67,6 +70,9 @@ function extractTextFromChunk(chunk: unknown): string {
   return "";
 }
 
+// ---------------------------------------------------------------------------
+// Helper: Parse, sanitize, and heal incoming AI JSON text streams
+// ---------------------------------------------------------------------------
 function parseAIResponse(fullResponse: string): Record<string, unknown> {
   let jsonText = fullResponse;
 
@@ -119,7 +125,7 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
     parsedData = JSON.parse(jsonText);
   } catch (initialParseError) {
     console.warn(
-      "⚠️ Initial JSON parser pass failed. Attempting structural recovery procedures:",
+      "Warning: Initial JSON parser pass failed. Attempting structural recovery procedures:",
       initialParseError,
     );
 
@@ -159,7 +165,7 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
         "AI text payload structure truncated. Executed fallback buffer string closing.";
     } catch (healingError) {
       console.error(
-        "🚨 Auto-healing parser phase failed to salvage malformed schema token space:",
+        "Error: Auto-healing parser phase failed to salvage malformed schema token space:",
         healingError,
       );
 
@@ -198,6 +204,9 @@ function parseAIResponse(fullResponse: string): Record<string, unknown> {
   return parsedData;
 }
 
+// ---------------------------------------------------------------------------
+// POST: Stream generation results and save output safely to the database
+// ---------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const route = "/api/generate";
@@ -380,18 +389,44 @@ export async function POST(req: NextRequest) {
 
           if (!isGuest) {
             const createStart = Date.now();
-            // FIXED: Removed duplicate variable assignments that were throwing lint errors
+
+            // ─── DATABASE SCHEMA METRICS MAPPING ───────────────────────────────────
+            // Extraction of parsed fields tracking system layout thresholds
+            // Mapping: warningMessage (String?), skippedCount (Int), skippedBy* (Int)
+            // ───────────────────────────────────────────────────────────────────────
             const responseWarning =
               (parsedData.warningMessage as string) || null;
             const isPayloadTruncated = !!parsedData.truncated;
 
+            const limitSkipped =
+              typeof parsedData.skippedByLimitCount === "number"
+                ? parsedData.skippedByLimitCount
+                : 0;
+            const depthSkipped =
+              typeof parsedData.skippedByDepthCount === "number"
+                ? parsedData.skippedByDepthCount
+                : 0;
+            const sizeSkipped =
+              typeof parsedData.skippedBySizeCount === "number"
+                ? parsedData.skippedBySizeCount
+                : 0;
+
+            const totalSkipped =
+              (parsedData.skippedCount as number) ||
+              limitSkipped + depthSkipped + sizeSkipped ||
+              (isPayloadTruncated ? 1 : 0);
+
             await db.generation.create({
+              // Writing extracted layout guard dimensions into database record properties fields
               data: {
                 userInput,
                 generatedOutput: parsedData as Prisma.InputJsonValue,
                 userId: userId as string,
-                warningMessage: responseWarning,
-                skippedCount: isPayloadTruncated ? 1 : 0,
+                warningMessage: responseWarning, // 👈 Maps: warningMessage String?
+                skippedCount: totalSkipped, // 👈 Maps: skippedCount Int
+                skippedByLimitCount: limitSkipped, // 👈 Maps: skippedByLimitCount Int
+                skippedByDepthCount: depthSkipped, // 👈 Maps: skippedByDepthCount Int
+                skippedBySizeCount: sizeSkipped, // 👈 Maps: skippedBySizeCount Int
               },
             });
 
