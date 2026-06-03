@@ -70,8 +70,23 @@ export async function POST(req: Request) {
   httpRequestsTotal.inc({ route, method });
 
   try {
-    const { token, password } = await req.json();
+    const body = await req.json();
+    const { resetPasswordSchema } = await import("@/lib/validations");
+    const parsed = resetPasswordSchema.safeParse(body);
 
+    if (!parsed.success) {
+      apiGatewayErrorsTotal.inc({ status_code: "400" });
+      httpRequestDurationSeconds.observe(
+        { route },
+        (Date.now() - startTime) / 1000,
+      );
+      return NextResponse.json(
+        { message: "Invalid input data", errors: parsed.error },
+        { status: 400 },
+      );
+    }
+
+    const { token, password } = parsed.data;
     if (!token || !password) {
       apiGatewayErrorsTotal.inc({ status_code: "400" });
       httpRequestDurationSeconds.observe(
