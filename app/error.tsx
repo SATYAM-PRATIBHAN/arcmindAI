@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
+  { ssr: false, loading: () => <div className="w-full h-full bg-muted animate-pulse rounded-full" /> }
+);
 import { Background } from "@/components/background";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/blocks/navbar";
