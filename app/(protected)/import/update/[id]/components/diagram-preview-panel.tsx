@@ -96,13 +96,13 @@ export function DiagramPreviewPanel({
 
         {/* Zoom Controls */}
         <div className="flex gap-1">
-          <Button size="sm" variant="outline" onClick={zoomOut}>
+          <Button size="sm" variant="outline" onClick={zoomOut} aria-label="Zoom Out">
             <Minus className="w-4 h-4" />
           </Button>
-          <Button size="sm" variant="outline" onClick={zoomIn}>
+          <Button size="sm" variant="outline" onClick={zoomIn} aria-label="Zoom In">
             <Plus className="w-4 h-4" />
           </Button>
-          <Button size="sm" variant="outline" onClick={resetView}>
+          <Button size="sm" variant="outline" onClick={resetView} aria-label="Reset View">
             Reset
           </Button>
         </div>
@@ -133,7 +133,7 @@ export function DiagramPreviewPanel({
       </CardContent>
 
       <div className="px-4 pb-4">
-        <Button className="w-full cursor-pointer" onClick={onOpenAIDialog}>
+        <Button className="w-full cursor-pointer" onClick={onOpenAIDialog} aria-label="Use AI to Improve">
           Use AI to Improve
         </Button>
       </div>

@@ -25,11 +25,11 @@ export default function PaymentSuccessPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href={DOC_ROUTES.HOME}>
-              <Button size="lg">Return Home</Button>
+            <Link href={DOC_ROUTES.HOME} aria-label="Return Home">
+              <Button size="lg" aria-label="Return Home">Return Home</Button>
             </Link>
-            <Link href={DOC_ROUTES.GENERATE}>
-              <Button size="lg" variant="outline">
+            <Link href={DOC_ROUTES.GENERATE} aria-label="Start Building">
+              <Button size="lg" variant="outline" aria-label="Start Building">
                 Start Building
               </Button>
             </Link>

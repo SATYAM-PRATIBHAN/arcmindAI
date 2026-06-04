@@ -352,7 +352,7 @@ export function RepositoryPageClient() {
             >
               Cancel
             </Button>
-            <Button onClick={handleConfirmUpdate} className="cursor-pointer">
+            <Button onClick={handleConfirmUpdate} className="cursor-pointer" aria-label="Confirm">
               Confirm
             </Button>
           </DialogFooter>

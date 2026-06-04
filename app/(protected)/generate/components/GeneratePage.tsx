@@ -482,8 +482,8 @@ export default function GeneratePage() {
                   >
                     View Benefits
                   </Button>
-                  <Button className="rounded-xl" asChild>
-                    <Link href={DOC_ROUTES.AUTH.SIGN_UP}>
+                  <Button className="rounded-xl" asChild aria-label="Create Free Account">
+                    <Link href={DOC_ROUTES.AUTH.SIGN_UP} aria-label="Create Free Account">
                       Create Free Account
                     </Link>
                   </Button>
@@ -833,8 +833,8 @@ export default function GeneratePage() {
                     <span className="font-medium">Guest Mode</span>. Save this
                     and continue generating by creating an account.
                   </p>
-                  <Button className="rounded-xl" asChild>
-                    <Link href={DOC_ROUTES.AUTH.SIGN_UP}>Sign Up to Save</Link>
+                  <Button className="rounded-xl" asChild aria-label="Sign Up to Save">
+                    <Link href={DOC_ROUTES.AUTH.SIGN_UP} aria-label="Sign Up to Save">Sign Up to Save</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -860,8 +860,8 @@ export default function GeneratePage() {
                     >
                       View Benefits
                     </Button>
-                    <Button className="rounded-xl" asChild>
-                      <Link href={DOC_ROUTES.AUTH.SIGN_UP}>
+                    <Button className="rounded-xl" asChild aria-label="Create Free Account">
+                      <Link href={DOC_ROUTES.AUTH.SIGN_UP} aria-label="Create Free Account">
                         Create Free Account
                       </Link>
                     </Button>

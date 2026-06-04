@@ -53,8 +53,8 @@ export default function Error() {
                 transition={{ delay: 0.35 }}
                 className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
               >
-                <Button asChild size="lg" className="group min-w-[200px] gap-2">
-                  <Link href={DOC_ROUTES.HOME}>
+                <Button asChild size="lg" className="group min-w-[200px] gap-2" aria-label="Return Home">
+                  <Link href={DOC_ROUTES.HOME} aria-label="Return Home">
                     <ArrowLeft className="size-5 transition-transform group-hover:-translate-x-1" />
                     Back to Home
                   </Link>
