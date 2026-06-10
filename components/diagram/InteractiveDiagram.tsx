@@ -221,6 +221,13 @@ export default function InteractiveDiagram({
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const { isD3Enabled, activeLayers, searchQuery } = useDiagram();
+  const searchQueryRef = useRef(searchQuery ?? "");
+  const updateSearchHighlightRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    searchQueryRef.current = searchQuery ?? "";
+    updateSearchHighlightRef.current?.();
+  }, [searchQuery]);
 
   const selectedIdRef = useRef<string | null>(null);
   const relations = useMemo(
