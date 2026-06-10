@@ -110,13 +110,6 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!password) {
-      return NextResponse.json(
-        { message: "Password is required" },
-        { status: 400 },
-      );
-    }
-
     const passwordError = validatePassword(password);
     if (passwordError) {
       return NextResponse.json({ message: passwordError }, { status: 400 });
