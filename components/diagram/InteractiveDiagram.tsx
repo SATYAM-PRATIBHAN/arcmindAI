@@ -220,7 +220,7 @@ export default function InteractiveDiagram({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { isD3Enabled, activeLayers } = useDiagram();
+  const { isD3Enabled, activeLayers, searchQuery } = useDiagram();
 
   const selectedIdRef = useRef<string | null>(null);
   const relations = useMemo(
