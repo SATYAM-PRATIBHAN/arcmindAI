@@ -1,5 +1,5 @@
 "use client";
-
+import LayerToggle from "@/components/diagram/LayerToggle";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
 import { analyzeDiagramRelations } from "@/lib/utils/diagram-analyzer";
 import {
@@ -220,7 +220,7 @@ export default function InteractiveDiagram({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { isD3Enabled } = useDiagram();
+  const { isD3Enabled, activeLayers } = useDiagram();
 
   const selectedIdRef = useRef<string | null>(null);
   const relations = useMemo(
@@ -368,9 +368,25 @@ export default function InteractiveDiagram({
     zoomRef.current = zoom;
     svgSel.call(zoom);
 
-    const nodes: DiagramNode[] = systemGraph.nodes.map((n) => ({ ...n }));
-    // parseMermaidToJSON already guarantees that the source and target exist in nodes.
-    const links: DiagramLink[] = systemGraph.links.map((l) => ({ ...l }));
+    const getNodeId = (node: string | DiagramNode) =>
+      typeof node === "string" ? node : node.id;
+
+    const filteredNodes = systemGraph.nodes.filter((node) =>
+      activeLayers.includes(node.layer),
+    );
+
+    const filteredNodeIds = new Set(filteredNodes.map((node) => node.id));
+
+    const nodes: DiagramNode[] = filteredNodes.map((node) => ({ ...node }));
+
+    const links: DiagramLink[] = systemGraph.links
+      .filter(
+        (link) =>
+          filteredNodeIds.has(getNodeId(link.source)) &&
+          filteredNodeIds.has(getNodeId(link.target)),
+      )
+      .map((link) => ({ ...link }));
+
     const g = gZoom.append("g").attr("class", "d3-diagram");
 
     const link = g
@@ -520,7 +536,7 @@ export default function InteractiveDiagram({
       window.cancelAnimationFrame(raf);
       simulation.stop();
     };
-  }, [dimensions, fitToScreen, systemGraph, relations]);
+  }, [dimensions, fitToScreen, systemGraph, relations, activeLayers]);
 
   const handleZoomIn = () => {
     const svgSel = svgSelectionRef.current;
@@ -548,6 +564,8 @@ export default function InteractiveDiagram({
     >
       {/* Floating search input (top-left) */}
       <FloatingSearch position="left" />
+      {/* Layer Filters */}
+      <LayerToggle />
       {/* Floating viewport controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
         <div className="inline-flex rounded-xl border border-border/40 bg-background/60 backdrop-blur p-1 shadow-sm gap-1">

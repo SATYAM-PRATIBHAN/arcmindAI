@@ -33,7 +33,13 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [activeLayers, setActiveLayers] = useState<DiagramLayer[]>([]);
+  const [activeLayers, setActiveLayers] = useState<DiagramLayer[]>([
+    "Frontend",
+    "API",
+    "Database",
+    "Infrastructure",
+    "External",
+  ]);
 
   const [isD3Enabled, setIsD3Enabled] = useState(false);
 
