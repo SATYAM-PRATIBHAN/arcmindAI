@@ -12,6 +12,7 @@ import {
 import * as d3 from "d3";
 import { Maximize, Minus, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FloatingSearch from "@/components/diagram/FloatingSearch";
 
 type NodeSelection = d3.Selection<SVGGElement, DiagramNode, null, undefined>;
 
@@ -545,6 +546,8 @@ export default function InteractiveDiagram({
       ref={containerRef}
       className="w-full h-125 min-h-100 rounded-2xl border border-border/40 bg-card/30 overflow-hidden backdrop-blur-sm shadow-inner relative flex items-center justify-center transition-all duration-500"
     >
+      {/* Floating search input (top-left) */}
+      <FloatingSearch position="left" />
       {/* Floating viewport controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
         <div className="inline-flex rounded-xl border border-border/40 bg-background/60 backdrop-blur p-1 shadow-sm gap-1">
