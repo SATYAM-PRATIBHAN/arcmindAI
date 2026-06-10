@@ -221,6 +221,18 @@ export default function InteractiveDiagram({
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const { isD3Enabled, searchQuery } = useDiagram();
+  const searchQueryRef = useRef(searchQuery);
+  const updateSearchHighlightRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    searchQueryRef.current = searchQuery;
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (updateSearchHighlightRef.current) {
+      updateSearchHighlightRef.current();
+    }
+  }, [searchQuery]);
 
   const selectedIdRef = useRef<string | null>(null);
   const relations = useMemo(
@@ -411,7 +423,7 @@ export default function InteractiveDiagram({
     });
 
     const applySearchHighlight = () => {
-      const query = searchQuery.trim().toLowerCase();
+      const query = searchQueryRef.current.trim().toLowerCase();
 
       if (!query) {
         node.transition().duration(300).style("opacity", 1);
@@ -433,20 +445,18 @@ export default function InteractiveDiagram({
         });
 
       node
-        .selectAll("rect,circle,polygon,path")
+        .selectAll<SVGElement, DiagramNode>("rect,circle,polygon,path")
         .transition()
         .duration(300)
-        .style("stroke-width", function (_, i) {
-          const d = nodes[i];
+        .style("stroke-width", function (d) {
           const text = `${d.label} ${d.id}`.toLowerCase();
 
-          return text.includes(query) ? "4px" : null;
+          return text.includes(query) ? "2px" : null;
         })
-        .style("filter", function (_, i) {
-          const d = nodes[i];
+        .style("filter", function (d) {
           const text = `${d.label} ${d.id}`.toLowerCase();
 
-          return text.includes(query) ? "drop-shadow(0 0 8px #60a5fa)" : null;
+          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
         });
     };
 
@@ -506,6 +516,7 @@ export default function InteractiveDiagram({
     svgSel.on("click", () => {
       selectedIdRef.current = null;
       applyHighlight(null);
+      applySearchHighlight();
     });
 
     // Initialize the physics engine
@@ -557,12 +568,15 @@ export default function InteractiveDiagram({
       fitToScreen({ padding: 28 });
     });
 
+    updateSearchHighlightRef.current = applySearchHighlight;
+
     // Clean up
     return () => {
       window.cancelAnimationFrame(raf);
       simulation.stop();
+      updateSearchHighlightRef.current = null;
     };
-  }, [dimensions, fitToScreen, systemGraph, relations, searchQuery]);
+  }, [dimensions, fitToScreen, systemGraph, relations]);
 
   const handleZoomIn = () => {
     const svgSel = svgSelectionRef.current;
