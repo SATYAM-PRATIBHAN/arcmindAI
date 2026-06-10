@@ -220,7 +220,7 @@ export default function InteractiveDiagram({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { isD3Enabled } = useDiagram();
+  const { isD3Enabled, searchQuery } = useDiagram();
 
   const selectedIdRef = useRef<string | null>(null);
   const relations = useMemo(
@@ -410,6 +410,46 @@ export default function InteractiveDiagram({
         .attr("pointer-events", "none");
     });
 
+    const applySearchHighlight = () => {
+      const query = searchQuery.trim().toLowerCase();
+
+      if (!query) {
+        node.transition().duration(300).style("opacity", 1);
+
+        node
+          .selectAll("rect,circle,polygon,path")
+          .style("stroke-width", null)
+          .style("filter", null);
+
+        return;
+      }
+
+      node
+        .transition()
+        .duration(300)
+        .style("opacity", (d) => {
+          const text = `${d.label} ${d.id}`.toLowerCase();
+          return text.includes(query) ? 1 : 0.2;
+        });
+
+      node
+        .selectAll("rect,circle,polygon,path")
+        .transition()
+        .duration(300)
+        .style("stroke-width", function (_, i) {
+          const d = nodes[i];
+          const text = `${d.label} ${d.id}`.toLowerCase();
+
+          return text.includes(query) ? "4px" : null;
+        })
+        .style("filter", function (_, i) {
+          const d = nodes[i];
+          const text = `${d.label} ${d.id}`.toLowerCase();
+
+          return text.includes(query) ? "drop-shadow(0 0 8px #60a5fa)" : null;
+        });
+    };
+
     const applyHighlight = (selectedId: string | null) => {
       if (!selectedId || !relations[selectedId]) {
         node.style("opacity", 1);
@@ -460,6 +500,7 @@ export default function InteractiveDiagram({
       event.stopPropagation();
       selectedIdRef.current = d.id;
       applyHighlight(selectedIdRef.current);
+      applySearchHighlight();
     });
 
     svgSel.on("click", () => {
@@ -509,6 +550,7 @@ export default function InteractiveDiagram({
     });
 
     applyHighlight(selectedIdRef.current);
+    applySearchHighlight();
 
     // Fit immediately once nodes exist (positions will update quickly)
     const raf = window.requestAnimationFrame(() => {
@@ -520,7 +562,7 @@ export default function InteractiveDiagram({
       window.cancelAnimationFrame(raf);
       simulation.stop();
     };
-  }, [dimensions, fitToScreen, systemGraph, relations]);
+  }, [dimensions, fitToScreen, systemGraph, relations, searchQuery]);
 
   const handleZoomIn = () => {
     const svgSel = svgSelectionRef.current;
