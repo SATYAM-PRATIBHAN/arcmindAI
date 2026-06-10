@@ -426,6 +426,44 @@ export default function InteractiveDiagram({
         .attr("pointer-events", "none");
     });
 
+    const applySearchHighlight = () => {
+      const query = searchQueryRef.current.trim().toLowerCase();
+
+      if (!query) {
+        node.transition().duration(300).style("opacity", 1);
+
+        node
+          .selectAll("rect,circle,polygon,path")
+          .style("stroke-width", null)
+          .style("filter", null);
+
+        return;
+      }
+
+      node
+        .transition()
+        .duration(300)
+        .style("opacity", (d) => {
+          const text = `${d.label} ${d.id}`.toLowerCase();
+          return text.includes(query) ? 1 : 0.2;
+        });
+
+      node
+        .selectAll<SVGElement, DiagramNode>("rect,circle,polygon,path")
+        .transition()
+        .duration(300)
+        .style("stroke-width", function (d) {
+          const text = `${d.label} ${d.id}`.toLowerCase();
+
+          return text.includes(query) ? "2px" : null;
+        })
+        .style("filter", function (d) {
+          const text = `${d.label} ${d.id}`.toLowerCase();
+
+          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
+        });
+    };
+
     const applyHighlight = (selectedId: string | null) => {
       if (!selectedId || !relations[selectedId]) {
         node.style("opacity", 1);
@@ -476,11 +514,13 @@ export default function InteractiveDiagram({
       event.stopPropagation();
       selectedIdRef.current = d.id;
       applyHighlight(selectedIdRef.current);
+      applySearchHighlight();
     });
 
     svgSel.on("click", () => {
       selectedIdRef.current = null;
       applyHighlight(null);
+      applySearchHighlight();
     });
 
     // Initialize the physics engine
@@ -525,16 +565,20 @@ export default function InteractiveDiagram({
     });
 
     applyHighlight(selectedIdRef.current);
+    applySearchHighlight();
 
     // Fit immediately once nodes exist (positions will update quickly)
     const raf = window.requestAnimationFrame(() => {
       fitToScreen({ padding: 28 });
     });
 
+    updateSearchHighlightRef.current = applySearchHighlight;
+
     // Clean up
     return () => {
       window.cancelAnimationFrame(raf);
       simulation.stop();
+      updateSearchHighlightRef.current = null;
     };
   }, [dimensions, fitToScreen, systemGraph, relations, activeLayers]);
 
