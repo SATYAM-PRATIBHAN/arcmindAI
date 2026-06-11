@@ -223,6 +223,13 @@ export default function InteractiveDiagram({
   const { isD3Enabled, activeLayers, searchQuery } = useDiagram();
   const searchQueryRef = useRef(searchQuery ?? "");
   const updateSearchHighlightRef = useRef<(() => void) | null>(null);
+  const activeLayersRef = useRef(activeLayers);
+  const updateLayerVisibilityRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    activeLayersRef.current = activeLayers;
+    updateLayerVisibilityRef.current?.();
+  }, [activeLayers]);
 
   useEffect(() => {
     searchQueryRef.current = searchQuery ?? "";
@@ -378,21 +385,9 @@ export default function InteractiveDiagram({
     const getNodeId = (node: string | DiagramNode) =>
       typeof node === "string" ? node : node.id;
 
-    const filteredNodes = systemGraph.nodes.filter((node) =>
-      activeLayers.includes(node.layer),
-    );
+    const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
 
-    const filteredNodeIds = new Set(filteredNodes.map((node) => node.id));
-
-    const nodes: DiagramNode[] = filteredNodes.map((node) => ({ ...node }));
-
-    const links: DiagramLink[] = systemGraph.links
-      .filter(
-        (link) =>
-          filteredNodeIds.has(getNodeId(link.source)) &&
-          filteredNodeIds.has(getNodeId(link.target)),
-      )
-      .map((link) => ({ ...link }));
+    const links: DiagramLink[] = systemGraph.links.map((link) => ({ ...link }));
 
     const g = gZoom.append("g").attr("class", "d3-diagram");
 
@@ -469,6 +464,32 @@ export default function InteractiveDiagram({
 
           return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
         });
+    };
+
+    const applyLayerVisibility = () => {
+      const visibleLayers = new Set(activeLayersRef.current);
+
+      node
+        .transition()
+        .duration(250)
+        .style("opacity", (d) => (visibleLayers.has(d.layer) ? 1 : 0))
+        .style("pointer-events", (d) =>
+          visibleLayers.has(d.layer) ? "auto" : "none",
+        );
+
+      link
+        .transition()
+        .duration(250)
+        .style("opacity", (d) => {
+          const source = d.source as DiagramNode;
+          const target = d.target as DiagramNode;
+
+          return visibleLayers.has(source.layer) &&
+            visibleLayers.has(target.layer)
+            ? 1
+            : 0;
+        })
+        .style("pointer-events", "none");
     };
 
     const applyHighlight = (selectedId: string | null) => {
@@ -580,14 +601,17 @@ export default function InteractiveDiagram({
     });
 
     updateSearchHighlightRef.current = applySearchHighlight;
+    updateLayerVisibilityRef.current = applyLayerVisibility;
+    applyLayerVisibility();
 
     // Clean up
     return () => {
       window.cancelAnimationFrame(raf);
       simulation.stop();
       updateSearchHighlightRef.current = null;
+      updateLayerVisibilityRef.current = null;
     };
-  }, [dimensions, fitToScreen, systemGraph, relations, activeLayers]);
+  }, [dimensions, fitToScreen, systemGraph, relations]);
 
   const handleZoomIn = () => {
     const svgSel = svgSelectionRef.current;
