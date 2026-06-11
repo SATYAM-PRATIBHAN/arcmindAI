@@ -9,7 +9,7 @@ const layers: DiagramLayer[] = [
   "Database",
   "Infrastructure",
   "External",
-  "Unknown",
+  "Other Services",
 ];
 
 export default function LayerToggle() {

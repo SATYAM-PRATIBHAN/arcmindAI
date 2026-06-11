@@ -7,7 +7,7 @@ export type DiagramLayer =
   | "Database"
   | "Infrastructure"
   | "External"
-  | "Unknown";
+  | "Other Services";
 
 /**
  * Represents the criticality of a node based on its dependencies.

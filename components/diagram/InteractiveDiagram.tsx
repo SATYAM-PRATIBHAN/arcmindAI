@@ -43,7 +43,7 @@ const DEFAULT_LAYER_COLORS: Record<DiagramLayer, string> = {
   Database: "#10b981",
   Infrastructure: "#f59e0b",
   External: "#ec4899",
-  Unknown: "var(--card)",
+  "Other Services": "var(--card)",
 };
 /**
  * Parse Mermaid-style class declarations such as
@@ -428,54 +428,60 @@ export default function InteractiveDiagram({
         .attr("pointer-events", "none");
     });
 
-    const applySearchHighlight = () => {
+    const updateVisualState = () => {
       const query = searchQueryRef.current.trim().toLowerCase();
+      const visibleLayers = new Set(activeLayersRef.current);
+      const selectedId = selectedIdRef.current;
 
-      if (!query) {
-        node.transition().duration(300).style("opacity", 1);
-
-        node
-          .selectAll("rect,circle,polygon,path")
-          .style("stroke-width", null)
-          .style("filter", null);
-
-        return;
+      const upstream = new Set<string>();
+      const downstream = new Set<string>();
+      if (selectedId) {
+        upstream.add(selectedId);
+        downstream.add(selectedId);
+        const rel = relations[selectedId];
+        if (rel) {
+          rel.ancestors.forEach((n) => upstream.add(n.id));
+          rel.descendants.forEach((n) => downstream.add(n.id));
+        }
       }
 
-      node
-        .transition()
-        .duration(300)
-        .style("opacity", (d) => {
-          const text = `${d.label} ${d.id}`.toLowerCase();
-          return text.includes(query) ? 1 : 0.2;
-        });
-
-      node
-        .selectAll<SVGElement, DiagramNode>("rect,circle,polygon,path")
-        .transition()
-        .duration(300)
-        .style("stroke-width", function (d) {
-          const text = `${d.label} ${d.id}`.toLowerCase();
-
-          return text.includes(query) ? "2px" : null;
-        })
-        .style("filter", function (d) {
-          const text = `${d.label} ${d.id}`.toLowerCase();
-
-          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
-        });
-    };
-
-    const applyLayerVisibility = () => {
-      const visibleLayers = new Set(activeLayersRef.current);
+      const onPath = (s: string, t: string) =>
+        (upstream.has(s) && upstream.has(t)) ||
+        (downstream.has(s) && downstream.has(t));
 
       node
         .transition()
         .duration(250)
-        .style("opacity", (d) => (visibleLayers.has(d.layer) ? 1 : 0))
+        .style("opacity", (d) => {
+          if (!visibleLayers.has(d.layer)) return 0;
+          let op = 1;
+          if (query) {
+            const text = `${d.label} ${d.id}`.toLowerCase();
+            if (!text.includes(query)) op = 0.2;
+          }
+          if (selectedId) {
+            if (!upstream.has(d.id) && !downstream.has(d.id)) op = 0.2;
+          }
+          return op;
+        })
         .style("pointer-events", (d) =>
           visibleLayers.has(d.layer) ? "auto" : "none",
         );
+
+      node
+        .selectAll<SVGElement, DiagramNode>("rect,circle,polygon,path")
+        .transition()
+        .duration(250)
+        .style("stroke-width", function (d) {
+          if (!query) return null;
+          const text = `${d.label} ${d.id}`.toLowerCase();
+          return text.includes(query) ? "2px" : null;
+        })
+        .style("filter", function (d) {
+          if (!query) return null;
+          const text = `${d.label} ${d.id}`.toLowerCase();
+          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
+        });
 
       link
         .transition()
@@ -483,72 +489,48 @@ export default function InteractiveDiagram({
         .style("opacity", (d) => {
           const source = d.source as DiagramNode;
           const target = d.target as DiagramNode;
-
-          return visibleLayers.has(source.layer) &&
-            visibleLayers.has(target.layer)
-            ? 1
-            : 0;
+          if (
+            !visibleLayers.has(source.layer) ||
+            !visibleLayers.has(target.layer)
+          ) {
+            return 0;
+          }
+          let op = getLinkOpacity(d);
+          if (selectedId) {
+            op = onPath(source.id, target.id) ? 0.9 : 0.05;
+          }
+          return op;
         })
-        .style("pointer-events", "none");
-    };
-
-    const applyHighlight = (selectedId: string | null) => {
-      if (!selectedId || !relations[selectedId]) {
-        node.style("opacity", 1);
-        link
-          .attr("stroke", "currentColor")
-          .attr("stroke-opacity", (d) => getLinkOpacity(d))
-          .attr("stroke-width", 2)
-          .attr("stroke-dasharray", (d) => getLinkDashArray(d));
-        return;
-      }
-
-      const rel = relations[selectedId];
-      const upstream = new Set<string>([
-        selectedId,
-        ...rel.ancestors.map((n) => n.id),
-      ]);
-      const downstream = new Set<string>([
-        selectedId,
-        ...rel.descendants.map((n) => n.id),
-      ]);
-      const onPath = (s: string, t: string) =>
-        (upstream.has(s) && upstream.has(t)) ||
-        (downstream.has(s) && downstream.has(t));
-
-      node.style("opacity", (d) =>
-        upstream.has(d.id) || downstream.has(d.id) ? 1 : 0.2,
-      );
-
-      link
-        .attr("stroke", (d) =>
-          onPath((d.source as DiagramNode).id, (d.target as DiagramNode).id)
-            ? "var(--primary)"
-            : "currentColor",
-        )
-        .attr("stroke-opacity", (d) =>
-          onPath((d.source as DiagramNode).id, (d.target as DiagramNode).id)
-            ? 0.9
-            : 0.05,
-        )
-        .attr("stroke-width", (d) =>
-          onPath((d.source as DiagramNode).id, (d.target as DiagramNode).id)
-            ? 3
-            : 2,
-        );
+        .style("pointer-events", "none")
+        .attr("stroke", (d) => {
+          if (selectedId) {
+            const source = d.source as DiagramNode;
+            const target = d.target as DiagramNode;
+            return onPath(source.id, target.id)
+              ? "var(--primary)"
+              : "currentColor";
+          }
+          return "currentColor";
+        })
+        .attr("stroke-width", (d) => {
+          if (selectedId) {
+            const source = d.source as DiagramNode;
+            const target = d.target as DiagramNode;
+            return onPath(source.id, target.id) ? 3 : 2;
+          }
+          return 2;
+        });
     };
 
     node.style("cursor", "pointer").on("click", (event, d) => {
       event.stopPropagation();
       selectedIdRef.current = d.id;
-      applyHighlight(selectedIdRef.current);
-      applySearchHighlight();
+      updateVisualState();
     });
 
     svgSel.on("click", () => {
       selectedIdRef.current = null;
-      applyHighlight(null);
-      applySearchHighlight();
+      updateVisualState();
     });
 
     // Initialize the physics engine
@@ -592,17 +574,14 @@ export default function InteractiveDiagram({
       fitToScreen({ padding: 28 });
     });
 
-    applyHighlight(selectedIdRef.current);
-    applySearchHighlight();
+    updateSearchHighlightRef.current = updateVisualState;
+    updateLayerVisibilityRef.current = updateVisualState;
+    updateVisualState();
 
     // Fit immediately once nodes exist (positions will update quickly)
     const raf = window.requestAnimationFrame(() => {
       fitToScreen({ padding: 28 });
     });
-
-    updateSearchHighlightRef.current = applySearchHighlight;
-    updateLayerVisibilityRef.current = applyLayerVisibility;
-    applyLayerVisibility();
 
     // Clean up
     return () => {
