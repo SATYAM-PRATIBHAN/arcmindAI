@@ -243,8 +243,6 @@ export default function InteractiveDiagram({
   );
   const getLinkOpacity = (d: DiagramLink) =>
     d.type === "fallback" ? 0.25 : 0.4;
-  const getLinkDashArray = (d: DiagramLink) =>
-    d.type === "async" ? "6 4" : null;
 
   // Use ResizeObserver to keep track of the container's dimensions
   useEffect(() => {
@@ -381,9 +379,6 @@ export default function InteractiveDiagram({
 
     zoomRef.current = zoom;
     svgSel.call(zoom);
-
-    const getNodeId = (node: string | DiagramNode) =>
-      typeof node === "string" ? node : node.id;
 
     const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
 
