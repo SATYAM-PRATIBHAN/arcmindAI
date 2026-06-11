@@ -1,5 +1,5 @@
 "use client";
-
+import LayerToggle from "@/components/diagram/LayerToggle";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
 import { analyzeDiagramRelations } from "@/lib/utils/diagram-analyzer";
 import {
@@ -43,7 +43,7 @@ const DEFAULT_LAYER_COLORS: Record<DiagramLayer, string> = {
   Database: "#10b981",
   Infrastructure: "#f59e0b",
   External: "#ec4899",
-  Unknown: "var(--card)",
+  "Other Services": "var(--card)",
 };
 /**
  * Parse Mermaid-style class declarations such as
@@ -220,18 +220,20 @@ export default function InteractiveDiagram({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { isD3Enabled, searchQuery } = useDiagram();
-  const searchQueryRef = useRef(searchQuery);
+  const { isD3Enabled, activeLayers, searchQuery } = useDiagram();
+  const searchQueryRef = useRef(searchQuery ?? "");
   const updateSearchHighlightRef = useRef<(() => void) | null>(null);
+  const activeLayersRef = useRef(activeLayers);
+  const updateLayerVisibilityRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    searchQueryRef.current = searchQuery;
-  }, [searchQuery]);
+    activeLayersRef.current = activeLayers;
+    updateLayerVisibilityRef.current?.();
+  }, [activeLayers]);
 
   useEffect(() => {
-    if (updateSearchHighlightRef.current) {
-      updateSearchHighlightRef.current();
-    }
+    searchQueryRef.current = searchQuery ?? "";
+    updateSearchHighlightRef.current?.();
   }, [searchQuery]);
 
   const selectedIdRef = useRef<string | null>(null);
@@ -241,8 +243,6 @@ export default function InteractiveDiagram({
   );
   const getLinkOpacity = (d: DiagramLink) =>
     d.type === "fallback" ? 0.25 : 0.4;
-  const getLinkDashArray = (d: DiagramLink) =>
-    d.type === "async" ? "6 4" : null;
 
   // Use ResizeObserver to keep track of the container's dimensions
   useEffect(() => {
@@ -380,9 +380,10 @@ export default function InteractiveDiagram({
     zoomRef.current = zoom;
     svgSel.call(zoom);
 
-    const nodes: DiagramNode[] = systemGraph.nodes.map((n) => ({ ...n }));
-    // parseMermaidToJSON already guarantees that the source and target exist in nodes.
-    const links: DiagramLink[] = systemGraph.links.map((l) => ({ ...l }));
+    const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
+
+    const links: DiagramLink[] = systemGraph.links.map((link) => ({ ...link }));
+
     const g = gZoom.append("g").attr("class", "d3-diagram");
 
     const link = g
@@ -422,101 +423,109 @@ export default function InteractiveDiagram({
         .attr("pointer-events", "none");
     });
 
-    const applySearchHighlight = () => {
+    const updateVisualState = () => {
       const query = searchQueryRef.current.trim().toLowerCase();
+      const visibleLayers = new Set(activeLayersRef.current);
+      const selectedId = selectedIdRef.current;
 
-      if (!query) {
-        node.transition().duration(300).style("opacity", 1);
-
-        node
-          .selectAll("rect,circle,polygon,path")
-          .style("stroke-width", null)
-          .style("filter", null);
-
-        return;
+      const upstream = new Set<string>();
+      const downstream = new Set<string>();
+      if (selectedId) {
+        upstream.add(selectedId);
+        downstream.add(selectedId);
+        const rel = relations[selectedId];
+        if (rel) {
+          rel.ancestors.forEach((n) => upstream.add(n.id));
+          rel.descendants.forEach((n) => downstream.add(n.id));
+        }
       }
 
-      node
-        .transition()
-        .duration(300)
-        .style("opacity", (d) => {
-          const text = `${d.label} ${d.id}`.toLowerCase();
-          return text.includes(query) ? 1 : 0.2;
-        });
-
-      node
-        .selectAll<SVGElement, DiagramNode>("rect,circle,polygon,path")
-        .transition()
-        .duration(300)
-        .style("stroke-width", function (d) {
-          const text = `${d.label} ${d.id}`.toLowerCase();
-
-          return text.includes(query) ? "2px" : null;
-        })
-        .style("filter", function (d) {
-          const text = `${d.label} ${d.id}`.toLowerCase();
-
-          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
-        });
-    };
-
-    const applyHighlight = (selectedId: string | null) => {
-      if (!selectedId || !relations[selectedId]) {
-        node.style("opacity", 1);
-        link
-          .attr("stroke", "currentColor")
-          .attr("stroke-opacity", (d) => getLinkOpacity(d))
-          .attr("stroke-width", 2)
-          .attr("stroke-dasharray", (d) => getLinkDashArray(d));
-        return;
-      }
-
-      const rel = relations[selectedId];
-      const upstream = new Set<string>([
-        selectedId,
-        ...rel.ancestors.map((n) => n.id),
-      ]);
-      const downstream = new Set<string>([
-        selectedId,
-        ...rel.descendants.map((n) => n.id),
-      ]);
       const onPath = (s: string, t: string) =>
         (upstream.has(s) && upstream.has(t)) ||
         (downstream.has(s) && downstream.has(t));
 
-      node.style("opacity", (d) =>
-        upstream.has(d.id) || downstream.has(d.id) ? 1 : 0.2,
-      );
+      node
+        .transition()
+        .duration(250)
+        .style("opacity", (d) => {
+          if (!visibleLayers.has(d.layer)) return 0;
+          let op = 1;
+          if (query) {
+            const text = `${d.label} ${d.id}`.toLowerCase();
+            if (!text.includes(query)) op = 0.2;
+          }
+          if (selectedId) {
+            if (!upstream.has(d.id) && !downstream.has(d.id)) op = 0.2;
+          }
+          return op;
+        })
+        .style("pointer-events", (d) =>
+          visibleLayers.has(d.layer) ? "auto" : "none",
+        );
+
+      node
+        .selectAll<SVGElement, DiagramNode>("rect,circle,polygon,path")
+        .transition()
+        .duration(250)
+        .style("stroke-width", function (d) {
+          if (!query) return null;
+          const text = `${d.label} ${d.id}`.toLowerCase();
+          return text.includes(query) ? "2px" : null;
+        })
+        .style("filter", function (d) {
+          if (!query) return null;
+          const text = `${d.label} ${d.id}`.toLowerCase();
+          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
+        });
 
       link
-        .attr("stroke", (d) =>
-          onPath((d.source as DiagramNode).id, (d.target as DiagramNode).id)
-            ? "var(--primary)"
-            : "currentColor",
-        )
-        .attr("stroke-opacity", (d) =>
-          onPath((d.source as DiagramNode).id, (d.target as DiagramNode).id)
-            ? 0.9
-            : 0.05,
-        )
-        .attr("stroke-width", (d) =>
-          onPath((d.source as DiagramNode).id, (d.target as DiagramNode).id)
-            ? 3
-            : 2,
-        );
+        .transition()
+        .duration(250)
+        .style("opacity", (d) => {
+          const source = d.source as DiagramNode;
+          const target = d.target as DiagramNode;
+          if (
+            !visibleLayers.has(source.layer) ||
+            !visibleLayers.has(target.layer)
+          ) {
+            return 0;
+          }
+          let op = getLinkOpacity(d);
+          if (selectedId) {
+            op = onPath(source.id, target.id) ? 0.9 : 0.05;
+          }
+          return op;
+        })
+        .style("pointer-events", "none")
+        .attr("stroke", (d) => {
+          if (selectedId) {
+            const source = d.source as DiagramNode;
+            const target = d.target as DiagramNode;
+            return onPath(source.id, target.id)
+              ? "var(--primary)"
+              : "currentColor";
+          }
+          return "currentColor";
+        })
+        .attr("stroke-width", (d) => {
+          if (selectedId) {
+            const source = d.source as DiagramNode;
+            const target = d.target as DiagramNode;
+            return onPath(source.id, target.id) ? 3 : 2;
+          }
+          return 2;
+        });
     };
 
     node.style("cursor", "pointer").on("click", (event, d) => {
       event.stopPropagation();
       selectedIdRef.current = d.id;
-      applyHighlight(selectedIdRef.current);
-      applySearchHighlight();
+      updateVisualState();
     });
 
     svgSel.on("click", () => {
       selectedIdRef.current = null;
-      applyHighlight(null);
-      applySearchHighlight();
+      updateVisualState();
     });
 
     // Initialize the physics engine
@@ -560,21 +569,21 @@ export default function InteractiveDiagram({
       fitToScreen({ padding: 28 });
     });
 
-    applyHighlight(selectedIdRef.current);
-    applySearchHighlight();
+    updateSearchHighlightRef.current = updateVisualState;
+    updateLayerVisibilityRef.current = updateVisualState;
+    updateVisualState();
 
     // Fit immediately once nodes exist (positions will update quickly)
     const raf = window.requestAnimationFrame(() => {
       fitToScreen({ padding: 28 });
     });
 
-    updateSearchHighlightRef.current = applySearchHighlight;
-
     // Clean up
     return () => {
       window.cancelAnimationFrame(raf);
       simulation.stop();
       updateSearchHighlightRef.current = null;
+      updateLayerVisibilityRef.current = null;
     };
   }, [dimensions, fitToScreen, systemGraph, relations]);
 
@@ -604,6 +613,8 @@ export default function InteractiveDiagram({
     >
       {/* Floating search input (top-left) */}
       <FloatingSearch position="left" />
+      {/* Layer Filters */}
+      <LayerToggle />
       {/* Floating viewport controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
         <div className="inline-flex rounded-xl border border-border/40 bg-background/60 backdrop-blur p-1 shadow-sm gap-1">

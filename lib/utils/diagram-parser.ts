@@ -137,7 +137,7 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
             label: nodeId,
             type: "Unknown",
             shape: "rectangle",
-            layer: "Unknown",
+            layer: "Other Services",
             severity: "Medium",
             subgraphId: currentSubgraphId,
             subgraphTitle: currentSubgraphTitle,
@@ -257,7 +257,7 @@ function inferLayerFromContext(
     return "Frontend";
   if (context.includes("external") || context.includes("auth"))
     return "External";
-  return "Unknown";
+  return "Other Services";
 }
 
 /**
