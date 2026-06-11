@@ -139,6 +139,7 @@ Unsure where to begin? Look for issues labeled:
 3. **Write meaningful commit messages**
 4. **Test your changes** thoroughly
 5. **Keep pull requests focused** - one feature/fix per PR
+6. **Include pictures or videos for UI changes**. If your feature includes UI changes, pictures or videos **must** be attached. Otherwise, the PR will be taken down without any review.
 
 **Pull Request Process:**
 
