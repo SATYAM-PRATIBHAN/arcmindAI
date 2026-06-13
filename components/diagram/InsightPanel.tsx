@@ -2,10 +2,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DiagramNode } from "@/types/diagram";
-import { X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { DiagramNode } from "@/types/diagram";
+import { AnimatePresence, motion } from "framer-motion";
+import { X } from "lucide-react";
 
 interface InsightPanelProps {
   open: boolean;
@@ -152,6 +152,14 @@ export default function InsightPanel({
                         <p className="text-sm">{node.subgraphTitle}</p>
                       </div>
                     )}
+
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Criticality Score
+                      </p>
+
+                      <p className="text-sm">{node.centralityScore}</p>
+                    </div>
                   </div>
                 </div>
 
