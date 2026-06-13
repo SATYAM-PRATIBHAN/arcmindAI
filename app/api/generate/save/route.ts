@@ -3,6 +3,7 @@ import { db } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Prisma } from "@prisma/client";
+import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
         userInput,
         generatedOutput: generatedOutput as Prisma.InputJsonValue,
         userId: userId as string,
+        shareId: nanoid(16),
       },
     });
 

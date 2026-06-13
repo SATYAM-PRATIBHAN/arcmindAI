@@ -17,6 +17,7 @@ import {
   httpRequestsTotal,
 } from "@/lib/metrics";
 import { sendWebhook } from "@/lib/webhooks/sendWebhook";
+import { nanoid } from "nanoid";
 
 interface GenerateGithubDesignRequest {
   owner: string;
@@ -231,6 +232,7 @@ export async function POST(request: NextRequest) {
               userInput: repoIdentifier,
               githubGeneration: mermaidDiagram,
               userId: userId!,
+              shareId: nanoid(16),
             },
           });
           databaseQueryDurationSeconds.observe(

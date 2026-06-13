@@ -22,6 +22,7 @@ import {
 } from "@/lib/metrics";
 import { sendWebhook } from "@/lib/webhooks/sendWebhook";
 import { Prisma } from "@prisma/client";
+import { nanoid } from "nanoid";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
@@ -444,6 +445,7 @@ export async function POST(req: NextRequest) {
                 userInput,
                 generatedOutput: parsedData as Prisma.InputJsonValue,
                 userId: userId as string,
+                shareId: nanoid(16),
               },
             });
 

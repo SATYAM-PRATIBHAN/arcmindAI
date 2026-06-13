@@ -568,9 +568,6 @@ export async function PATCH(
       );
     }
 
-    // Generate shareId if it doesn't exist
-    const shareId = generation.shareId || nanoid(10);
-
     const updatedGeneration = await db.generation.update({
       where: {
         id: generationId,
@@ -578,7 +575,7 @@ export async function PATCH(
 
       data: {
         isPublic: true,
-        shareId: shareId,
+        shareId: generation.shareId ?? nanoid(16), // Generate shareId if it doesn't exist, temporary use until migrations, then remove it.
       },
     });
 
