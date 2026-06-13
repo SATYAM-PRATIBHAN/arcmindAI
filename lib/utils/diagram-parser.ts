@@ -101,6 +101,7 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
           shape,
           layer: inferLayerFromContext(label, currentSubgraphTitle),
           severity: "Medium", // Will be calculated in the second pass
+          centralityScore: 0, // Pessimistic default is 0, will be calculated in the second pass
           subgraphId: currentSubgraphId,
           subgraphTitle: currentSubgraphTitle,
         };
@@ -139,6 +140,7 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
             shape: "rectangle",
             layer: "Other Services",
             severity: "Medium",
+            centralityScore: 0,
             subgraphId: currentSubgraphId,
             subgraphTitle: currentSubgraphTitle,
           };
@@ -177,16 +179,17 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
 
   // 5. Calculate Severity (Second pass based on graph topology)
   nodes.forEach((node) => {
-    const incomingConnections = links.filter(
-      (l) => l.target === node.id,
-    ).length;
-    const outgoingConnections = links.filter(
-      (l) => l.source === node.id,
-    ).length;
+    const incomingConnections = links.filter((l) => l.target === node.id);
+    const outgoingConnections = links.filter((l) => l.source === node.id);
+    const neighbors = new Set([
+      ...incomingConnections.map((l) => l.source),
+      ...outgoingConnections.map((l) => l.target),
+    ]);
+    node.centralityScore = neighbors.size;
     node.severity = calculateNodeSeverity(
       node,
-      incomingConnections,
-      outgoingConnections,
+      incomingConnections.length,
+      outgoingConnections.length,
     );
   });
 
