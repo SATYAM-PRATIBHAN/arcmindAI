@@ -80,6 +80,18 @@ export const authOptions: AuthOptions = {
             throw new Error("User not found");
           }
 
+          // Check if email is verified
+          if (!user.isVerified) {
+            apiGatewayErrorsTotal.inc({ status_code: "403" });
+
+            httpRequestDurationSeconds.observe(
+              { route },
+              (Date.now() - startTime) / 1000,
+            );
+
+            throw new Error("Please verify your email before logging in");
+          }
+
           // Rate limit by account (email)
           const accountLimitResult = await loginRateLimitAccount.limit(
             credentials.email,
