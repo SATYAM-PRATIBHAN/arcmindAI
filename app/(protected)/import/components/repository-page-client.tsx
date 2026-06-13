@@ -124,6 +124,15 @@ export function RepositoryPageClient() {
     }
   }, [analyzeError]);
 
+  // Handle warnings
+  useEffect(() => {
+    if (analysis?.warnings && analysis.warnings.length > 0) {
+      analysis.warnings.forEach((warning) => {
+        toast.warning(warning, { duration: 10000 });
+      });
+    }
+  }, [analysis]);
+
   useEffect(() => {
     if (generateError) {
       toast.error(`Design generation failed: ${generateError}`);

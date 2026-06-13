@@ -21,6 +21,7 @@ export class RepositoryAnalyzer {
   private token: string;
   private tree: GitHubTreeNode[] = [];
   private fileContents: Map<string, string> = new Map();
+  private warnings: string[] = [];
 
   constructor(
     userId: string,
@@ -95,6 +96,7 @@ export class RepositoryAnalyzer {
       tests,
       messaging,
       analyzedAt: new Date().toISOString(),
+      warnings: this.warnings,
     };
   }
 
@@ -165,7 +167,32 @@ export class RepositoryAnalyzer {
         return response.data;
       },
     );
-    this.tree = data.tree;
+
+    if (data.truncated) {
+      this.warnings.push(
+        "The repository tree is too large. Some files may have been skipped by GitHub.",
+      );
+    }
+
+    const MAX_REPO_TREE_SIZE = Number(process.env.MAX_REPO_TREE_SIZE) || 20000;
+    if (data.tree.length > MAX_REPO_TREE_SIZE) {
+      throw new Error(
+        `Repository exceeds maximum allowed size for analysis (${MAX_REPO_TREE_SIZE} files).`,
+      );
+    }
+
+    const MAX_REPO_DEPTH = Number(process.env.MAX_REPO_DEPTH) || 10;
+    const originalLength = data.tree.length;
+    this.tree = data.tree.filter(
+      (node: GitHubTreeNode) => node.path.split("/").length <= MAX_REPO_DEPTH,
+    );
+
+    const removedByDepth = originalLength - this.tree.length;
+    if (removedByDepth > 0) {
+      this.warnings.push(
+        `Skipped ${removedByDepth} files exceeding max depth of ${MAX_REPO_DEPTH}.`,
+      );
+    }
   }
 
   private async fetchImportantFiles(): Promise<void> {
@@ -181,12 +208,21 @@ export class RepositoryAnalyzer {
       FILE_PATTERNS.openapi,
     ];
 
-    const filesToFetch = this.tree
+    const MAX_REPO_FILES_SCANNED =
+      Number(process.env.MAX_REPO_FILES_SCANNED) || 50;
+
+    let filesToFetch = this.tree
       .filter((node) => node.type === "blob")
       .filter((node) =>
         importantPatterns.some((pattern) => pattern.test(node.path)),
-      )
-      .slice(0, 50); // Limit to avoid rate limits
+      );
+
+    if (filesToFetch.length > MAX_REPO_FILES_SCANNED) {
+      this.warnings.push(
+        `Truncated file scans: analyzed ${MAX_REPO_FILES_SCANNED} out of ${filesToFetch.length} important files.`,
+      );
+      filesToFetch = filesToFetch.slice(0, MAX_REPO_FILES_SCANNED);
+    }
 
     await Promise.all(
       filesToFetch.map((file) => this.fetchFileContent(file.path)),

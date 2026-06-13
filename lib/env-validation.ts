@@ -26,6 +26,9 @@ const optionalVars = [
   "GOOGLE_REDIRECT_URI",
   "GRIEVANCE_EMAIL",
   "API_BODY_LIMIT_BYTES",
+  "MAX_REPO_TREE_SIZE",
+  "MAX_REPO_DEPTH",
+  "MAX_REPO_FILES_SCANNED",
 ] as const;
 
 export function validateEnv(): void {
