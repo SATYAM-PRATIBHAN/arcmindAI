@@ -151,6 +151,7 @@ export interface RepositoryAnalysis {
   tests: TestAnalysis;
   messaging: MessagingAnalysis;
   analyzedAt: string;
+  warnings?: string[];
 }
 
 export interface AnalyzeRepositoryRequest {
