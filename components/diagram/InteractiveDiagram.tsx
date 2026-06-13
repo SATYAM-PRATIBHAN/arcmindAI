@@ -13,6 +13,7 @@ import * as d3 from "d3";
 import { Maximize, Minus, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FloatingSearch from "@/components/diagram/FloatingSearch";
+import InsightPanel from "@/components/diagram/InsightPanel";
 
 type NodeSelection = d3.Selection<SVGGElement, DiagramNode, null, undefined>;
 
@@ -237,6 +238,11 @@ export default function InteractiveDiagram({
   }, [searchQuery]);
 
   const selectedIdRef = useRef<string | null>(null);
+
+  const [selectedNode, setSelectedNode] = useState<DiagramNode | null>(null);
+  const [isInsightOpen, setIsInsightOpen] = useState(false);
+  const hasInitializedRef = useRef(false);
+
   const relations = useMemo(
     () => (systemGraph ? analyzeDiagramRelations(systemGraph) : {}),
     [systemGraph],
@@ -252,7 +258,15 @@ export default function InteractiveDiagram({
       for (const entry of entries) {
         // Use contentRect for accurate sizing
         const { width, height } = entry.contentRect;
-        setDimensions({ width, height });
+        setDimensions((prev) => {
+          if (
+            Math.abs(prev.width - width) < 2 &&
+            Math.abs(prev.height - height) < 2
+          ) {
+            return prev;
+          }
+          return { width, height };
+        });
       }
     });
 
@@ -468,11 +482,18 @@ export default function InteractiveDiagram({
         .transition()
         .duration(250)
         .style("stroke-width", function (d) {
+          // Highlight selected node more prominently
+          if (selectedId === d.id) return "3px";
+
           if (!query) return null;
           const text = `${d.label} ${d.id}`.toLowerCase();
           return text.includes(query) ? "2px" : null;
         })
         .style("filter", function (d) {
+          // Strong glow for selected node
+          if (selectedId === d.id)
+            return "drop-shadow(0 0 12px var(--primary))";
+
           if (!query) return null;
           const text = `${d.label} ${d.id}`.toLowerCase();
           return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
@@ -520,11 +541,15 @@ export default function InteractiveDiagram({
     node.style("cursor", "pointer").on("click", (event, d) => {
       event.stopPropagation();
       selectedIdRef.current = d.id;
+      setSelectedNode(d);
+      setIsInsightOpen(true);
       updateVisualState();
     });
 
     svgSel.on("click", () => {
       selectedIdRef.current = null;
+      setSelectedNode(null);
+      setIsInsightOpen(false);
       updateVisualState();
     });
 
@@ -565,22 +590,20 @@ export default function InteractiveDiagram({
 
     simulation.on("end", () => {
       simulation.stop();
-      // Fit after simulation stabilizes
-      fitToScreen({ padding: 28 });
+      // Fit to screen after initial stabilization, but only on the first run to avoid
+      if (!hasInitializedRef.current) {
+        fitToScreen({ padding: 28 });
+
+        hasInitializedRef.current = true;
+      }
     });
 
     updateSearchHighlightRef.current = updateVisualState;
     updateLayerVisibilityRef.current = updateVisualState;
     updateVisualState();
 
-    // Fit immediately once nodes exist (positions will update quickly)
-    const raf = window.requestAnimationFrame(() => {
-      fitToScreen({ padding: 28 });
-    });
-
     // Clean up
     return () => {
-      window.cancelAnimationFrame(raf);
       simulation.stop();
       updateSearchHighlightRef.current = null;
       updateLayerVisibilityRef.current = null;
@@ -652,6 +675,12 @@ export default function InteractiveDiagram({
         ref={svgRef}
         className="w-full h-full block touch-none cursor-grab active:cursor-grabbing"
         preserveAspectRatio="xMidYMid meet"
+      />
+
+      <InsightPanel
+        open={isInsightOpen}
+        onOpenChange={setIsInsightOpen}
+        node={selectedNode}
       />
 
       {/* Dev Mode Badge */}
