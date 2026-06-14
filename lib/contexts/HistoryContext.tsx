@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import { useSession } from "next-auth/react";
@@ -34,7 +35,7 @@ export function HistoryProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     // @ts-expect-error accessToken is added to session in NextAuth callbacks
     if (!session?.user?.accessToken) {
       setError("No access token available. Please log in.");
@@ -66,7 +67,8 @@ export function HistoryProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+    // @ts-expect-error accessToken is added to session in NextAuth callbacks
+  }, [session?.user?.accessToken]);
 
   const refetch = fetchHistory;
 
@@ -77,6 +79,7 @@ export function HistoryProvider({ children }: { children: ReactNode }) {
       fetchHistory();
     }
   }, [
+    fetchHistory,
     // @ts-expect-error id is added to session in NextAuth callbacks
     session?.user?.id,
   ]);
