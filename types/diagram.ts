@@ -51,6 +51,8 @@ export interface DiagramNode {
   layer: DiagramLayer;
   /** Calculated severity based on system impact/dependencies */
   severity: NodeSeverity;
+  /** Calculated centrality score based on node dependency graph */
+  centralityScore: number;
   /** ID of the subgraph this node belongs to (for grouping) */
   subgraphId?: string;
   /** Title of the subgraph (e.g., 'Infrastructure', 'Core Services') */

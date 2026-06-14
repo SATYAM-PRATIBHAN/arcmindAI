@@ -1,4 +1,6 @@
 "use client";
+import FloatingSearch from "@/components/diagram/FloatingSearch";
+import InsightPanel from "@/components/diagram/InsightPanel";
 import LayerToggle from "@/components/diagram/LayerToggle";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
 import { analyzeDiagramRelations } from "@/lib/utils/diagram-analyzer";
@@ -12,8 +14,6 @@ import {
 import * as d3 from "d3";
 import { Maximize, Minus, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import FloatingSearch from "@/components/diagram/FloatingSearch";
-import InsightPanel from "@/components/diagram/InsightPanel";
 
 type NodeSelection = d3.Selection<SVGGElement, DiagramNode, null, undefined>;
 
@@ -38,6 +38,7 @@ const DEFAULT_NODE_STYLE: NodeStyle = {
   strokeWidth: "1.5px",
 };
 
+const DEFAULT_CRITICAL_COLOR = "var(--destructive)";
 const DEFAULT_LAYER_COLORS: Record<DiagramLayer, string> = {
   Frontend: "#3b82f6",
   API: "#8b5cf6",
@@ -46,6 +47,12 @@ const DEFAULT_LAYER_COLORS: Record<DiagramLayer, string> = {
   External: "#ec4899",
   "Other Services": "var(--card)",
 };
+
+/** Check if a node is critical severity */
+function isNodeCritical(node: DiagramNode) {
+  return node.severity === "Critical";
+}
+
 /**
  * Parse Mermaid-style class declarations such as
  * `["fill:#ffcc99", "stroke:#333", "stroke-width:2px"]` into concrete SVG
@@ -53,8 +60,11 @@ const DEFAULT_LAYER_COLORS: Record<DiagramLayer, string> = {
  */
 function parseNodeStyle(node: DiagramNode): NodeStyle {
   const style: NodeStyle = { ...DEFAULT_NODE_STYLE };
-  if (DEFAULT_LAYER_COLORS[node.layer]) {
+  const isCritical = isNodeCritical(node);
+  if (!isCritical && DEFAULT_LAYER_COLORS[node.layer]) {
     style.fill = DEFAULT_LAYER_COLORS[node.layer];
+  } else if (isCritical) {
+    style.fill = DEFAULT_CRITICAL_COLOR;
   }
 
   const classes = node.classes;
@@ -64,7 +74,9 @@ function parseNodeStyle(node: DiagramNode): NodeStyle {
     const value = rest?.join(":").trim();
     if (!key || !value) return;
 
-    if (key === "fill") style.fill = value;
+    // Overwrite the node Mermaid style once critical severity
+    if (key === "fill")
+      style.fill = isCritical ? DEFAULT_CRITICAL_COLOR : value;
     else if (key === "stroke") style.stroke = value;
     else if (key === "stroke-width") style.strokeWidth = value;
   });
@@ -433,7 +445,8 @@ export default function InteractiveDiagram({
         .attr("font-size", DEFAULT_FONT_SIZE)
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
-        .attr("fill", "currentColor")
+        .attr("fill", isNodeCritical(d) ? "#fff" : "currentColor")
+        .attr("font-weight", isNodeCritical(d) ? "bold" : "medium")
         .attr("pointer-events", "none");
     });
 

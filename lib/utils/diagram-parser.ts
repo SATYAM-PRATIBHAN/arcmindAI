@@ -101,6 +101,7 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
           shape,
           layer: inferLayerFromContext(label, currentSubgraphTitle),
           severity: "Medium", // Will be calculated in the second pass
+          centralityScore: 0, // Pessimistic default is 0, will be calculated in the second pass
           subgraphId: currentSubgraphId,
           subgraphTitle: currentSubgraphTitle,
         };
@@ -139,6 +140,7 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
             shape: "rectangle",
             layer: "Other Services",
             severity: "Medium",
+            centralityScore: 0,
             subgraphId: currentSubgraphId,
             subgraphTitle: currentSubgraphTitle,
           };
@@ -176,18 +178,36 @@ export function parseMermaidToJSON(mermaidCode: string): SystemGraph {
   const nodes: DiagramNode[] = Object.values(nodeId2Node);
 
   // 5. Calculate Severity (Second pass based on graph topology)
+  // Initialize PageRank scores
+  const pr: Record<string, number> = {};
+  nodes.forEach((n) => (pr[n.id] = 1));
+
+  const d = 0.85; // Damping factor
+  const iterations = 20;
+
+  for (let i = 0; i < iterations; i++) {
+    const newPr: Record<string, number> = {};
+    nodes.forEach((node) => {
+      const incoming = links.filter((l) => (l.target as string) === node.id);
+      let sum = 0;
+      incoming.forEach((link) => {
+        const sourceId = link.source as string;
+        const sourceOutgoingCount = links.filter(
+          (l) => (l.source as string) === sourceId,
+        ).length;
+        sum += pr[sourceId] / (sourceOutgoingCount || 1);
+      });
+      newPr[node.id] = 1 - d + d * sum;
+    });
+    Object.assign(pr, newPr);
+  }
+
   nodes.forEach((node) => {
-    const incomingConnections = links.filter(
-      (l) => l.target === node.id,
-    ).length;
-    const outgoingConnections = links.filter(
-      (l) => l.source === node.id,
-    ).length;
-    node.severity = calculateNodeSeverity(
-      node,
-      incomingConnections,
-      outgoingConnections,
-    );
+    // Scale by 10 and round to 1 decimal place for a clean UI presentation
+    node.centralityScore = Math.round(pr[node.id] * 10 * 10) / 10;
+
+    // Calculate severity based on the newly computed centrality score
+    node.severity = calculateNodeSeverity(node);
   });
 
   return {
@@ -261,19 +281,14 @@ function inferLayerFromContext(
 }
 
 /**
- * Heuristic to calculate the severity/criticality of a node based on its dependencies.
+ * Calculate the severity/criticality of a node based on its computed centrality score.
  */
-function calculateNodeSeverity(
-  node: DiagramNode,
-  incomingCount: number,
-  outgoingCount: number,
-): NodeSeverity {
-  if (node.layer === "Database") return "Critical";
-  if (node.layer === "Infrastructure") return "High";
+function calculateNodeSeverity(node: DiagramNode): NodeSeverity {
+  const score = node.centralityScore || 0;
 
-  if (incomingCount >= 3) return "Critical";
-  if (incomingCount === 2) return "High";
-  if (incomingCount === 1 || outgoingCount >= 2) return "Medium";
+  if (score >= 5.0) return "Critical";
+  if (score >= 3.0) return "High";
+  if (score >= 2.0) return "Medium";
 
   return "Low";
 }
