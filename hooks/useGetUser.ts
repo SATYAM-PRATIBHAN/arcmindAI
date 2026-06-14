@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { DOC_ROUTES } from "@/lib/routes";
@@ -26,7 +26,7 @@ export function useGetUser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getUser = async (): Promise<UserResponse | null> => {
+  const getUser = useCallback(async (): Promise<UserResponse | null> => {
     // @ts-expect-error accessToken is added to session in NextAuth callbacks
     if (!session?.user?.accessToken) {
       setError("No access token available. Please log in.");
@@ -63,7 +63,7 @@ export function useGetUser() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
 
   return {
     getUser,
