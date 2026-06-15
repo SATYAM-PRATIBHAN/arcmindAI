@@ -33,19 +33,19 @@ const DEFAULT_FONT_SIZE = 12;
 const DEFAULT_PADDING = 16;
 const DEFAULT_NODE_HEIGHT = DEFAULT_FONT_SIZE * 4;
 const DEFAULT_NODE_STYLE: NodeStyle = {
-  fill: "var(--card)",
-  stroke: "currentColor",
-  strokeWidth: "1.5px",
+  fill: "#0f172a", // Dark slate background
+  stroke: "#334155",
+  strokeWidth: "2px",
 };
 
-const DEFAULT_CRITICAL_COLOR = "var(--destructive)";
+const DEFAULT_CRITICAL_COLOR = "#ef4444";
 const DEFAULT_LAYER_COLORS: Record<DiagramLayer, string> = {
-  Frontend: "#3b82f6",
-  API: "#8b5cf6",
-  Database: "#10b981",
-  Infrastructure: "#f59e0b",
-  External: "#ec4899",
-  "Other Services": "var(--card)",
+  Frontend: "#60a5fa", // bright blue
+  API: "#a78bfa", // bright purple
+  Database: "#34d399", // bright green
+  Infrastructure: "#fbbf24", // bright amber
+  External: "#f472b6", // bright pink
+  "Other Services": "#94a3b8", // slate
 };
 
 /** Check if a node is critical severity */
@@ -58,13 +58,49 @@ function isNodeCritical(node: DiagramNode) {
  * `["fill:#ffcc99", "stroke:#333", "stroke-width:2px"]` into concrete SVG
  * presentation attributes, falling back to theme-aware defaults.
  */
+// Helper to determine text color based on background
+function getContrastColor(color: string) {
+  // If it's not a hex color (e.g. named color, rgb, var), default to a readable dark if it contains 'white' or 'light'
+  if (!color.startsWith("#")) {
+    const lower = color.toLowerCase();
+    if (
+      lower.includes("white") ||
+      lower.includes("light") ||
+      lower === "#fff" ||
+      lower === "#ffffff"
+    ) {
+      return "#0f172a";
+    }
+    return "#ffffff";
+  }
+
+  let hex = color.replace("#", "");
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+
+  const r = parseInt(hex.substring(0, 2), 16) || 0;
+  const g = parseInt(hex.substring(2, 4), 16) || 0;
+  const b = parseInt(hex.substring(4, 6), 16) || 0;
+
+  // YIQ equation from W3C
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 128 ? "#0f172a" : "#ffffff"; // dark text for light bg, white text for dark bg
+}
+
 function parseNodeStyle(node: DiagramNode): NodeStyle {
   const style: NodeStyle = { ...DEFAULT_NODE_STYLE };
   const isCritical = isNodeCritical(node);
+
+  // Use layer colors for the stroke to create a glowing border effect, keep fill dark
   if (!isCritical && DEFAULT_LAYER_COLORS[node.layer]) {
-    style.fill = DEFAULT_LAYER_COLORS[node.layer];
+    style.stroke = DEFAULT_LAYER_COLORS[node.layer];
   } else if (isCritical) {
-    style.fill = DEFAULT_CRITICAL_COLOR;
+    style.stroke = DEFAULT_CRITICAL_COLOR;
+    style.fill = "#450a0a"; // Subtle red tint for critical
   }
 
   const classes = node.classes;
@@ -74,10 +110,8 @@ function parseNodeStyle(node: DiagramNode): NodeStyle {
     const value = rest?.join(":").trim();
     if (!key || !value) return;
 
-    // Overwrite the node Mermaid style once critical severity
-    if (key === "fill")
-      style.fill = isCritical ? DEFAULT_CRITICAL_COLOR : value;
-    else if (key === "stroke") style.stroke = value;
+    if (key === "fill" && !isCritical) style.fill = value;
+    else if (key === "stroke" && !isCritical) style.stroke = value;
     else if (key === "stroke-width") style.strokeWidth = value;
   });
 
@@ -98,7 +132,8 @@ function applyStyle<E extends d3.BaseType>(
   return shape
     .attr("fill", style.fill)
     .attr("stroke", style.stroke)
-    .attr("stroke-width", style.strokeWidth);
+    .attr("stroke-width", style.strokeWidth)
+    .attr("filter", "url(#glow)");
 }
 
 /**
@@ -214,8 +249,8 @@ function drawNodeShape(
           .attr("y", -h2)
           .attr("width", w)
           .attr("height", h)
-          .attr("rx", 6)
-          .attr("ry", 6),
+          .attr("rx", 16)
+          .attr("ry", 16),
         style,
       );
       return;
@@ -386,6 +421,67 @@ export default function InteractiveDiagram({
     // Clear previous elements before rendering
     svgSel.selectAll("*").remove();
 
+    // Define reusable SVG definitions (filters, patterns)
+    const defs = svgSel.append("defs");
+
+    // Background dot pattern
+    defs
+      .append("pattern")
+      .attr("id", "bg-dots")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", 40)
+      .attr("height", 40)
+      .attr("patternUnits", "userSpaceOnUse")
+      .append("circle")
+      .attr("cx", 2)
+      .attr("fill", "#ffffff")
+      .attr("cy", 2)
+      .attr("r", 1.5)
+      .attr("opacity", 0.08);
+
+    // Arrowhead marker
+    defs
+      .append("marker")
+      .attr("id", "arrowhead")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 8) // Arrow tip is at x=10, so refX=8 places it perfectly at the end of the line
+      .attr("refY", 0)
+      .attr("orient", "auto")
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("xoverflow", "visible")
+      .append("svg:path")
+      .attr("d", "M 0,-5 L 10 ,0 L 0,5")
+      .attr("fill", "rgba(255, 255, 255, 0.6)")
+      .style("stroke", "none");
+
+    // Subtle glow filter
+    const glowFilter = defs
+      .append("filter")
+      .attr("id", "glow")
+      .attr("x", "-30%")
+      .attr("y", "-30%")
+      .attr("width", "160%")
+      .attr("height", "160%");
+
+    glowFilter
+      .append("feGaussianBlur")
+      .attr("stdDeviation", "8")
+      .attr("result", "blur");
+
+    const feMerge = glowFilter.append("feMerge");
+    feMerge.append("feMergeNode").attr("in", "blur");
+    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+    // Add a background rect to hold the pattern
+    svgSel
+      .append("rect")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("fill", "url(#bg-dots)")
+      .attr("pointer-events", "none");
+
     // Create zoom viewport group that holds ALL drawable diagram content
     const gZoom = svgSel.append("g").attr("class", "d3-zoom-viewport");
     gZoomRef.current = gZoom;
@@ -413,14 +509,16 @@ export default function InteractiveDiagram({
     const g = gZoom.append("g").attr("class", "d3-diagram");
 
     const link = g
-      .selectAll("line")
+      .selectAll("path")
       .data(links)
       .enter()
-      .append("line")
-      .attr("stroke", "currentColor")
+      .append("path")
+      .attr("fill", "none")
+      .attr("stroke", "rgba(255, 255, 255, 0.5)")
       .attr("stroke-opacity", (d) => getLinkOpacity(d))
       .attr("stroke-width", 2)
-      .attr("stroke-dasharray", (d) => (d.type === "async" ? "6 4" : null));
+      .attr("stroke-dasharray", (d) => (d.type === "async" ? "6 4" : null))
+      .attr("marker-end", "url(#arrowhead)");
 
     const node = g
       .append("g")
@@ -445,8 +543,9 @@ export default function InteractiveDiagram({
         .attr("font-size", DEFAULT_FONT_SIZE)
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
-        .attr("fill", isNodeCritical(d) ? "#fff" : "currentColor")
-        .attr("font-weight", isNodeCritical(d) ? "bold" : "medium")
+        .attr("fill", getContrastColor(style.fill))
+        .attr("font-weight", isNodeCritical(d) ? "bold" : "600")
+        .attr("letter-spacing", "0.5px")
         .attr("pointer-events", "none");
     });
 
@@ -495,21 +594,10 @@ export default function InteractiveDiagram({
         .transition()
         .duration(250)
         .style("stroke-width", function (d) {
-          // Highlight selected node more prominently
-          if (selectedId === d.id) return "3px";
-
+          if (selectedId === d.id) return "4px";
           if (!query) return null;
           const text = `${d.label} ${d.id}`.toLowerCase();
-          return text.includes(query) ? "2px" : null;
-        })
-        .style("filter", function (d) {
-          // Strong glow for selected node
-          if (selectedId === d.id)
-            return "drop-shadow(0 0 12px var(--primary))";
-
-          if (!query) return null;
-          const text = `${d.label} ${d.id}`.toLowerCase();
-          return text.includes(query) ? "drop-shadow(0 0 4px #60a5fa)" : null;
+          return text.includes(query) ? "3px" : null;
         });
 
       link
@@ -536,10 +624,10 @@ export default function InteractiveDiagram({
             const source = d.source as DiagramNode;
             const target = d.target as DiagramNode;
             return onPath(source.id, target.id)
-              ? "var(--primary)"
-              : "currentColor";
+              ? "rgba(255, 255, 255, 0.9)"
+              : "rgba(255, 255, 255, 0.2)";
           }
-          return "currentColor";
+          return "rgba(255, 255, 255, 0.5)";
         })
         .attr("stroke-width", (d) => {
           if (selectedId) {
@@ -589,11 +677,55 @@ export default function InteractiveDiagram({
       .force("y", d3.forceY(dimensions.height / 2).strength(0.05));
 
     simulation.on("tick", () => {
-      link
-        .attr("x1", (d: DiagramLink) => (d.source as DiagramNode).x ?? 0)
-        .attr("y1", (d: DiagramLink) => (d.source as DiagramNode).y ?? 0)
-        .attr("x2", (d: DiagramLink) => (d.target as DiagramNode).x ?? 0)
-        .attr("y2", (d: DiagramLink) => (d.target as DiagramNode).y ?? 0);
+      link.attr("d", (d: DiagramLink) => {
+        const source = d.source as DiagramNode;
+        const target = d.target as DiagramNode;
+        const sx = source.x ?? 0;
+        const sy = source.y ?? 0;
+        let tx = target.x ?? 0;
+        let ty = target.y ?? 0;
+
+        let dx = tx - sx;
+        let dy = ty - sy;
+        const dr = Math.sqrt(dx * dx + dy * dy);
+
+        // Handle self-referencing links
+        if (dr === 0) {
+          return `M${sx},${sy} A40,40 0 1,1 ${sx + 1},${sy + 1}`;
+        }
+
+        // Approximate target node boundary as an ellipse to prevent arrows from hiding underneath
+        const tw = Math.max(90, (target.label?.length ?? 0) * 6 + 32); // Approximation of nodeWidth
+        const th = 48; // DEFAULT_NODE_HEIGHT
+
+        const angle = Math.atan2(dy, dx);
+        const targetRadius =
+          ((tw / 2) * th) /
+          2 /
+          Math.sqrt(
+            Math.pow((th / 2) * Math.cos(angle), 2) +
+              Math.pow((tw / 2) * Math.sin(angle), 2),
+          );
+
+        // Pull back the target point by the node's radius so the arrow sits exactly on the edge
+        const padding = 2;
+        const pullBack = targetRadius + padding;
+
+        if (dr > pullBack) {
+          tx = tx - (dx / dr) * pullBack;
+          ty = ty - (dy / dr) * pullBack;
+        }
+
+        // Recalculate dx, dy for the curve
+        dx = tx - sx;
+        dy = ty - sy;
+
+        // Use a smooth quadratic curve instead of an arc for a more predictable and aesthetic flow
+        const cx = (sx + tx) / 2 - dy * 0.15;
+        const cy = (sy + ty) / 2 + dx * 0.15;
+
+        return `M${sx},${sy} Q${cx},${cy} ${tx},${ty}`;
+      });
 
       node.attr(
         "transform",
@@ -645,42 +777,42 @@ export default function InteractiveDiagram({
   return (
     <div
       ref={containerRef}
-      className="w-full h-125 min-h-100 rounded-2xl border border-border/40 bg-card/30 overflow-hidden backdrop-blur-sm shadow-inner relative flex items-center justify-center transition-all duration-500"
+      className="w-full h-125 min-h-100 rounded-2xl border border-border/10 bg-[#0b0f19] overflow-hidden shadow-2xl relative flex items-center justify-center transition-all duration-500"
     >
-      {/* Floating search input (top-left) */}
-      <FloatingSearch position="left" />
+      {/* Floating search input (top-right) */}
+      <FloatingSearch position="right" />
       {/* Layer Filters */}
       <LayerToggle />
       {/* Floating viewport controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-        <div className="inline-flex rounded-xl border border-border/40 bg-background/60 backdrop-blur p-1 shadow-sm gap-1">
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+        <div className="inline-flex rounded-full border border-slate-800 bg-[#0f172a]/80 backdrop-blur p-1 shadow-lg gap-1">
           <button
             type="button"
             onClick={handleZoomIn}
-            className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-full text-slate-300 hover:text-white hover:bg-slate-800 active:scale-95 transition-all"
             aria-label="Zoom in"
             title="Zoom In"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={handleZoomOut}
-            className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-full text-slate-300 hover:text-white hover:bg-slate-800 active:scale-95 transition-all"
             aria-label="Zoom out"
             title="Zoom Out"
           >
-            <Minus className="w-3.5 h-3.5" />
+            <Minus className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-2 py-1 text-xs rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-full text-slate-300 hover:text-white hover:bg-slate-800 active:scale-95 transition-all font-medium"
             aria-label="Reset view"
             title="Reset View (Fit to Screen)"
           >
-            <Maximize className="w-3.5 h-3.5" />
-            Reset View
+            <Maximize className="w-4 h-4" />
+            Reset
           </button>
         </div>
       </div>

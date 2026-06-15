@@ -44,18 +44,18 @@ export default function InsightPanel({
           exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className={cn(
-            "absolute right-4 top-4 bottom-4 w-80 md:w-96 z-20 flex flex-col rounded-xl",
-            "border border-border/50 bg-background/95 backdrop-blur-xl shadow-2xl",
+            "absolute right-4 top-20 bottom-4 w-80 md:w-96 z-20 flex flex-col rounded-2xl",
+            "border border-slate-800 bg-[#0f172a]/95 backdrop-blur-xl shadow-2xl text-slate-200",
           )}
         >
-          <div className="flex items-center justify-between p-4 border-b border-border/50">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="flex items-center justify-between p-4 border-b border-slate-800">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Insight Panel
             </h2>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full"
+              className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800"
               onClick={() => onOpenChange(false)}
             >
               <X className="h-4 w-4" />
@@ -63,14 +63,14 @@ export default function InsightPanel({
             </Button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 rounded-b-xl">
+          <div className="flex-1 overflow-y-auto p-6 space-y-8 rounded-b-2xl">
             <div className="space-y-3">
               <div className="space-y-1">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
+                <p className="text-xs uppercase tracking-[0.2em] text-blue-400 font-medium">
                   Architecture Insight
                 </p>
 
-                <h2 className="text-2xl font-bold leading-tight">
+                <h2 className="text-2xl font-bold leading-tight text-white">
                   {node?.label ?? "System Component"}
                 </h2>
               </div>
@@ -92,12 +92,12 @@ export default function InsightPanel({
               <div className="space-y-5">
                 {/* Overview */}
                 {node.description && (
-                  <div className="rounded-xl border border-border/50 bg-card/40 p-5 space-y-3 shadow-sm">
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-3 shadow-sm">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                       Overview
                     </h3>
 
-                    <p className="text-sm leading-relaxed text-muted-foreground">
+                    <p className="text-sm leading-relaxed text-slate-300">
                       {node.description ||
                         "No architectural description available for this component."}
                     </p>
@@ -105,76 +105,99 @@ export default function InsightPanel({
                 )}
 
                 {/* Architecture Metadata */}
-                <div className="rounded-xl border border-border/50 bg-card/40 p-5 space-y-4 shadow-sm">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-4 shadow-sm">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                     Architecture Metadata
                   </h3>
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Node ID
                       </p>
 
-                      <p className="font-mono text-sm break-all">{node.id}</p>
+                      <p className="font-mono text-sm break-all text-slate-300">
+                        {node.id}
+                      </p>
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Shape
                       </p>
 
-                      <p className="text-sm capitalize">{node.shape}</p>
+                      <p className="text-sm capitalize text-slate-300">
+                        {node.shape}
+                      </p>
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Layer
                       </p>
 
-                      <p className="text-sm">{node.layer}</p>
+                      <p className="text-sm text-slate-300">{node.layer}</p>
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Component Type
                       </p>
 
-                      <p className="text-sm">{node.type}</p>
+                      <p className="text-sm text-slate-300">{node.type}</p>
                     </div>
 
                     {node.subgraphTitle && (
                       <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
                           Subgraph
                         </p>
 
-                        <p className="text-sm">{node.subgraphTitle}</p>
+                        <p className="text-sm text-slate-300">
+                          {node.subgraphTitle}
+                        </p>
                       </div>
                     )}
 
                     <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
                         Criticality Score
                       </p>
 
-                      <p className="text-sm">{node.centralityScore}</p>
+                      <p className="text-sm text-slate-300">
+                        {node.centralityScore}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* System Classification */}
-                <div className="rounded-xl border border-border/50 bg-card/40 p-5 space-y-3 shadow-sm">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 space-y-3 shadow-sm">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                     System Classification
                   </h3>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline">{node.shape}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="border-slate-700 text-slate-300"
+                    >
+                      {node.shape}
+                    </Badge>
 
-                    <Badge variant="outline">{node.layer}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="border-slate-700 text-slate-300"
+                    >
+                      {node.layer}
+                    </Badge>
 
-                    <Badge variant="outline">{node.type}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="border-slate-700 text-slate-300"
+                    >
+                      {node.type}
+                    </Badge>
                   </div>
                 </div>
               </div>

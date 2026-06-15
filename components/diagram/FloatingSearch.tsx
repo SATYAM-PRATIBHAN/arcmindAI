@@ -35,10 +35,10 @@ export const FloatingSearch: React.FC<FloatingSearchProps> = React.memo(
     return (
       <div
         className={
-          "absolute top-4 z-20 flex items-center gap-2 p-2 rounded-xl border border-border/40 bg-background/60 backdrop-blur-sm shadow-sm transition-all duration-300 overflow-hidden " +
+          "absolute top-4 z-20 flex items-center gap-2 p-2 rounded-full border border-slate-800 bg-[#0f172a]/90 backdrop-blur-md shadow-lg transition-all duration-300 overflow-hidden text-slate-200 " +
           (isExpanded
-            ? "w-[calc(100%-10rem)] sm:w-80 "
-            : "w-10 sm:w-80 cursor-pointer ") +
+            ? "w-[calc(100%-4rem)] sm:w-64 "
+            : "w-10 sm:w-64 cursor-pointer ") +
           (position === "left" ? "left-4" : "right-4") +
           (className ? ` ${className}` : "")
         }
@@ -59,7 +59,7 @@ export const FloatingSearch: React.FC<FloatingSearchProps> = React.memo(
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`flex-1 min-w-0 !p-1 !pl-0 bg-transparent border-0 shadow-none transition-opacity duration-300 ${isExpanded ? "opacity-100" : "opacity-0 sm:opacity-100"}`}
+          className={`flex-1 min-w-0 !p-1 !pl-0 bg-transparent border-0 shadow-none text-white placeholder:text-slate-400 focus-visible:ring-0 transition-opacity duration-300 ${isExpanded ? "opacity-100" : "opacity-0 sm:opacity-100"}`}
           aria-label="Search components or nodes"
         />
       </div>

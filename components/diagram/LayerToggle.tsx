@@ -37,35 +37,37 @@ export default function LayerToggle() {
   };
 
   return (
-    <div className="absolute left-4 top-20 z-10 rounded-xl border border-border/40 bg-background/70 p-2 sm:p-3 shadow-sm backdrop-blur w-fit min-w-[140px]">
+    <div
+      className={`absolute left-4 top-4 z-10 rounded-2xl border border-slate-800 bg-[#0f172a]/90 p-2 sm:p-3 shadow-lg backdrop-blur w-fit min-w-[160px] ${!isOpen ? "rounded-full py-2" : ""}`}
+    >
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wide text-slate-300 hover:text-white"
       >
         <div className="flex items-center gap-2">
-          <Layers className="w-3.5 h-3.5" />
-          Layers
+          <Layers className="w-4 h-4" />
+          Layers Filters (All)
         </div>
         {isOpen ? (
-          <ChevronUp className="w-3.5 h-3.5" />
+          <ChevronUp className="w-4 h-4" />
         ) : (
-          <ChevronDown className="w-3.5 h-3.5" />
+          <ChevronDown className="w-4 h-4" />
         )}
       </button>
 
       {isOpen && (
-        <div className="flex flex-col gap-2 mt-3">
+        <div className="flex flex-col gap-3 mt-4 pt-3 border-t border-slate-800">
           {layers.map((layer) => (
             <label
               key={layer}
-              className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+              className="flex cursor-pointer items-center gap-3 text-xs font-medium text-slate-400 hover:text-white transition-colors"
             >
               <input
                 type="checkbox"
                 checked={activeLayers.includes(layer)}
                 onChange={() => toggleLayer(layer)}
-                className="h-3.5 w-3.5 shrink-0"
+                className="h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
               />
               {layer}
             </label>
