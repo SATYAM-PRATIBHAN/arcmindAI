@@ -82,7 +82,7 @@ export function FileBrowser() {
     };
 
     fetchTree();
-  }, [owner, repo, branchParam]);
+  }, [owner, repo, branchParam, defaultBranch]);
 
   const handleBranchChange = (branch: string) => {
     if (branch === activeBranch) return;
