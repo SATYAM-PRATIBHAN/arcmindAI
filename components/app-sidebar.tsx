@@ -92,7 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (session) {
       fetchUser();
     }
-  }, [session]);
+  }, [session, getUser]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

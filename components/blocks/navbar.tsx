@@ -78,7 +78,7 @@ export const Navbar = () => {
     if (session) {
       fetchUser();
     }
-  }, [session]);
+  }, [session, getUser]);
 
   return (
     <section

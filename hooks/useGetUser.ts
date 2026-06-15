@@ -63,7 +63,7 @@ export function useGetUser() {
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  }, [session?.user?.accessToken]);
 
   return {
     getUser,
