@@ -63,6 +63,7 @@ export function useGetUser() {
     } finally {
       setIsLoading(false);
     }
+    // @ts-expect-error accessToken is added to session in NextAuth callbacks
   }, [session?.user?.accessToken]);
 
   return {
