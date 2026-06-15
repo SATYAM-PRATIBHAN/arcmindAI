@@ -38,30 +38,35 @@ export function FileBrowser() {
 
   const { branches, loading: branchesLoading } = useGithubBranches(owner, repo);
 
+  // Resolve repository default branch if not provided in params
+  useEffect(() => {
+    const fetchRepoInfo = async () => {
+      if (branchParam || defaultBranch) return;
+
+      try {
+        const repoRes = await axios.get(DOC_ROUTES.API.GITHUB.REPO_INFO, {
+          params: { owner, repo },
+        });
+
+        if (repoRes.data.success) {
+          setDefaultBranch(repoRes.data.data.default_branch);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchRepoInfo();
+  }, [owner, repo, branchParam, defaultBranch]);
+
   // Fetch repository tree
   useEffect(() => {
     const fetchTree = async () => {
+      const branch = branchParam || defaultBranch;
+      if (!branch) return;
+
       setLoading(true);
       try {
-        let branch = branchParam;
-
-        // First get the default branch via proxy
-        if (!branch || !defaultBranch) {
-          const repoRes = await axios.get(DOC_ROUTES.API.GITHUB.REPO_INFO, {
-            params: { owner, repo },
-          });
-
-          if (!repoRes.data.success) {
-            throw new Error(
-              repoRes.data.message || "Failed to fetch repo info",
-            );
-          }
-
-          const defaultBranch = repoRes.data.data.default_branch;
-          setDefaultBranch(defaultBranch);
-          if (!branch) branch = defaultBranch;
-        }
-
         // Get the tree recursively via proxy
         const treeRes = await axios.get(DOC_ROUTES.API.GITHUB.REPO_TREE, {
           params: { owner, repo, branch },
@@ -82,7 +87,7 @@ export function FileBrowser() {
     };
 
     fetchTree();
-  }, [owner, repo, branchParam]);
+  }, [owner, repo, branchParam, defaultBranch]);
 
   const handleBranchChange = (branch: string) => {
     if (branch === activeBranch) return;

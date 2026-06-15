@@ -83,7 +83,7 @@ export function UserDetailsCard({
       setIsLoadingFullUser(false);
     };
     fetchUser();
-  }, [session]);
+  }, [session, getUser]);
 
   if (!user) {
     return <UserDetailsCardSkeleton />;

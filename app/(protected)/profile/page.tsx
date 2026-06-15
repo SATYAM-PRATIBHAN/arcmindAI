@@ -104,7 +104,7 @@ export default function ProfilePage() {
     if (status === "authenticated") {
       fetchUser();
     }
-  }, [session]);
+  }, [session, status, getUser]);
 
   if (status === "loading") {
     return (
