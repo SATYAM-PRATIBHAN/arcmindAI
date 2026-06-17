@@ -272,8 +272,7 @@ export default function InteractiveDiagram({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { isD3Enabled, activeLayers, setActiveLayers, searchQuery } =
-    useDiagram();
+  const { isD3Enabled, activeLayers, searchQuery } = useDiagram();
   const searchQueryRef = useRef(searchQuery ?? "");
   const updateSearchHighlightRef = useRef<(() => void) | null>(null);
   const activeLayersRef = useRef(activeLayers);
@@ -290,6 +289,7 @@ export default function InteractiveDiagram({
   }, [searchQuery]);
 
   const selectedIdRef = useRef<string | null>(null);
+  const tourSelectedIdRef = useRef<string | null>(null);
 
   const [selectedNode, setSelectedNode] = useState<DiagramNode | null>(null);
   const [isInsightOpen, setIsInsightOpen] = useState(false);
@@ -301,6 +301,8 @@ export default function InteractiveDiagram({
   );
   const getLinkOpacity = (d: DiagramLink) =>
     d.type === "fallback" ? 0.25 : 0.4;
+  const getLinkTargetId = (d: DiagramLink) =>
+    typeof d.target === "string" ? d.target : (d.target as DiagramNode).id;
 
   const walkthroughSteps = useMemo(
     () => (systemGraph ? buildDiagramWalkthroughSteps(systemGraph) : []),
@@ -308,6 +310,9 @@ export default function InteractiveDiagram({
   );
   const [tourActive, setTourActive] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
+
+  const applyTourStepRef = useRef<((nodeId: string) => void) | null>(null);
+  const clearVisualStateRef = useRef<(() => void) | null>(null);
 
   // Use ResizeObserver to keep track of the container's dimensions
   useEffect(() => {
@@ -562,25 +567,39 @@ export default function InteractiveDiagram({
     });
 
     const updateVisualState = () => {
-      const query = searchQueryRef.current.trim().toLowerCase();
-      const visibleLayers = new Set(activeLayersRef.current);
-      const selectedId = selectedIdRef.current;
+      const tourNodeId = tourSelectedIdRef.current;
+      const isTour = tourNodeId !== null;
+
+      // Temporarily disable search query, visibility query and node selection for tours
+      const query = isTour ? "" : searchQueryRef.current.trim().toLowerCase();
+      const visibleLayers = new Set(
+        isTour ? ALL_LAYERS : activeLayersRef.current,
+      );
+      const selectedId = tourNodeId ?? selectedIdRef.current;
 
       const upstream = new Set<string>();
       const downstream = new Set<string>();
       if (selectedId) {
         upstream.add(selectedId);
         downstream.add(selectedId);
-        const rel = relations[selectedId];
-        if (rel) {
-          rel.ancestors.forEach((n) => upstream.add(n.id));
-          rel.descendants.forEach((n) => downstream.add(n.id));
+        if (!isTour) {
+          const rel = relations[selectedId];
+          if (rel) {
+            rel.ancestors.forEach((n) => upstream.add(n.id));
+            rel.descendants.forEach((n) => downstream.add(n.id));
+          }
         }
       }
 
-      const onPath = (s: string, t: string) =>
-        (upstream.has(s) && upstream.has(t)) ||
-        (downstream.has(s) && downstream.has(t));
+      const onPath = (d: DiagramLink) => {
+        if (isTour) return getLinkTargetId(d) === selectedId;
+        const s = (d.source as DiagramNode).id;
+        const t = (d.target as DiagramNode).id;
+        return (
+          (upstream.has(s) && upstream.has(t)) ||
+          (downstream.has(s) && downstream.has(t))
+        );
+      };
 
       node
         .transition()
@@ -598,7 +617,7 @@ export default function InteractiveDiagram({
           return op;
         })
         .style("pointer-events", (d) =>
-          visibleLayers.has(d.layer) ? "auto" : "none",
+          isTour || !visibleLayers.has(d.layer) ? "none" : "auto",
         );
 
       node
@@ -624,31 +643,18 @@ export default function InteractiveDiagram({
           ) {
             return 0;
           }
-          let op = getLinkOpacity(d);
-          if (selectedId) {
-            op = onPath(source.id, target.id) ? 0.9 : 0.05;
-          }
-          return op;
+          if (selectedId) return onPath(d) ? 0.9 : 0.05;
+          return getLinkOpacity(d);
         })
         .style("pointer-events", "none")
-        .attr("stroke", (d) => {
-          if (selectedId) {
-            const source = d.source as DiagramNode;
-            const target = d.target as DiagramNode;
-            return onPath(source.id, target.id)
+        .attr("stroke", (d) =>
+          selectedId
+            ? onPath(d)
               ? "rgba(255, 255, 255, 0.9)"
-              : "rgba(255, 255, 255, 0.2)";
-          }
-          return "rgba(255, 255, 255, 0.5)";
-        })
-        .attr("stroke-width", (d) => {
-          if (selectedId) {
-            const source = d.source as DiagramNode;
-            const target = d.target as DiagramNode;
-            return onPath(source.id, target.id) ? 3 : 2;
-          }
-          return 2;
-        });
+              : "rgba(255, 255, 255, 0.2)"
+            : "rgba(255, 255, 255, 0.5)",
+        )
+        .attr("stroke-width", (d) => (selectedId && onPath(d) ? 3 : 2));
     };
 
     node.style("cursor", "pointer").on("click", (event, d) => {
@@ -755,6 +761,35 @@ export default function InteractiveDiagram({
       }
     });
 
+    const centerOnNode = (nodeId: string) => {
+      const target = nodes.find((n) => n.id === nodeId);
+      const svgSel = svgSelectionRef.current;
+      if (
+        !target ||
+        target.x == null ||
+        target.y == null ||
+        !svgSel ||
+        !zoomRef.current
+      )
+        return;
+
+      const k = 1.5;
+      const tx = dimensions.width / 2 - target.x * k;
+      const ty = dimensions.height / 2 - target.y * k;
+      const t = d3.zoomIdentity.translate(tx, ty).scale(k);
+      svgSel.transition().duration(300).call(zoomRef.current.transform, t);
+    };
+
+    applyTourStepRef.current = (nodeId: string) => {
+      tourSelectedIdRef.current = nodeId;
+      updateVisualState();
+      centerOnNode(nodeId);
+    };
+    clearVisualStateRef.current = () => {
+      tourSelectedIdRef.current = null;
+      updateVisualState();
+    };
+
     updateSearchHighlightRef.current = updateVisualState;
     updateLayerVisibilityRef.current = updateVisualState;
     updateVisualState();
@@ -764,6 +799,8 @@ export default function InteractiveDiagram({
       simulation.stop();
       updateSearchHighlightRef.current = null;
       updateLayerVisibilityRef.current = null;
+      applyTourStepRef.current = null;
+      clearVisualStateRef.current = null;
     };
   }, [dimensions, fitToScreen, systemGraph, relations]);
 
@@ -791,10 +828,9 @@ export default function InteractiveDiagram({
     selectedIdRef.current = null;
     setSelectedNode(null);
     setIsInsightOpen(false);
-    setActiveLayers(ALL_LAYERS);
     setTourStepIndex(0);
     setTourActive(true);
-  }, [setActiveLayers]);
+  }, []);
 
   const nextStep = useCallback(() => {
     setTourStepIndex((i) => Math.min(i + 1, walkthroughSteps.length - 1));
@@ -806,8 +842,15 @@ export default function InteractiveDiagram({
 
   const exitTour = useCallback(() => {
     setTourActive(false);
+    clearVisualStateRef.current?.();
     handleReset();
   }, [handleReset]);
+
+  useEffect(() => {
+    if (!tourActive) return;
+    const step = walkthroughSteps[tourStepIndex];
+    if (step) applyTourStepRef.current?.(step.nodeId);
+  }, [tourActive, tourStepIndex, walkthroughSteps]);
 
   useEffect(() => {
     if (!tourActive) return;
