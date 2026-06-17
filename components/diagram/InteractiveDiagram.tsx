@@ -1,9 +1,13 @@
 "use client";
 import FloatingSearch from "@/components/diagram/FloatingSearch";
 import InsightPanel from "@/components/diagram/InsightPanel";
-import LayerToggle from "@/components/diagram/LayerToggle";
+import LayerToggle, { ALL_LAYERS } from "@/components/diagram/LayerToggle";
+import WalkthroughControls from "@/components/diagram/WalkthroughControls";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
-import { analyzeDiagramRelations } from "@/lib/utils/diagram-analyzer";
+import {
+  analyzeDiagramRelations,
+  buildDiagramWalkthroughSteps,
+} from "@/lib/utils/diagram-analyzer";
 import {
   DiagramLayer,
   DiagramLink,
@@ -268,7 +272,8 @@ export default function InteractiveDiagram({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const { isD3Enabled, activeLayers, searchQuery } = useDiagram();
+  const { isD3Enabled, activeLayers, setActiveLayers, searchQuery } =
+    useDiagram();
   const searchQueryRef = useRef(searchQuery ?? "");
   const updateSearchHighlightRef = useRef<(() => void) | null>(null);
   const activeLayersRef = useRef(activeLayers);
@@ -296,6 +301,13 @@ export default function InteractiveDiagram({
   );
   const getLinkOpacity = (d: DiagramLink) =>
     d.type === "fallback" ? 0.25 : 0.4;
+
+  const walkthroughSteps = useMemo(
+    () => (systemGraph ? buildDiagramWalkthroughSteps(systemGraph) : []),
+    [systemGraph],
+  );
+  const [tourActive, setTourActive] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
 
   // Use ResizeObserver to keep track of the container's dimensions
   useEffect(() => {
@@ -770,7 +782,43 @@ export default function InteractiveDiagram({
       .call(zoomRef.current.scaleBy, 1 / 1.2);
   };
 
-  const handleReset = () => fitToScreen({ padding: 28, animate: true });
+  const handleReset = useCallback(
+    () => fitToScreen({ padding: 28, animate: true }),
+    [fitToScreen],
+  );
+
+  const startTour = useCallback(() => {
+    selectedIdRef.current = null;
+    setSelectedNode(null);
+    setIsInsightOpen(false);
+    setActiveLayers(ALL_LAYERS);
+    setTourStepIndex(0);
+    setTourActive(true);
+  }, [setActiveLayers]);
+
+  const nextStep = useCallback(() => {
+    setTourStepIndex((i) => Math.min(i + 1, walkthroughSteps.length - 1));
+  }, [walkthroughSteps.length]);
+
+  const prevStep = useCallback(() => {
+    setTourStepIndex((i) => Math.max(i - 1, 0));
+  }, []);
+
+  const exitTour = useCallback(() => {
+    setTourActive(false);
+    handleReset();
+  }, [handleReset]);
+
+  useEffect(() => {
+    if (!tourActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") nextStep();
+      else if (e.key === "ArrowLeft") prevStep();
+      else if (e.key === "Escape") exitTour();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tourActive, nextStep, prevStep, exitTour]);
 
   if (!isD3Enabled) return null;
 
@@ -780,9 +828,19 @@ export default function InteractiveDiagram({
       className="w-full h-125 min-h-100 rounded-2xl border border-border/10 bg-[#0b0f19] overflow-hidden shadow-2xl relative flex items-center justify-center transition-all duration-500"
     >
       {/* Floating search input (top-right) */}
-      <FloatingSearch position="right" />
+      <FloatingSearch position="right" disabled={tourActive} />
       {/* Layer Filters */}
-      <LayerToggle />
+      <LayerToggle disabled={tourActive} />
+      {/* Guided walkthrough controls (bottom-center) */}
+      <WalkthroughControls
+        active={tourActive}
+        index={tourStepIndex}
+        total={walkthroughSteps.length}
+        onStart={startTour}
+        onPrev={prevStep}
+        onNext={nextStep}
+        onExit={exitTour}
+      />
       {/* Floating viewport controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
         <div className="inline-flex rounded-full border border-slate-800 bg-[#0f172a]/80 backdrop-blur p-1 shadow-lg gap-1">
