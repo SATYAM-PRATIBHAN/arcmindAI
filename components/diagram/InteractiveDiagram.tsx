@@ -12,6 +12,7 @@ import {
   DiagramLayer,
   DiagramLink,
   DiagramNode,
+  DiagramWalkthroughStep,
   NodeShape,
   SystemGraph,
 } from "@/types/diagram";
@@ -310,8 +311,15 @@ export default function InteractiveDiagram({
   );
   const [tourActive, setTourActive] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [tourTooltip, setTourTooltip] = useState<{
+    left: number;
+    top: number;
+    caption: string;
+  } | null>(null);
 
-  const applyTourStepRef = useRef<((nodeId: string) => void) | null>(null);
+  const applyTourStepRef = useRef<
+    ((step: DiagramWalkthroughStep) => void) | null
+  >(null);
   const clearVisualStateRef = useRef<(() => void) | null>(null);
 
   // Use ResizeObserver to keep track of the container's dimensions
@@ -503,6 +511,8 @@ export default function InteractiveDiagram({
     const gZoom = svgSel.append("g").attr("class", "d3-zoom-viewport");
     gZoomRef.current = gZoom;
 
+    const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
+
     // Attach d3.zoom to the SVG
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
@@ -514,12 +524,27 @@ export default function InteractiveDiagram({
       })
       .on("zoom", (event) => {
         gZoom.attr("transform", event.transform.toString());
+        const activeId = tourSelectedIdRef.current;
+        if (!activeId) return;
+        const n = nodes.find((d) => d.id === activeId);
+        if (n?.x == null || n?.y == null) return;
+        const [sx, sy] = event.transform.apply([n.x, n.y]);
+        setTourTooltip((prev) =>
+          prev
+            ? {
+                ...prev,
+                left: sx,
+                top:
+                  sy -
+                  (DEFAULT_NODE_HEIGHT / 2) * event.transform.k -
+                  DEFAULT_PADDING,
+              }
+            : prev,
+        );
       });
 
     zoomRef.current = zoom;
     svgSel.call(zoom);
-
-    const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
 
     const links: DiagramLink[] = systemGraph.links.map((link) => ({ ...link }));
 
@@ -780,13 +805,25 @@ export default function InteractiveDiagram({
       svgSel.transition().duration(300).call(zoomRef.current.transform, t);
     };
 
-    applyTourStepRef.current = (nodeId: string) => {
-      tourSelectedIdRef.current = nodeId;
+    applyTourStepRef.current = (step: DiagramWalkthroughStep) => {
+      tourSelectedIdRef.current = step.nodeId;
       updateVisualState();
-      centerOnNode(nodeId);
+      centerOnNode(step.nodeId);
+      const svgEl = svgRef.current;
+      const n = nodes.find((d) => d.id === step.nodeId);
+      if (svgEl && n?.x != null && n?.y != null) {
+        const tr = d3.zoomTransform(svgEl);
+        const [sx, sy] = tr.apply([n.x, n.y]);
+        setTourTooltip({
+          left: sx,
+          top: sy - (DEFAULT_NODE_HEIGHT / 2) * tr.k - DEFAULT_PADDING,
+          caption: step.caption,
+        });
+      }
     };
     clearVisualStateRef.current = () => {
       tourSelectedIdRef.current = null;
+      setTourTooltip(null);
       updateVisualState();
     };
 
@@ -849,7 +886,7 @@ export default function InteractiveDiagram({
   useEffect(() => {
     if (!tourActive) return;
     const step = walkthroughSteps[tourStepIndex];
-    if (step) applyTourStepRef.current?.(step.nodeId);
+    if (step) applyTourStepRef.current?.(step);
   }, [tourActive, tourStepIndex, walkthroughSteps]);
 
   useEffect(() => {
@@ -874,6 +911,15 @@ export default function InteractiveDiagram({
       <FloatingSearch position="right" disabled={tourActive} />
       {/* Layer Filters */}
       <LayerToggle disabled={tourActive} />
+      {tourActive && tourTooltip && (
+        <div
+          className="pointer-events-none absolute z-20 max-w-xs -translate-x-1/2 -translate-y-full rounded-lg border border-slate-700 bg-[#0f172a]/95 px-3 py-2 text-xs leading-snug text-slate-100 shadow-xl backdrop-blur"
+          style={{ left: tourTooltip.left, top: tourTooltip.top }}
+        >
+          {tourTooltip.caption}
+          <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-700" />
+        </div>
+      )}
       {/* Guided walkthrough controls (bottom-center) */}
       <WalkthroughControls
         active={tourActive}
