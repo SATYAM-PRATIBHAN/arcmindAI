@@ -513,6 +513,9 @@ export default function InteractiveDiagram({
 
     const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
 
+    let updateMinimapViewport: (() => void) | null = null;
+    let updateMinimapNodes: (() => void) | null = null;
+
     // Attach d3.zoom to the SVG
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
@@ -541,6 +544,7 @@ export default function InteractiveDiagram({
               }
             : prev,
         );
+        updateMinimapViewport?.();
       });
 
     zoomRef.current = zoom;
@@ -774,6 +778,7 @@ export default function InteractiveDiagram({
         "transform",
         (d: DiagramNode) => `translate(${d.x ?? 0}, ${d.y ?? 0})`,
       );
+      updateMinimapNodes?.();
     });
 
     simulation.on("end", () => {
@@ -785,6 +790,125 @@ export default function InteractiveDiagram({
         hasInitializedRef.current = true;
       }
     });
+
+    // --- Minimap ---
+    const showMinimap = dimensions.width > 500 && dimensions.height > 400;
+    const minimapSize = Math.min(120, dimensions.width * 0.25);
+    const minimapMargin = 16;
+    const minimapScale = minimapSize / Math.max(dimensions.width * 2, 2000);
+
+    if (showMinimap) {
+      const clipId = "minimap-clip-" + Math.random().toString(36).substr(2, 9);
+      defs
+        .append("clipPath")
+        .attr("id", clipId)
+        .append("rect")
+        .attr("width", minimapSize)
+        .attr("height", minimapSize)
+        .attr("rx", 8);
+
+      const gMinimap = svgSel
+        .append("g")
+        .attr("class", "minimap d3-minimap")
+        .attr(
+          "transform",
+          `translate(${minimapMargin}, ${dimensions.height - minimapSize - minimapMargin})`,
+        );
+
+      gMinimap
+        .append("rect")
+        .attr("width", minimapSize)
+        .attr("height", minimapSize)
+        .attr("fill", "rgba(15, 23, 42, 0.8)")
+        .attr("stroke", "#334155")
+        .attr("rx", 8)
+        .style("backdrop-filter", "blur(4px)");
+
+      const gMinimapClipped = gMinimap
+        .append("g")
+        .attr("clip-path", `url(#${clipId})`);
+
+      const gMinimapContent = gMinimapClipped
+        .append("g")
+        .attr("transform", `translate(${minimapSize / 2}, ${minimapSize / 2})`);
+
+      const minimapNodesSel = gMinimapContent
+        .selectAll("circle.m-node")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "m-node")
+        .attr("r", 2)
+        .attr(
+          "fill",
+          (d) =>
+            DEFAULT_LAYER_COLORS[
+              d.layer as keyof typeof DEFAULT_LAYER_COLORS
+            ] || "#94a3b8",
+        );
+
+      const gViewport = gMinimapClipped
+        .append("rect")
+        .attr("class", "minimap-viewport")
+        .attr("fill", "rgba(255, 255, 255, 0.1)")
+        .attr("stroke", "rgba(255, 255, 255, 0.6)")
+        .attr("stroke-width", 1)
+        .attr("rx", 2);
+
+      updateMinimapNodes = () => {
+        minimapNodesSel
+          .attr("cx", (d) => ((d.x ?? 0) - dimensions.width / 2) * minimapScale)
+          .attr(
+            "cy",
+            (d) => ((d.y ?? 0) - dimensions.height / 2) * minimapScale,
+          );
+      };
+
+      updateMinimapViewport = () => {
+        if (!zoomRef.current || !svgSelectionRef.current) return;
+        const currentTransform = d3.zoomTransform(
+          svgSelectionRef.current.node()!,
+        );
+        const worldX = -currentTransform.x / currentTransform.k;
+        const worldY = -currentTransform.y / currentTransform.k;
+        const worldW = dimensions.width / currentTransform.k;
+        const worldH = dimensions.height / currentTransform.k;
+
+        gViewport
+          .attr(
+            "x",
+            minimapSize / 2 + (worldX - dimensions.width / 2) * minimapScale,
+          )
+          .attr(
+            "y",
+            minimapSize / 2 + (worldY - dimensions.height / 2) * minimapScale,
+          )
+          .attr("width", worldW * minimapScale)
+          .attr("height", worldH * minimapScale);
+      };
+
+      gMinimap.style("cursor", "crosshair").on("click", (event) => {
+        const [mx, my] = d3.pointer(event);
+        const targetWorldX =
+          dimensions.width / 2 + (mx - minimapSize / 2) / minimapScale;
+        const targetWorldY =
+          dimensions.height / 2 + (my - minimapSize / 2) / minimapScale;
+
+        if (zoomRef.current && svgSelectionRef.current) {
+          const currentTransform = d3.zoomTransform(
+            svgSelectionRef.current.node()!,
+          );
+          const k = currentTransform.k;
+          const tx = dimensions.width / 2 - targetWorldX * k;
+          const ty = dimensions.height / 2 - targetWorldY * k;
+          const t = d3.zoomIdentity.translate(tx, ty).scale(k);
+          svgSelectionRef.current
+            .transition()
+            .duration(300)
+            .call(zoomRef.current.transform, t);
+        }
+      });
+    }
 
     const centerOnNode = (nodeId: string) => {
       const target = nodes.find((n) => n.id === nodeId);
@@ -931,7 +1055,7 @@ export default function InteractiveDiagram({
         onExit={exitTour}
       />
       {/* Floating viewport controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+      <div className="absolute right-4 bottom-4 z-10 flex flex-col gap-2 max-sm:bottom-24 max-sm:right-2">
         <div className="inline-flex rounded-full border border-slate-800 bg-[#0f172a]/80 backdrop-blur p-1 shadow-lg gap-1">
           <button
             type="button"
