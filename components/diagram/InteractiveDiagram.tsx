@@ -1,13 +1,18 @@
 "use client";
 import FloatingSearch from "@/components/diagram/FloatingSearch";
 import InsightPanel from "@/components/diagram/InsightPanel";
-import LayerToggle from "@/components/diagram/LayerToggle";
+import LayerToggle, { ALL_LAYERS } from "@/components/diagram/LayerToggle";
+import WalkthroughControls from "@/components/diagram/WalkthroughControls";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
-import { analyzeDiagramRelations } from "@/lib/utils/diagram-analyzer";
+import {
+  analyzeDiagramRelations,
+  buildDiagramWalkthroughSteps,
+} from "@/lib/utils/diagram-analyzer";
 import {
   DiagramLayer,
   DiagramLink,
   DiagramNode,
+  DiagramWalkthroughStep,
   NodeShape,
   SystemGraph,
 } from "@/types/diagram";
@@ -285,6 +290,7 @@ export default function InteractiveDiagram({
   }, [searchQuery]);
 
   const selectedIdRef = useRef<string | null>(null);
+  const tourSelectedIdRef = useRef<string | null>(null);
 
   const [selectedNode, setSelectedNode] = useState<DiagramNode | null>(null);
   const [isInsightOpen, setIsInsightOpen] = useState(false);
@@ -296,6 +302,25 @@ export default function InteractiveDiagram({
   );
   const getLinkOpacity = (d: DiagramLink) =>
     d.type === "fallback" ? 0.25 : 0.4;
+  const getLinkTargetId = (d: DiagramLink) =>
+    typeof d.target === "string" ? d.target : (d.target as DiagramNode).id;
+
+  const walkthroughSteps = useMemo(
+    () => (systemGraph ? buildDiagramWalkthroughSteps(systemGraph) : []),
+    [systemGraph],
+  );
+  const [tourActive, setTourActive] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [tourTooltip, setTourTooltip] = useState<{
+    left: number;
+    top: number;
+    caption: string;
+  } | null>(null);
+
+  const applyTourStepRef = useRef<
+    ((step: DiagramWalkthroughStep) => void) | null
+  >(null);
+  const clearVisualStateRef = useRef<(() => void) | null>(null);
 
   // Use ResizeObserver to keep track of the container's dimensions
   useEffect(() => {
@@ -486,6 +511,8 @@ export default function InteractiveDiagram({
     const gZoom = svgSel.append("g").attr("class", "d3-zoom-viewport");
     gZoomRef.current = gZoom;
 
+    const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
+
     // Attach d3.zoom to the SVG
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
@@ -497,12 +524,27 @@ export default function InteractiveDiagram({
       })
       .on("zoom", (event) => {
         gZoom.attr("transform", event.transform.toString());
+        const activeId = tourSelectedIdRef.current;
+        if (!activeId) return;
+        const n = nodes.find((d) => d.id === activeId);
+        if (n?.x == null || n?.y == null) return;
+        const [sx, sy] = event.transform.apply([n.x, n.y]);
+        setTourTooltip((prev) =>
+          prev
+            ? {
+                ...prev,
+                left: sx,
+                top:
+                  sy -
+                  (DEFAULT_NODE_HEIGHT / 2) * event.transform.k -
+                  DEFAULT_PADDING,
+              }
+            : prev,
+        );
       });
 
     zoomRef.current = zoom;
     svgSel.call(zoom);
-
-    const nodes: DiagramNode[] = systemGraph.nodes.map((node) => ({ ...node }));
 
     const links: DiagramLink[] = systemGraph.links.map((link) => ({ ...link }));
 
@@ -550,25 +592,39 @@ export default function InteractiveDiagram({
     });
 
     const updateVisualState = () => {
-      const query = searchQueryRef.current.trim().toLowerCase();
-      const visibleLayers = new Set(activeLayersRef.current);
-      const selectedId = selectedIdRef.current;
+      const tourNodeId = tourSelectedIdRef.current;
+      const isTour = tourNodeId !== null;
+
+      // Temporarily disable search query, visibility query and node selection for tours
+      const query = isTour ? "" : searchQueryRef.current.trim().toLowerCase();
+      const visibleLayers = new Set(
+        isTour ? ALL_LAYERS : activeLayersRef.current,
+      );
+      const selectedId = tourNodeId ?? selectedIdRef.current;
 
       const upstream = new Set<string>();
       const downstream = new Set<string>();
       if (selectedId) {
         upstream.add(selectedId);
         downstream.add(selectedId);
-        const rel = relations[selectedId];
-        if (rel) {
-          rel.ancestors.forEach((n) => upstream.add(n.id));
-          rel.descendants.forEach((n) => downstream.add(n.id));
+        if (!isTour) {
+          const rel = relations[selectedId];
+          if (rel) {
+            rel.ancestors.forEach((n) => upstream.add(n.id));
+            rel.descendants.forEach((n) => downstream.add(n.id));
+          }
         }
       }
 
-      const onPath = (s: string, t: string) =>
-        (upstream.has(s) && upstream.has(t)) ||
-        (downstream.has(s) && downstream.has(t));
+      const onPath = (d: DiagramLink) => {
+        if (isTour) return getLinkTargetId(d) === selectedId;
+        const s = (d.source as DiagramNode).id;
+        const t = (d.target as DiagramNode).id;
+        return (
+          (upstream.has(s) && upstream.has(t)) ||
+          (downstream.has(s) && downstream.has(t))
+        );
+      };
 
       node
         .transition()
@@ -586,7 +642,7 @@ export default function InteractiveDiagram({
           return op;
         })
         .style("pointer-events", (d) =>
-          visibleLayers.has(d.layer) ? "auto" : "none",
+          isTour || !visibleLayers.has(d.layer) ? "none" : "auto",
         );
 
       node
@@ -612,31 +668,18 @@ export default function InteractiveDiagram({
           ) {
             return 0;
           }
-          let op = getLinkOpacity(d);
-          if (selectedId) {
-            op = onPath(source.id, target.id) ? 0.9 : 0.05;
-          }
-          return op;
+          if (selectedId) return onPath(d) ? 0.9 : 0.05;
+          return getLinkOpacity(d);
         })
         .style("pointer-events", "none")
-        .attr("stroke", (d) => {
-          if (selectedId) {
-            const source = d.source as DiagramNode;
-            const target = d.target as DiagramNode;
-            return onPath(source.id, target.id)
+        .attr("stroke", (d) =>
+          selectedId
+            ? onPath(d)
               ? "rgba(255, 255, 255, 0.9)"
-              : "rgba(255, 255, 255, 0.2)";
-          }
-          return "rgba(255, 255, 255, 0.5)";
-        })
-        .attr("stroke-width", (d) => {
-          if (selectedId) {
-            const source = d.source as DiagramNode;
-            const target = d.target as DiagramNode;
-            return onPath(source.id, target.id) ? 3 : 2;
-          }
-          return 2;
-        });
+              : "rgba(255, 255, 255, 0.2)"
+            : "rgba(255, 255, 255, 0.5)",
+        )
+        .attr("stroke-width", (d) => (selectedId && onPath(d) ? 3 : 2));
     };
 
     node.style("cursor", "pointer").on("click", (event, d) => {
@@ -743,6 +786,47 @@ export default function InteractiveDiagram({
       }
     });
 
+    const centerOnNode = (nodeId: string) => {
+      const target = nodes.find((n) => n.id === nodeId);
+      const svgSel = svgSelectionRef.current;
+      if (
+        !target ||
+        target.x == null ||
+        target.y == null ||
+        !svgSel ||
+        !zoomRef.current
+      )
+        return;
+
+      const k = 1.5;
+      const tx = dimensions.width / 2 - target.x * k;
+      const ty = dimensions.height / 2 - target.y * k;
+      const t = d3.zoomIdentity.translate(tx, ty).scale(k);
+      svgSel.transition().duration(300).call(zoomRef.current.transform, t);
+    };
+
+    applyTourStepRef.current = (step: DiagramWalkthroughStep) => {
+      tourSelectedIdRef.current = step.nodeId;
+      updateVisualState();
+      centerOnNode(step.nodeId);
+      const svgEl = svgRef.current;
+      const n = nodes.find((d) => d.id === step.nodeId);
+      if (svgEl && n?.x != null && n?.y != null) {
+        const tr = d3.zoomTransform(svgEl);
+        const [sx, sy] = tr.apply([n.x, n.y]);
+        setTourTooltip({
+          left: sx,
+          top: sy - (DEFAULT_NODE_HEIGHT / 2) * tr.k - DEFAULT_PADDING,
+          caption: step.caption,
+        });
+      }
+    };
+    clearVisualStateRef.current = () => {
+      tourSelectedIdRef.current = null;
+      setTourTooltip(null);
+      updateVisualState();
+    };
+
     updateSearchHighlightRef.current = updateVisualState;
     updateLayerVisibilityRef.current = updateVisualState;
     updateVisualState();
@@ -752,6 +836,8 @@ export default function InteractiveDiagram({
       simulation.stop();
       updateSearchHighlightRef.current = null;
       updateLayerVisibilityRef.current = null;
+      applyTourStepRef.current = null;
+      clearVisualStateRef.current = null;
     };
   }, [dimensions, fitToScreen, systemGraph, relations]);
 
@@ -770,7 +856,49 @@ export default function InteractiveDiagram({
       .call(zoomRef.current.scaleBy, 1 / 1.2);
   };
 
-  const handleReset = () => fitToScreen({ padding: 28, animate: true });
+  const handleReset = useCallback(
+    () => fitToScreen({ padding: 28, animate: true }),
+    [fitToScreen],
+  );
+
+  const startTour = useCallback(() => {
+    selectedIdRef.current = null;
+    setSelectedNode(null);
+    setIsInsightOpen(false);
+    setTourStepIndex(0);
+    setTourActive(true);
+  }, []);
+
+  const nextStep = useCallback(() => {
+    setTourStepIndex((i) => Math.min(i + 1, walkthroughSteps.length - 1));
+  }, [walkthroughSteps.length]);
+
+  const prevStep = useCallback(() => {
+    setTourStepIndex((i) => Math.max(i - 1, 0));
+  }, []);
+
+  const exitTour = useCallback(() => {
+    setTourActive(false);
+    clearVisualStateRef.current?.();
+    handleReset();
+  }, [handleReset]);
+
+  useEffect(() => {
+    if (!tourActive) return;
+    const step = walkthroughSteps[tourStepIndex];
+    if (step) applyTourStepRef.current?.(step);
+  }, [tourActive, tourStepIndex, walkthroughSteps]);
+
+  useEffect(() => {
+    if (!tourActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") nextStep();
+      else if (e.key === "ArrowLeft") prevStep();
+      else if (e.key === "Escape") exitTour();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tourActive, nextStep, prevStep, exitTour]);
 
   if (!isD3Enabled) return null;
 
@@ -780,9 +908,28 @@ export default function InteractiveDiagram({
       className="w-full h-125 min-h-100 rounded-2xl border border-border/10 bg-[#0b0f19] overflow-hidden shadow-2xl relative flex items-center justify-center transition-all duration-500"
     >
       {/* Floating search input (top-right) */}
-      <FloatingSearch position="right" />
+      <FloatingSearch position="right" disabled={tourActive} />
       {/* Layer Filters */}
-      <LayerToggle />
+      <LayerToggle disabled={tourActive} />
+      {tourActive && tourTooltip && (
+        <div
+          className="pointer-events-none absolute z-20 max-w-xs -translate-x-1/2 -translate-y-full rounded-lg border border-slate-700 bg-[#0f172a]/95 px-3 py-2 text-xs leading-snug text-slate-100 shadow-xl backdrop-blur"
+          style={{ left: tourTooltip.left, top: tourTooltip.top }}
+        >
+          {tourTooltip.caption}
+          <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-700" />
+        </div>
+      )}
+      {/* Guided walkthrough controls (bottom-center) */}
+      <WalkthroughControls
+        active={tourActive}
+        index={tourStepIndex}
+        total={walkthroughSteps.length}
+        onStart={startTour}
+        onPrev={prevStep}
+        onNext={nextStep}
+        onExit={exitTour}
+      />
       {/* Floating viewport controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
         <div className="inline-flex rounded-full border border-slate-800 bg-[#0f172a]/80 backdrop-blur p-1 shadow-lg gap-1">

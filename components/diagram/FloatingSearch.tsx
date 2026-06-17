@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
+import { Search } from "lucide-react";
+import React, { useRef, useState } from "react";
 
 type FloatingSearchProps = {
   position?: "left" | "right";
   className?: string;
+  disabled?: boolean;
 };
 
 /**
@@ -18,7 +19,7 @@ type FloatingSearchProps = {
  * - Shrinks to icon on mobile if unfocused and empty
  */
 export const FloatingSearch: React.FC<FloatingSearchProps> = React.memo(
-  function FloatingSearch({ position = "left", className }) {
+  function FloatingSearch({ position = "left", className, disabled = false }) {
     const { searchQuery, setSearchQuery } = useDiagram();
     const [isFocused, setIsFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -40,12 +41,13 @@ export const FloatingSearch: React.FC<FloatingSearchProps> = React.memo(
             ? "w-[calc(100%-4rem)] sm:w-64 "
             : "w-10 sm:w-64 cursor-pointer ") +
           (position === "left" ? "left-4" : "right-4") +
+          (disabled ? " opacity-50 pointer-events-none" : "") +
           (className ? ` ${className}` : "")
         }
         role="search"
         aria-label="Search diagram"
         onClick={() => {
-          if (!isExpanded) {
+          if (!disabled && !isExpanded) {
             inputRef.current?.focus();
           }
         }}
@@ -57,6 +59,7 @@ export const FloatingSearch: React.FC<FloatingSearchProps> = React.memo(
           placeholder="Search components..."
           value={searchQuery}
           onChange={handleChange}
+          disabled={disabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={`flex-1 min-w-0 !p-1 !pl-0 bg-transparent border-0 shadow-none text-white placeholder:text-slate-400 focus-visible:ring-0 transition-opacity duration-300 ${isExpanded ? "opacity-100" : "opacity-0 sm:opacity-100"}`}

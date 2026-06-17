@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useDiagram } from "@/lib/contexts/DiagramContext";
 import { DiagramLayer } from "@/types/diagram";
 import { ChevronDown, ChevronUp, Layers } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const layers: DiagramLayer[] = [
+export const ALL_LAYERS: DiagramLayer[] = [
   "Frontend",
   "API",
   "Database",
@@ -14,7 +14,11 @@ const layers: DiagramLayer[] = [
   "Other Services",
 ];
 
-export default function LayerToggle() {
+interface LayerToggleProps {
+  disabled?: boolean;
+}
+
+export default function LayerToggle({ disabled = false }: LayerToggleProps) {
   const { activeLayers, setActiveLayers } = useDiagram();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,6 +33,7 @@ export default function LayerToggle() {
   }, []);
 
   const toggleLayer = (layer: DiagramLayer) => {
+    if (disabled) return;
     setActiveLayers((prev) =>
       prev.includes(layer)
         ? prev.filter((item) => item !== layer)
@@ -58,16 +63,21 @@ export default function LayerToggle() {
 
       {isOpen && (
         <div className="flex flex-col gap-3 mt-4 pt-3 border-t border-slate-800">
-          {layers.map((layer) => (
+          {ALL_LAYERS.map((layer) => (
             <label
               key={layer}
-              className="flex cursor-pointer items-center gap-3 text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              className={`flex items-center gap-3 text-xs font-medium text-slate-400 transition-colors ${
+                disabled
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer hover:text-white"
+              }`}
             >
               <input
                 type="checkbox"
                 checked={activeLayers.includes(layer)}
                 onChange={() => toggleLayer(layer)}
-                className="h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                disabled={disabled}
+                className="h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900 disabled:cursor-not-allowed"
               />
               {layer}
             </label>
