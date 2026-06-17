@@ -108,3 +108,17 @@ export interface NodeRelation {
   ancestors: DiagramNode[];
   descendants: DiagramNode[];
 }
+
+/**
+ * A single step in the guided walkthrough of the system architecture.
+ * Steps are ordered by its dependency depth so a node always appears after the
+ * upstream nodes it depends on.
+ */
+export interface DiagramWalkthroughStep {
+  /** Index of the ordered tour (0-based). */
+  index: number;
+  /** Highlighted node id. */
+  nodeId: string;
+  /** Auto-generated narration describing the node and its dependencies. */
+  caption: string;
+}

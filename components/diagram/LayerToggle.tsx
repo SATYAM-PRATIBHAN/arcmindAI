@@ -5,7 +5,7 @@ import { DiagramLayer } from "@/types/diagram";
 import { ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export const AllLayers: DiagramLayer[] = [
+export const ALL_LAYERS: DiagramLayer[] = [
   "Frontend",
   "API",
   "Database",
@@ -63,7 +63,7 @@ export default function LayerToggle({ disabled = false }: LayerToggleProps) {
 
       {isOpen && (
         <div className="flex flex-col gap-3 mt-4 pt-3 border-t border-slate-800">
-          {AllLayers.map((layer) => (
+          {ALL_LAYERS.map((layer) => (
             <label
               key={layer}
               className={`flex items-center gap-3 text-xs font-medium text-slate-400 transition-colors ${
