@@ -2,6 +2,7 @@ import {
   DependencyAnalysis,
   DependencyInfo,
 } from "@/types/repository-analysis";
+import { FILE_PATTERNS, getFileContentByPattern } from "./constants";
 
 export class DependencyAnalyzer {
   private fileContents: Map<string, string>;
@@ -19,7 +20,10 @@ export class DependencyAnalyzer {
     const buildTools: string[] = [];
 
     // Parse package.json
-    const packageJson = this.fileContents.get("package.json");
+    const packageJson = getFileContentByPattern(
+      this.fileContents,
+      FILE_PATTERNS.packageJson,
+    );
     if (packageJson) {
       packageManager = "npm";
       try {
@@ -49,7 +53,10 @@ export class DependencyAnalyzer {
     }
 
     // Parse requirements.txt
-    const requirementsTxt = this.fileContents.get("requirements.txt");
+    const requirementsTxt = getFileContentByPattern(
+      this.fileContents,
+      FILE_PATTERNS.requirementsTxt,
+    );
     if (requirementsTxt) {
       packageManager = "pip";
       const lines = requirementsTxt.split("\n");
