@@ -1,5 +1,5 @@
 import { DatabaseAnalysis } from "@/types/repository-analysis";
-import { GitHubTreeNode, FILE_PATTERNS } from "./constants";
+import { GitHubTreeNode, FILE_PATTERNS, getFileByPattern } from "./constants";
 
 export class DatabaseAnalyzer {
   private tree: GitHubTreeNode[];
@@ -17,14 +17,17 @@ export class DatabaseAnalyzer {
     let orm: string | null = null;
 
     // Check for Prisma
-    const prismaSchema = this.fileContents.get("prisma/schema.prisma");
-    if (prismaSchema) {
+    const prismaResult = getFileByPattern(
+      this.fileContents,
+      FILE_PATTERNS.prismaSchema,
+    );
+    if (prismaResult) {
       orm = "prisma";
-      type = this.detectDatabaseType(prismaSchema);
+      type = this.detectDatabaseType(prismaResult.content);
       schemas.push({
-        file: "prisma/schema.prisma",
-        content: prismaSchema,
-        models: this.extractPrismaModels(prismaSchema),
+        file: prismaResult.path,
+        content: prismaResult.content,
+        models: this.extractPrismaModels(prismaResult.content),
       });
     }
 

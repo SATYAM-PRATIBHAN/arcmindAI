@@ -1,5 +1,9 @@
 import { MessagingAnalysis } from "@/types/repository-analysis";
-import { GitHubTreeNode, FILE_PATTERNS } from "./constants";
+import {
+  GitHubTreeNode,
+  FILE_PATTERNS,
+  getFileContentByPattern,
+} from "./constants";
 
 export class MessagingAnalyzer {
   private tree: GitHubTreeNode[];
@@ -19,7 +23,10 @@ export class MessagingAnalyzer {
     const patterns: string[] = [];
 
     // Detect messaging systems from dependencies
-    const packageJson = this.fileContents.get("package.json");
+    const packageJson = getFileContentByPattern(
+      this.fileContents,
+      FILE_PATTERNS.packageJson,
+    );
     if (packageJson) {
       try {
         const pkg = JSON.parse(packageJson);
