@@ -256,9 +256,9 @@ export function validateApiKeyFormat(
     return /^AI[a-zA-Z0-9_-]{30,}$/.test(apiKey);
   }
 
-  // OpenAI API keys typically start with "sk-" and contain alphanumeric characters
+  // OpenAI API keys typically start with "sk-" and contain alphanumeric characters, hyphens, and underscores
   if (provider === "openai") {
-    return /^sk-[a-zA-Z0-9]{20,}$/.test(apiKey);
+    return /^sk-[a-zA-Z0-9_-]{20,}$/.test(apiKey);
   }
 
   return false;
