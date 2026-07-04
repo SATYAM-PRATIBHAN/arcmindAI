@@ -14,15 +14,25 @@ const redis =
 const inMemoryLimits = new Map<string, { count: number; resetAt: number }>();
 
 function checkInMemoryLimit(
+  prefix: string,
   key: string,
   maxRequests: number,
   windowMs: number,
 ) {
   const now = Date.now();
-  const limit = inMemoryLimits.get(key);
+
+  // Cleanup expired entries
+  for (const [k, value] of inMemoryLimits.entries()) {
+    if (now > value.resetAt) {
+      inMemoryLimits.delete(k);
+    }
+  }
+
+  const fullKey = `${prefix}:${key}`;
+  const limit = inMemoryLimits.get(fullKey);
 
   if (!limit || now > limit.resetAt) {
-    inMemoryLimits.set(key, { count: 1, resetAt: now + windowMs });
+    inMemoryLimits.set(fullKey, { count: 1, resetAt: now + windowMs });
     return {
       success: true,
       limit: maxRequests,
@@ -78,16 +88,20 @@ export const generationRateLimits = redis
     }
   : {
       free: {
-        limit: async (key: string) => checkInMemoryLimit(key, 5, 3600000),
+        limit: async (key: string) =>
+          checkInMemoryLimit("generation:free", key, 5, 3600000),
       } as unknown as Ratelimit,
       guest: {
-        limit: async (key: string) => checkInMemoryLimit(key, 1, 86400000), // 1 per day
+        limit: async (key: string) =>
+          checkInMemoryLimit("generation:guest", key, 1, 86400000), // 1 per day
       } as unknown as Ratelimit,
       pro: {
-        limit: async (key: string) => checkInMemoryLimit(key, 50, 3600000),
+        limit: async (key: string) =>
+          checkInMemoryLimit("generation:pro", key, 50, 3600000),
       } as unknown as Ratelimit,
       enterprise: {
-        limit: async (key: string) => checkInMemoryLimit(key, 200, 3600000),
+        limit: async (key: string) =>
+          checkInMemoryLimit("generation:enterprise", key, 200, 3600000),
       } as unknown as Ratelimit,
     };
 
@@ -98,7 +112,7 @@ export const otpRateLimit = redis
       analytics: true,
     })
   : ({
-      limit: async (key: string) => checkInMemoryLimit(key, 1, 60000),
+      limit: async (key: string) => checkInMemoryLimit("otp", key, 1, 60000),
     } as unknown as Ratelimit);
 
 export const signupRateLimitIP = redis
@@ -108,7 +122,8 @@ export const signupRateLimitIP = redis
       analytics: true,
     })
   : ({
-      limit: async (key: string) => checkInMemoryLimit(key, 3, 3600000),
+      limit: async (key: string) =>
+        checkInMemoryLimit("signup", key, 3, 3600000),
     } as unknown as Ratelimit);
 
 export const loginRateLimitIP = redis
@@ -118,7 +133,8 @@ export const loginRateLimitIP = redis
       analytics: true,
     })
   : ({
-      limit: async (key: string) => checkInMemoryLimit(key, 5, 60000),
+      limit: async (key: string) =>
+        checkInMemoryLimit("login:ip", key, 5, 60000),
     } as unknown as Ratelimit);
 
 export const loginRateLimitAccount = redis
@@ -128,7 +144,8 @@ export const loginRateLimitAccount = redis
       analytics: true,
     })
   : ({
-      limit: async (key: string) => checkInMemoryLimit(key, 5, 3600000),
+      limit: async (key: string) =>
+        checkInMemoryLimit("login:account", key, 5, 3600000),
     } as unknown as Ratelimit);
 
 export const contactRateLimitIP = redis
@@ -138,5 +155,6 @@ export const contactRateLimitIP = redis
       analytics: true,
     })
   : ({
-      limit: async (key: string) => checkInMemoryLimit(key, 3, 3600000),
+      limit: async (key: string) =>
+        checkInMemoryLimit("contact", key, 3, 3600000),
     } as unknown as Ratelimit);
