@@ -1,0 +1,12 @@
+# ArcMind AI GitHub Issue Helper Configuration
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: "💬 GSSoC 2026 Discussion & Assignment Channel"
+    url: "https://github.com/SATYAM-PRATIBHAN/arcmindAI/discussions/120"
+    about: "Official discussion thread for GSSoC 2026 announcements, issue assignment requests, and Q&A."
+
+  - name: "💡 Community Q&A & Idea Brainstorming"
+    url: "https://github.com/SATYAM-PRATIBHAN/arcmindAI/discussions"
+    about: "Ask general technical questions, propose open-ended ideas, or showcase your ArcMind AI implementations."

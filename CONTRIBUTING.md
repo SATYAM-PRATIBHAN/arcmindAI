@@ -45,84 +45,28 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 ### Reporting Bugs
 
-Before creating bug reports, please check the existing issues to avoid duplicates. When you create a bug report, include as many details as possible:
+Before creating bug reports, please check existing issues to avoid duplicates. When creating a bug report, select the **🐛 Bug Report** template when opening a new issue on GitHub. 
 
-- **Use a clear and descriptive title**
+For complete guidelines on issue reporting and template details, refer to [`docs/ISSUE_TEMPLATES.md`](docs/ISSUE_TEMPLATES.md).
+
+Key guidelines:
+- **Use a clear and descriptive title** starting with `[BUG]: `
 - **Describe the exact steps to reproduce the problem**
-- **Provide specific examples** to demonstrate the steps
-- **Describe the behavior you observed** and what you expected to see
-- **Include screenshots or animated GIFs** if applicable
-- **Include your environment details**: OS, Node.js version, browser, etc.
-
-**Bug Report Template:**
-
-```markdown
-## Bug Description
-
-A clear and concise description of what the bug is.
-
-## Steps to Reproduce
-
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
-
-## Expected Behavior
-
-What you expected to happen.
-
-## Actual Behavior
-
-What actually happened.
-
-## Screenshots
-
-If applicable, add screenshots to help explain your problem.
-
-## Environment
-
-- OS: [e.g., macOS 14.0]
-- Node.js version: [e.g., 18.17.0]
-- Browser: [e.g., Chrome 120]
-- ArcMind AI version: [e.g., 1.0.0]
-
-## Additional Context
-
-Add any other context about the problem here.
-```
+- **Provide error logs and stack traces** using Markdown code blocks
+- **Attach screenshots or screen recordings** for UI defects
+- **Include your environment details** (OS, Node.js version, browser, etc.)
 
 ### Suggesting Features
 
-Feature suggestions are welcome! Before creating a feature request:
+Feature suggestions are welcome! Select the **✨ Feature Request** template when creating an issue.
 
+Before submitting a feature request:
 - **Check if the feature has already been suggested**
-- **Provide a clear use case** for the feature
-- **Explain how it would benefit users**
+- **Provide a clear problem statement and use case**
+- **Detail your proposed solution and architecture impact**
+- **Include mockups or UI sketches** where applicable
 
-**Feature Request Template:**
-
-```markdown
-## Feature Description
-
-A clear and concise description of the feature you'd like to see.
-
-## Problem Statement
-
-What problem does this feature solve? Is your feature request related to a problem?
-
-## Proposed Solution
-
-Describe how you envision this feature working.
-
-## Alternatives Considered
-
-Describe any alternative solutions or features you've considered.
-
-## Additional Context
-
-Add any other context, mockups, or screenshots about the feature request here.
-```
+For documentation, UI/UX, performance, security, and refactoring proposals, please select the corresponding issue template when opening a new issue. See [`docs/ISSUE_TEMPLATES.md`](docs/ISSUE_TEMPLATES.md) for full details.
 
 ### Your First Code Contribution
 
