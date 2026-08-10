@@ -55,7 +55,7 @@
     "d3": "^7.9.0",
     "dodopayments": "^2.43.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^12.43.0",
+    "framer-motion": "^13.0.0",
     "get-nonce": "^1.0.1",
     "googleapis": "^171.4.0",
     "html-to-image": "^1.11.13",
