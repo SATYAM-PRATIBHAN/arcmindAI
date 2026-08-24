@@ -57,7 +57,7 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^13.1.0",
     "get-nonce": "^1.0.1",
-    "googleapis": "^174.0.1",
+    "googleapis": "^176.0.0",
     "html-to-image": "^1.11.13",
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.3",
