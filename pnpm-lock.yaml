@@ -129,8 +129,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1
       lottie-react:
-        specifier: ^2.4.1
-        version: 2.4.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: ^3.1.1
+        version: 3.1.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@19.2.8)
@@ -3558,11 +3558,11 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
-  lottie-react@2.4.1:
-    resolution: {integrity: sha512-LQrH7jlkigIIv++wIyrOYFLHSKQpEY4zehPicL9bQsrt1rnoKRYCYgpCUe5maqylNtacy58/sQDZTkwMcTRxZw==}
+  lottie-react@3.1.1:
+    resolution: {integrity: sha512-e4qta5ljrlNee31fHkdYiGByYhQWfLmpYE8lBYNvQKVXM6SugR6ZSbQE6rMcocqv6luanPEP8N9zglVduwv/AA==}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react: ^18.2.0 || ^19.0.0
+      react-dom: ^18.2.0 || ^19.0.0
 
   lottie-web@5.13.0:
     resolution: {integrity: sha512-+gfBXl6sxXMPe8tKQm7qzLnUy5DUPJPKIyRHwtpCpyUEYjHYRJC/5gjUvdkuO2c3JllrPtHXH5UJJK8LRYl5yQ==}
@@ -8506,7 +8506,7 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  lottie-react@2.4.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  lottie-react@3.1.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       lottie-web: 5.13.0
       react: 19.2.8
