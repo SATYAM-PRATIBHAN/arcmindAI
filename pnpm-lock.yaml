@@ -132,8 +132,8 @@ importers:
         specifier: ^2.4.1
         version: 2.4.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       lucide-react:
-        specifier: ^0.575.0
-        version: 0.575.0(react@19.3.0)
+        specifier: ^1.44.0
+        version: 1.44.0(react@19.3.0)
       mermaid:
         specifier: ^11.17.2
         version: 11.17.2
@@ -3580,8 +3580,8 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  lucide-react@0.575.0:
-    resolution: {integrity: sha512-VuXgKZrk0uiDlWjGGXmKV6MSk9Yy4l10qgVvzGn2AWBx1Ylt0iBexKOAoA6I7JO3m+M9oeovJd3yYENfkUbOeg==}
+  lucide-react@1.44.0:
+    resolution: {integrity: sha512-2egNApH4hX4j/qdCgRublh88+9u3mEhz9iSlW5ckm4kaQEqZbXbMr0l5u5JZLy8nmWRx2dbHGQkEDYz6C9aCgw==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -8540,7 +8540,7 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
-  lucide-react@0.575.0(react@19.3.0):
+  lucide-react@1.44.0(react@19.3.0):
     dependencies:
       react: 19.3.0
 
