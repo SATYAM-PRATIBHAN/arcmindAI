@@ -114,8 +114,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       googleapis:
-        specifier: ^185.0.0
-        version: 185.0.0(supports-color@7.2.0)
+        specifier: ^186.0.0
+        version: 186.0.0(supports-color@7.2.0)
       html-to-image:
         specifier: ^1.11.13
         version: 1.11.13
@@ -2996,10 +2996,6 @@ packages:
     resolution: {integrity: sha512-eAmLkjDjAFCVXg7A1unxHsLf961m6y17QFqXqAXGj/gVkKFrEICfStRfwUlGNfeCEjNRa32JEWOUTlYXPyyKvA==}
     engines: {node: '>=14'}
 
-  google-logging-utils@1.2.0:
-    resolution: {integrity: sha512-WE9av4wKDZgRjBwgVUabocx8T6/7o3Ca1Fat46FXDhXVAFibzNadedcOXrdgd1Kzmk8tsk/9ZH89Wyf/SqeZ3A==}
-    engines: {node: '>=18'}
-
   google-logging-utils@2.0.1:
     resolution: {integrity: sha512-HMhaQghlOTvbcb3c4T5jmmOMtG3JUF1iOQMezaJXL86CDS+Tm2vHd0IeLFRAx3+ewd+bo9E1HFHoy17X5aJa9A==}
     engines: {node: '>=22'}
@@ -3008,8 +3004,8 @@ packages:
     resolution: {integrity: sha512-OYCBMfAPDJSB4E1RiQQzrIxCJLGMVrCgeVvuUKzSLBgnSSA+hH3X16/q76UMjS/HCJmOjcVVopwhUUnTo2SHyg==}
     engines: {node: '>=22'}
 
-  googleapis@185.0.0:
-    resolution: {integrity: sha512-w/rO9+ank7JpAj65X6DzUoSLbxvHtsTf4F2kD9+8AScA3KEzDjeTFOUFVldDSePSuRSlpJkP/s36fMaqgFX3sw==}
+  googleapis@186.0.0:
+    resolution: {integrity: sha512-ljnYwbM1IX6xM0q5tQHqAtnFdHBC9rPa5jidpoQB7wRiqBYOs5hOQPUPidF454tNLO5LCwB06EvkPg/93E1OJw==}
     engines: {node: '>=22.0.0'}
 
   gopd@1.2.0:
@@ -7855,8 +7851,6 @@ snapshots:
 
   google-logging-utils@1.1.3: {}
 
-  google-logging-utils@1.2.0: {}
-
   google-logging-utils@2.0.1: {}
 
   googleapis-common@9.2.0(supports-color@7.2.0):
@@ -7870,7 +7864,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  googleapis@185.0.0(supports-color@7.2.0):
+  googleapis@186.0.0(supports-color@7.2.0):
     dependencies:
       google-auth-library: 11.2.0(supports-color@7.2.0)
       googleapis-common: 9.2.0(supports-color@7.2.0)
