@@ -9,20 +9,20 @@ importers:
   .:
     dependencies:
       '@google/genai':
-        specifier: ^2.30.0
-        version: 2.30.0(supports-color@7.2.0)
+        specifier: ^2.31.0
+        version: 2.31.0(supports-color@7.2.0)
       '@hookform/resolvers':
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(effect@3.18.4)(react-hook-form@7.90.0(@types/react@19.3.0)(react@19.3.1))(zod@4.6.7)
       '@langchain/core':
-        specifier: ^1.2.18
-        version: 1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+        specifier: ^1.3.0
+        version: 1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       '@langchain/google-genai':
-        specifier: ^2.3.2
-        version: 2.3.2(@langchain/core@1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))
+        specifier: ^2.3.4
+        version: 2.3.4(@langchain/core@1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))
       '@langchain/openai':
-        specifier: ^1.6.2
-        version: 1.6.2(@langchain/core@1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(ws@8.21.3)
+        specifier: ^1.7.0
+        version: 1.7.0(@langchain/core@1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)
       '@lottiefiles/dotlottie-react':
         specifier: ^0.20.0
         version: 0.20.0(react@19.3.1)
@@ -102,8 +102,8 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
       dodopayments:
-        specifier: ^2.55.0
-        version: 2.55.0
+        specifier: ^2.56.1
+        version: 2.56.1
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.3.1)
@@ -537,8 +537,8 @@ packages:
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
-  '@google/genai@2.30.0':
-    resolution: {integrity: sha512-Gkv1ix8iZey/V3WF4lHaRS8C71P533jenDT/lA+fdPTCfXYfmCVHvo+0H5jTgzonqsmROQG7QpzLJkpoP/x7bg==}
+  '@google/genai@2.31.0':
+    resolution: {integrity: sha512-u1fw0qEiuWwNcjZixJFRfQF0awQnHb/rBBQUeiYGF+nmTXQCvcgpR2UMhKU9KNdnZdYhahY5jwS6nJ2V2tGtDA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       '@modelcontextprotocol/sdk': ^1.25.2
@@ -828,21 +828,21 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@langchain/core@1.2.18':
-    resolution: {integrity: sha512-ccwixbasSfP0ZGEUsN0/qdA1PK3GBzA1fwSi7PlQpvnT78/chR5FAKcodsvSk8imUNP/SWWeWnBG2VDrR1JLJQ==}
+  '@langchain/core@1.3.0':
+    resolution: {integrity: sha512-ZiS8USsHdO8ZVFh0m8Rs6v2BvqBEvfFicG66zxdF4rGgXSJjk0d0sLnnFZCx3RXPUvP8ybTJgPlNfkJGs1J7BA==}
     engines: {node: '>=20'}
 
-  '@langchain/google-genai@2.3.2':
-    resolution: {integrity: sha512-wiiHx3aBJmWJcKmYs/4xZo5KNRICYjdbwegtmH8ega7liYFKBY6e1F4ocMNL+ylApaRIYeO54ceAHNbKmRVHeQ==}
+  '@langchain/google-genai@2.3.4':
+    resolution: {integrity: sha512-Hq7lEtiQd5KiPquGjwKwzGg/JgbqSQia7CINLjJKoQ4FtolRuxj/mYDql0XZIMTAZJD93eeOk9wo3klEgueMYQ==}
     engines: {node: '>=20'}
     peerDependencies:
-      '@langchain/core': ^1.2.11
+      '@langchain/core': ^1.2.19
 
-  '@langchain/openai@1.6.2':
-    resolution: {integrity: sha512-KaXc3zjdM2/E24FdBlsk5NTT2Dyxh46vzCS2by78ehN6G5zdx+4OfVnPvyLl8r2tv2TqQCHpEhImVXgnAZaOvg==}
+  '@langchain/openai@1.7.0':
+    resolution: {integrity: sha512-ne5vZme5yZaC0VcNu2SJrYa8kqJ++dTZlvPmq4lNMyp+oupl5vsEb7YXPHtGgzBU21C44+I5ToEFYbJrXieSkA==}
     engines: {node: '>=22'}
     peerDependencies:
-      '@langchain/core': ^1.2.14
+      '@langchain/core': ^1.3.0
 
   '@lottiefiles/dotlottie-react@0.20.0':
     resolution: {integrity: sha512-M4HLo6RxNTbYwByZw7ns2zaGgPx0PpGZU1xfyMdj8VEoTasSJ1uhsJZjl+l55TPQ7g0soF7JVHEJLTOv1TIeMA==}
@@ -2577,8 +2577,8 @@ packages:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
 
-  dodopayments@2.55.0:
-    resolution: {integrity: sha512-EEHw/Y/0zxKgX5QEVNalc2a6msEFvMdPnUqznQiJJO3+3VfQkH0FKpYes+tXspCa2dbOmrUiNKGFfvdEGEAVNg==}
+  dodopayments@2.56.1:
+    resolution: {integrity: sha512-fm2vMQgTbPPs78Ni7tHWrIrA7Z85HE1NPykefhpJgWIs7nyoJaeK4BNss77qyAOyeJ0ErtxIw43sHLcUTDrGvA==}
     hasBin: true
 
   dompurify@3.3.3:
@@ -3803,13 +3803,14 @@ packages:
     resolution: {integrity: sha512-6gj2m8cJZ+iSW8bm0FXdGF0YhIQbKrfP4yWTNzxc31U6MOjfEmB1rHvlYvxI1B7t7BCi1F2vYTT6YhtQRG4hxw==}
     engines: {node: ^10.13.0 || >=12.0.0}
 
-  openai@7.15.0:
-    resolution: {integrity: sha512-2DIwesnPSduw68MFx7nAdgvshrgvS8WOan5W8+tgUMlAy/tY+Q41g80Pa+w/v64rHA6rtn+dketa8QvMVxU96w==}
+  openai@7.43.0:
+    resolution: {integrity: sha512-fBjKaDFG8AVfkGYoIo/E+xNRlNk7nx2nQ9GoQtXfePzPjg4QcT6nejkhXayJnEwSpFGfthOrAPI2KXj5yAqg9A==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
       '@smithy/hash-node': '>=4.3.0 <5'
       '@smithy/signature-v4': '>=5.4.0 <6'
+      google-auth-library: '>=9.15.1 <11'
       undici: '>=5 <9'
       ws: ^8.21.0
       zod: ^3.25 || ^4.0
@@ -3819,6 +3820,8 @@ packages:
       '@smithy/hash-node':
         optional: true
       '@smithy/signature-v4':
+        optional: true
+      google-auth-library:
         optional: true
       undici:
         optional: true
@@ -5191,7 +5194,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
-  '@google/genai@2.30.0(supports-color@7.2.0)':
+  '@google/genai@2.31.0(supports-color@7.2.0)':
     dependencies:
       google-auth-library: 10.9.1(supports-color@7.2.0)
       p-retry: 4.6.2
@@ -5358,12 +5361,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@langchain/core@1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)':
+  '@langchain/core@1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@standard-schema/spec': 1.1.0
       js-tiktoken: 1.0.21
-      langsmith: 0.11.0(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+      langsmith: 0.11.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       mustache: 4.2.0
       p-queue: 6.6.2
       zod: 4.6.7
@@ -5374,21 +5377,22 @@ snapshots:
       - openai
       - ws
 
-  '@langchain/google-genai@2.3.2(@langchain/core@1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))':
+  '@langchain/google-genai@2.3.4(@langchain/core@1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))':
     dependencies:
       '@google/generative-ai': 0.24.1
-      '@langchain/core': 1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+      '@langchain/core': 1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
 
-  '@langchain/openai@1.6.2(@langchain/core@1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(ws@8.21.3)':
+  '@langchain/openai@1.7.0(@langchain/core@1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)':
     dependencies:
-      '@langchain/core': 1.2.18(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+      '@langchain/core': 1.3.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       js-tiktoken: 1.0.21
-      openai: 7.15.0(ws@8.21.3)(zod@4.6.7)
+      openai: 7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7)
       zod: 4.6.7
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-node'
       - '@smithy/hash-node'
       - '@smithy/signature-v4'
+      - google-auth-library
       - undici
       - ws
 
@@ -7253,7 +7257,7 @@ snapshots:
     dependencies:
       esutils: 2.0.3
 
-  dodopayments@2.55.0:
+  dodopayments@2.56.1:
     dependencies:
       standardwebhooks: 1.1.1
 
@@ -8235,12 +8239,12 @@ snapshots:
 
   khroma@2.1.0: {}
 
-  langsmith@0.11.0(@opentelemetry/api@1.9.0)(openai@7.15.0(ws@8.21.3)(zod@4.6.7))(ws@8.21.3):
+  langsmith@0.11.0(@opentelemetry/api@1.9.0)(openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3):
     dependencies:
       p-queue: 6.6.2
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
-      openai: 7.15.0(ws@8.21.3)(zod@4.6.7)
+      openai: 7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7)
       ws: 8.21.3
 
   language-subtag-registry@0.3.23: {}
@@ -8792,8 +8796,9 @@ snapshots:
 
   oidc-token-hash@5.2.0: {}
 
-  openai@7.15.0(ws@8.21.3)(zod@4.6.7):
+  openai@7.43.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7):
     optionalDependencies:
+      google-auth-library: 10.9.1(supports-color@7.2.0)
       ws: 8.21.3
       zod: 4.6.7
 
