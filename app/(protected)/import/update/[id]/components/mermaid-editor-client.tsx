@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Group, Panel, Separator } from "react-resizable-panels";
 import { DOC_ROUTES } from "@/lib/routes";
 import { useMobileDetection } from "./hooks/use-mobile-detection";
 import { useMermaidRenderer } from "./hooks/use-mermaid-renderer";
@@ -87,15 +87,15 @@ export function MermaidEditorClient({
         onSave={handleSave}
       />
 
-      <PanelGroup
-        direction={isMobile ? "vertical" : "horizontal"}
+      <Group
+        orientation={isMobile ? "vertical" : "horizontal"}
         className={`rounded-lg border ${isMobile ? "min-h-[1000px] flex-1" : "flex-1"}`}
       >
-        <Panel defaultSize={isMobile ? 50 : 40} minSize={30}>
+        <Panel defaultSize={isMobile ? "50%" : "40%"} minSize="30%">
           <CodeEditorPanel code={code} onCodeChange={setCode} />
         </Panel>
 
-        <PanelResizeHandle
+        <Separator
           className={
             isMobile
               ? "h-2 bg-border hover:bg-primary/20 transition-colors"
@@ -103,14 +103,14 @@ export function MermaidEditorClient({
           }
         />
 
-        <Panel defaultSize={isMobile ? 50 : 60} minSize={30}>
+        <Panel defaultSize={isMobile ? "50%" : "60%"} minSize="30%">
           <DiagramPreviewPanel
             diagramRef={diagramRef}
             renderError={renderError}
             onOpenAIDialog={() => setAiDialogOpen(true)}
           />
         </Panel>
-      </PanelGroup>
+      </Group>
 
       <AIImprovementDialog
         open={aiDialogOpen}
