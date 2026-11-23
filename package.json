@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.32.0",
-    "@hookform/resolvers": "^5.9.1",
+    "@hookform/resolvers": "^7.0.7",
     "@langchain/core": "^1.4.0",
     "@langchain/google-genai": "^2.3.6",
     "@langchain/openai": "^1.8.4",
