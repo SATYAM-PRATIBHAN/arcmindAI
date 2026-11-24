@@ -15,17 +15,17 @@ importers:
         specifier: ^5.9.1
         version: 5.9.1(@standard-schema/spec@1.1.0)(effect@3.18.4)(react-hook-form@7.92.0(@types/react@19.3.0)(react@19.3.1))(zod@4.6.7)
       '@langchain/core':
-        specifier: ^1.4.0
-        version: 1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+        specifier: ^1.4.2
+        version: 1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       '@langchain/google-genai':
         specifier: ^2.3.6
-        version: 2.3.6(@langchain/core@1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))
+        version: 2.3.6(@langchain/core@1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))
       '@langchain/openai':
         specifier: ^1.8.4
-        version: 1.8.4(@langchain/core@1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)
+        version: 1.8.4(@langchain/core@1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)
       '@lottiefiles/dotlottie-react':
-        specifier: ^0.22.2
-        version: 0.22.2(react@19.3.1)
+        specifier: ^0.22.3
+        version: 0.22.3(react@19.3.1)
       '@next-auth/prisma-adapter':
         specifier: ^1.0.7
         version: 1.0.7(@prisma/client@6.19.0(prisma@6.19.0(typescript@5.9.3))(typescript@5.9.3))(next-auth@4.24.15(next@16.4.6(@babel/core@7.28.6(supports-color@7.2.0))(@opentelemetry/api@1.9.0)(@types/node@26.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(nodemailer@7.0.13)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))
@@ -102,14 +102,14 @@ importers:
         specifier: ^7.9.2
         version: 7.9.2
       dodopayments:
-        specifier: ^2.62.0
-        version: 2.62.0
+        specifier: ^2.63.1
+        version: 2.63.1
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.3.1)
       framer-motion:
-        specifier: ^14.13.0
-        version: 14.13.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: ^14.14.0
+        version: 14.14.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       get-nonce:
         specifier: ^1.0.1
         version: 1.0.1
@@ -186,11 +186,11 @@ importers:
         specifier: ^2.0.8
         version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       standardwebhooks:
-        specifier: ^1.1.1
-        version: 1.1.1
+        specifier: ^1.3.0
+        version: 1.3.0
       tailwind-merge:
-        specifier: ^3.7.0
-        version: 3.7.0
+        specifier: ^3.7.1
+        version: 3.7.1
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -229,8 +229,8 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       lint-staged:
-        specifier: ^17.6.0
-        version: 17.6.0
+        specifier: ^17.6.1
+        version: 17.6.1
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -828,8 +828,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@langchain/core@1.4.0':
-    resolution: {integrity: sha512-4FLE0OoPu4hFFcGX4ep3o/BWTXVcE0hQroxB9z3PzWKqZV9+WAqlqmH30We6YUFMMc/1Vzkfa/q+PTioaAkoDw==}
+  '@langchain/core@1.4.2':
+    resolution: {integrity: sha512-XjYUhRmgtKvopQtSQEYR9WQZMOUtN7yXsYapu7Zvo9leRN18CPPoa4Nj2+lYL0rC+zIG0HOFkY/2Cn813CBdNA==}
     engines: {node: '>=20'}
 
   '@langchain/google-genai@2.3.6':
@@ -844,8 +844,8 @@ packages:
     peerDependencies:
       '@langchain/core': ^1.4.0
 
-  '@lottiefiles/dotlottie-react@0.22.2':
-    resolution: {integrity: sha512-X91hm/hGigVt7PFRfcFYO5XeLqUAQSyhcAMfvpCBv7fNjUy8DCEENJdXglRsiUGGJezwqwaV2QoJxfDECoiiyw==}
+  '@lottiefiles/dotlottie-react@0.22.3':
+    resolution: {integrity: sha512-TBcQsb7FqprGEKsn8D1w+HGINz9t8LAz1wgcYVej4I964SbwzDPxnuCoGV/c8WIdIxn/XAmDRzSXQljSRpOtsA==}
     engines: {node: '>=18.17.0', npm: '>=9.5.0'}
     peerDependencies:
       react: ^17 || ^18 || ^19
@@ -2643,8 +2643,8 @@ packages:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
 
-  dodopayments@2.62.0:
-    resolution: {integrity: sha512-LM7/mgUPoj6GPZkxIo+NDtDnQNLA3d5o0kT/N2CmbimuOXddNe8IvIkjeBNjiuCCzC/MH4CJKirjAzGiZYUi3g==}
+  dodopayments@2.63.1:
+    resolution: {integrity: sha512-8tlZTOM//+pjtfIqzLHXfDwq+zAIe/uyRtXJ0ezbJUBNEUHREqy6LHvzSdalUoWaorgkoSaDK3TY7oo+PjC61g==}
     hasBin: true
 
   dompurify@3.3.3:
@@ -2966,8 +2966,8 @@ packages:
     resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
     engines: {node: '>=12.20.0'}
 
-  framer-motion@14.13.0:
-    resolution: {integrity: sha512-62FgGVeqEI3pgI5jG/d6yagg/hX9z7Vw3ytE0gGAsDXWBBruUCr74b5LQJXMSF1E62Zp7HKO88nDu/hhUdRSCQ==}
+  framer-motion@14.14.0:
+    resolution: {integrity: sha512-fidRX0VzkZdA9OovFiBSzJtt9/jLcJpna78Z+KCqQQZIWoIpN3tOhEXAhhAw/FObUUh+o3Y18yx1F4BP0mVJ8Q==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -3521,8 +3521,8 @@ packages:
     resolution: {integrity: sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA==}
     engines: {node: '>= 12.0.0'}
 
-  lint-staged@17.6.0:
-    resolution: {integrity: sha512-nOhBfYkZEwkFtNzD5pK9s9LkcWoxJ+whLzEnhqi9nl7zTB5n7tg8+9iYgMGx2Wm3VlLu8cbNj0RACzY+nWi5iQ==}
+  lint-staged@17.6.1:
+    resolution: {integrity: sha512-3MXgVN7BERDR/6CXZs2fDHGc+r0+hlvGAa9wqMlVbIS6RVRuaPOnb5SnN6wMXulwfEy9DXVkMVUN/8cUlpPDnw==}
     engines: {node: '>=22.22.1'}
     hasBin: true
 
@@ -3722,8 +3722,8 @@ packages:
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
-  motion-dom@14.13.0:
-    resolution: {integrity: sha512-nWrB6Psw7mFTBNL9r5hw9nm/a5+21WZ1LymOml/V2b43LdiIDO1oi+oBMSR3bcyuzEQKJoaa+t5qnsCWYhcNvA==}
+  motion-dom@14.14.0:
+    resolution: {integrity: sha512-IAxcKhYkuQA2W0Tlx1AvVgImfqEoF3/t3IovbPQJlYkefmGsmrXjn967lMII5VmFmLpQEab4+ZkHo/ijJ4Esig==}
 
   motion-utils@14.7.0:
     resolution: {integrity: sha512-woO0/Nb7ys75f94fjvQi/6leiHGvZUYkeHUPEZ3vxsV+9OpEVhkxp01x8MlRwX0zt31EqgXsKDAoBoJLC148Tw==}
@@ -4353,8 +4353,8 @@ packages:
     resolution: {integrity: sha512-yf7OENo23AGJhBriGx0QivY5JP6Y1HbrrDI6WLt6C5auYZXlQrheoY8hD4ibekFKz1HOfE48Ww8kMWMnJD/zcQ==}
     engines: {node: '>=0.1.14'}
 
-  standardwebhooks@1.1.1:
-    resolution: {integrity: sha512-bCbX9ZEyFkWPsRz7Bl3NuQUJohmwGSev/yhr7vhaGPlc4AfIrspIRa6cPTBuI1ItmrTDJ4d/S2hCsfe4+vQGnQ==}
+  standardwebhooks@1.3.0:
+    resolution: {integrity: sha512-5W9skHjqAm2dlA9wWvglTP+oX47JX4lFXVk1aJV7+TG1snvTR4QXaVgPscEzvOw9GRreeavMwbqEeL+MGhZHCg==}
 
   stop-iteration-iterator@1.1.0:
     resolution: {integrity: sha512-eLoXW/DHyl62zxY4SCaIgnRhuMr6ri4juEYARS8E6sCEqzKpOiE521Ucofdx+KnDZl5xmvGYaaKCk5FEOxJCoQ==}
@@ -4363,9 +4363,9 @@ packages:
   strictdom@1.0.1:
     resolution: {integrity: sha512-cEmp9QeXXRmjj/rVp9oyiqcvyocWab/HaoN4+bwFeZ7QzykJD6L3yD4v12K1x0tHpqRqVpJevN3gW7kyM39Bqg==}
 
-  string-argv@0.3.2:
-    resolution: {integrity: sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==}
-    engines: {node: '>=0.6.19'}
+  string-argv@0.4.0:
+    resolution: {integrity: sha512-UOtaksJ3SK3KLHba2i9I27fvuZNfBlImDP5wKsCOxCDMRDNxlipCe8rmnUAaDpqlQ93upnA0SzF2pjWhttozSA==}
+    engines: {node: '>=16.20.0'}
 
   string.prototype.includes@2.0.1:
     resolution: {integrity: sha512-o7+c9bW6zpAdJHTtujeePODAhkuicdAryFsfVKwA+wGw89wJ4GTY484WTucM9hLtDEOpOvI+aHnzqnC5lHp4Rg==}
@@ -4438,8 +4438,8 @@ packages:
     resolution: {integrity: sha512-qsjeeq5YjBZ5eMdFuUa4ZosMLxgr5RZ+F+Y1OrDhuOCEInRMA3x74XdBtggJcj9kOeInz0WE+LgCPDkZFlBYJw==}
     engines: {node: '>=12.0.0'}
 
-  tailwind-merge@3.7.0:
-    resolution: {integrity: sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA==}
+  tailwind-merge@3.7.1:
+    resolution: {integrity: sha512-v7y4BV4FUlO8exj/4M5UXKeoowDiuugVUg3tkMNIyOUCOHy5xp8+5aWQeXCtZ2491sUV1YPsVeM9EveZ6/xuZQ==}
 
   tailwindcss@4.3.5:
     resolution: {integrity: sha512-FcQk9BuffmEHJP2G0XmB2SplU1aLTI7j07Kunk+U74Ny+XiWOtzXz9aujFZ/avntw1e2cOv/3PkgzflQ7gX2vQ==}
@@ -5439,7 +5439,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@langchain/core@1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)':
+  '@langchain/core@1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)':
     dependencies:
       '@cfworker/json-schema': 4.1.6
       '@standard-schema/spec': 1.1.0
@@ -5455,14 +5455,14 @@ snapshots:
       - openai
       - ws
 
-  '@langchain/google-genai@2.3.6(@langchain/core@1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))':
+  '@langchain/google-genai@2.3.6(@langchain/core@1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))':
     dependencies:
       '@google/generative-ai': 0.24.1
-      '@langchain/core': 1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+      '@langchain/core': 1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
 
-  '@langchain/openai@1.8.4(@langchain/core@1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)':
+  '@langchain/openai@1.8.4(@langchain/core@1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3))(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)':
     dependencies:
-      '@langchain/core': 1.4.0(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
+      '@langchain/core': 1.4.2(@opentelemetry/api@1.9.0)(openai@7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7))(ws@8.21.3)
       js-tiktoken: 1.0.21
       openai: 7.56.0(google-auth-library@10.9.1(supports-color@7.2.0))(ws@8.21.3)(zod@4.6.7)
       zod: 4.6.7
@@ -5474,7 +5474,7 @@ snapshots:
       - undici
       - ws
 
-  '@lottiefiles/dotlottie-react@0.22.2(react@19.3.1)':
+  '@lottiefiles/dotlottie-react@0.22.3(react@19.3.1)':
     dependencies:
       '@lottiefiles/dotlottie-web': 0.83.2
       react: 19.3.1
@@ -7396,9 +7396,9 @@ snapshots:
     dependencies:
       esutils: 2.0.3
 
-  dodopayments@2.62.0:
+  dodopayments@2.63.1:
     dependencies:
-      standardwebhooks: 1.1.1
+      standardwebhooks: 1.3.0
 
   dompurify@3.3.3:
     optionalDependencies:
@@ -7866,9 +7866,9 @@ snapshots:
     dependencies:
       fetch-blob: 3.2.0
 
-  framer-motion@14.13.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  framer-motion@14.14.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
-      motion-dom: 14.13.0
+      motion-dom: 14.14.0
       motion-utils: 14.7.0
       tslib: 2.8.1
     optionalDependencies:
@@ -8450,10 +8450,10 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.33.0
       lightningcss-win32-x64-msvc: 1.33.0
 
-  lint-staged@17.6.0:
+  lint-staged@17.6.1:
     dependencies:
       picomatch: 4.0.7
-      string-argv: 0.3.2
+      string-argv: 0.4.0
       tinyexec: 1.3.1
     optionalDependencies:
       yaml: 2.9.1
@@ -8793,7 +8793,7 @@ snapshots:
 
   minimist@1.2.8: {}
 
-  motion-dom@14.13.0:
+  motion-dom@14.14.0:
     dependencies:
       motion-utils: 14.7.0
 
@@ -9460,7 +9460,7 @@ snapshots:
   stackblur-canvas@2.7.0:
     optional: true
 
-  standardwebhooks@1.1.1:
+  standardwebhooks@1.3.0:
     dependencies:
       '@stablelib/base64': 1.0.1
       fast-sha256: 1.3.0
@@ -9472,7 +9472,7 @@ snapshots:
 
   strictdom@1.0.1: {}
 
-  string-argv@0.3.2: {}
+  string-argv@0.4.0: {}
 
   string.prototype.includes@2.0.1:
     dependencies:
@@ -9561,7 +9561,7 @@ snapshots:
   svg-pathdata@6.0.3:
     optional: true
 
-  tailwind-merge@3.7.0: {}
+  tailwind-merge@3.7.1: {}
 
   tailwindcss@4.3.5: {}
 
